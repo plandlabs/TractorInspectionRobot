@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="5dp">
+    <GridLayout
+        android:id="@+id/grid_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3">
+        <LinearLayout
+            android:id="@+id/topTilting"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="상부 틸팅"/>
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="1">
+                <Button
+                    style="@style/controlButtonStyleInGrid"
+                    android:id="@+id/btn_control_01"
+                    android:drawableLeft="@drawable/baseline_keyboard_arrow_up_24"
+                    android:text="상부 틸팅 상승"/>
+                <Button
+                    style="@style/controlButtonStyleInGrid"
+                    android:id="@+id/btn_control_02"
+                    android:drawableLeft="@drawable/baseline_keyboard_arrow_down_24"
+                    android:text="상부 틸팅 하강"/>
+            </GridLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/bottomTilting"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="하부 틸팅"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_weight="2">
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_03"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_up_24"
+                        android:text="하부 틸팅 상승"/>
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_04"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_down_24"
+                        android:text="하부 틸팅 하강"/>
+                </GridLayout>
+                <LinearLayout
+                    style="@style/controlMonitor">
+                    <LinearLayout
+                        style="@style/controlMonitItem">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="2D Lidar 구동 영역 OK/NG 상태"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OK"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        style="@style/controlMonitItem">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Sliding 부 작업  위치 OK/NG 상태"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OK"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        style="@style/controlMonitItem">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Sliding 부 캐스터 전진 상태"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OK"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sliding"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="슬라이딩"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_weight="2">
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_05"
+                        android:drawableLeft="@drawable/baseline_arrow_upward_24"
+                        android:text="슬라이딩 전진"/>
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_06"
+                        android:drawableLeft="@drawable/baseline_arrow_downward_24"
+                        android:text="슬라이딩 후진"/>
+                </GridLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/slidingCaster"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="슬라이딩 캐스터"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_weight="2">
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_07"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_up_24"
+                        android:text="슬라이딩 캐스터 상승"/>
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_08"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_down_24"
+                        android:text="슬라이딩 캐스터 하강"/>
+                </GridLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/lift"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="리프트"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_weight="2">
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_09"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_up_24"
+                        android:text="리프트 상승"/>
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_10"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_down_24"
+                        android:text="리프트 하강"/>
+                </GridLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/stabilizer"
+            style="@style/controlBox">
+            <TextView
+                style="@style/controlTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="스테빌라이저"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:layout_weight="2">
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_11"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_up_24"
+                        android:text="스테빌라이저 상승"/>
+                    <Button
+                        style="@style/controlButtonStyleInGrid"
+                        android:id="@+id/btn_control_12"
+                        android:drawableLeft="@drawable/baseline_keyboard_arrow_down_24"
+                        android:text="스테빌라이저 하강"/>
+                </GridLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </GridLayout>
+</LinearLayout>

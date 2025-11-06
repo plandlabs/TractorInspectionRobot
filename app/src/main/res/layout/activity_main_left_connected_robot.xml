@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="현재 연결중인 로봇 정보"
+            android:textSize="17sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/leftBlock1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/viewItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_grey"
+            android:backgroundTint="#fff"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:paddingTop="5sp">
+
+                    <ImageView
+                        android:id="@+id/robot1"
+                        android:layout_width="57sp"
+                        android:layout_height="90sp"
+                        android:adjustViewBounds="true"
+                        android:background="@drawable/robot1" />
+                    <ImageView
+                        android:id="@+id/robot2"
+                        android:layout_width="57sp"
+                        android:layout_height="90sp"
+                        android:adjustViewBounds="true"
+                        android:background="@drawable/robot2" />
+                </LinearLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true">
+                    <ProgressBar
+                        android:id="@+id/progressCircle"
+                        style="?android:attr/progressBarStyleLarge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"/>
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true">
+                    <TextView
+                        android:id="@+id/btn_ip_change"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded"
+                        android:backgroundTint="@color/actionbar_bg2"
+                        android:textSize="12sp"
+                        android:paddingLeft="30sp"
+                        android:paddingRight="10sp"
+                        android:paddingTop="7sp"
+                        android:paddingBottom="7sp"
+                        android:text="로봇 IP 변경"/>
+                    <ImageView
+                        android:layout_centerVertical="true"
+                        android:layout_width="18sp"
+                        android:layout_height="18sp"
+                        android:background="@drawable/ic_settings_black_24dp"
+                        android:layout_marginLeft="7sp"
+                        android:backgroundTint="@color/white"
+                        />
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:layout_alignParentStart="true">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:text="SSID : "
+                                android:textSize="13sp"
+                                android:textColor="@color/text_color_smaller"
+                                android:layout_weight="2"/>
+
+                            <TextView
+                                android:id="@+id/ssid"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:textSize="13sp"
+                                android:text=""
+                                android:textColor="@color/background"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:text="MAC ADDR : "
+                                android:textSize="13sp"
+                                android:textColor="@color/text_color_smaller"
+                                android:layout_weight="2" />
+
+                            <TextView
+                                android:id="@+id/mac_address"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:textSize="13sp"
+                                android:text=""
+                                android:textColor="@color/background"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:text="로봇 IP : "
+                                android:textSize="13sp"
+                                android:textColor="@color/text_color_smaller"
+                                android:layout_weight="2" />
+
+                            <TextView
+                                android:id="@+id/socket_robot_IP"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:textSize="13sp"
+                                android:text=""
+                                android:textColor="@color/background"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="right|center"
+                                android:text="내 IP : "
+                                android:textSize="13sp"
+                                android:textColor="@color/text_color_smaller"
+                                android:layout_weight="2" />
+
+                            <TextView
+                                android:id="@+id/socket_device_IP"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:textSize="13sp"
+                                android:text=""
+                                android:textColor="@color/background"
+                                android:layout_weight="1" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </RelativeLayout>
+                <TextView
+                    android:id="@+id/robot_name_division"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_state_03"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginBottom="0dp"
+                    android:padding="3dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

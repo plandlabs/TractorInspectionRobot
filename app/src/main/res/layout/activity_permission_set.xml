@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#eeeeee"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/callmachine"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#2f4d6a"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_left_padding"
+        android:paddingRight="@dimen/activity_right_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:backgroundTint="#eeeeee"
+                android:background="@drawable/ic_settings_black_24dp" />
+
+            <TextView
+                android:id="@+id/app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="7dp"
+                android:text="권한설정하기"
+                android:textColor="#fff"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView13"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="25sp"
+        android:textColor="#777777"
+        android:textSize="18sp"
+        android:text='"다른 앱 위에 표시되는 앱 권한 허용하기" 버튼을 눌러 다른 앱 위에 표시되는 앱 권한을 허용해주세요.'
+        />
+
+    <Button
+        android:id="@+id/button_overlay_permission"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="다른 앱 위에 표시되는 앱 권한 허용하기"
+        android:textColor="#fff"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:backgroundTint="@color/menu_color_select"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/textView15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16sp"
+        android:text='2. "권한 허용하기" 버튼을 눌러 시스템을 변경할 수 있는 앱 권한을 허용해주세요 : )'
+         />
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/button_write_setting_permission"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="권한 허용하기"
+        android:textStyle="bold"
+        android:textColor="#fff" />
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/textView16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16sp"
+        android:text='3. "접근성 설정" 버튼을 누르고 - "네비 자동실행"을 찾아서 클릭 후 - 권한을 활성화 시켜주세요 : )'
+        />
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/button_accessibility_permission"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="접근성 설정"
+        android:textColor="#fff"
+        android:textStyle="bold" />
+</LinearLayout>

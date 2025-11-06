@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">220.124.186.134:8088</domain>
+    </domain-config>
+    -->
+    <base-config cleartextTrafficPermitted="true" />    <!-- 모든 경로가 허용하도록 설정-->
+</network-security-config>

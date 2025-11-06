@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:theme="@style/Theme.TractorInspectionRobot"
+    android:background="@color/background"
+    tools:context=".views.activity.LoginActivity">
+
+    <!-- progressCircle -->
+    <ProgressBar
+        android:id="@+id/progressCircle"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+    <LinearLayout
+        android:id="@+id/mainHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        android:gravity="top"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/showmachine"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/activity_left_padding"
+            android:paddingRight="@dimen/activity_right_padding">
+
+            <LinearLayout
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="33sp"
+                    android:layout_height="33sp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/baseline_arrow_back_ios_new_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_weight="1"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/action_join"
+                    android:textColor="#fff"
+                    android:textSize="21sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="33sp"
+                    android:layout_height="33sp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/ic_baseline_logout_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/login_form"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded"
+            android:backgroundTint="#10ffffff"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/email_login_form"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:focusable="true"
+                android:focusableInTouchMode="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_gravity="center"
+                    android:paddingBottom="@dimen/activity_vertical_margin"
+                    android:paddingLeft="@dimen/activity_horizontal_margin"
+                    android:paddingRight="@dimen/activity_horizontal_margin"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:gravity="left"
+                        android:text="아이디"
+                        android:textSize="15sp" />
+                    <LinearLayout
+                        android:id="@+id/idViewBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/OutlinedBoxTextInputLayoutStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/idView"
+                                android:layout_width="match_parent"
+                                style="@style/EditViewStyle"
+                                tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <Button
+                            android:id="@+id/btnIdCheck"
+                            style="?android:textAppearanceSmall"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_marginLeft="5dp"
+                            android:background="#2f4d6a"
+                            android:text="중복체크"
+                            android:textColor="#ffffff"
+                            android:textSize="14sp"
+                            android:layout_weight="2.5" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/idConfBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/idConf"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:background="@drawable/rounded_slim_grey"
+                            android:backgroundTint="#ccc"
+                            android:textColor="#000"
+                            android:layout_weight="1" />
+                        <Button
+                            android:id="@+id/btnIdChange"
+                            style="?android:textAppearanceSmall"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_marginLeft="5dp"
+                            android:background="#2f4d6a"
+                            android:text="아이디변경"
+                            android:textColor="#ffffff"
+                            android:textSize="14sp"
+                            android:layout_weight="2.5" />
+                    </LinearLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="패스워드"
+                        android:textSize="15sp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/OutlinedBoxTextInputLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/passwordEdit"
+                            android:layout_width="match_parent"
+                            style="@style/EditViewStyle"
+                            android:imeActionId="6"
+                            android:imeActionLabel="@string/action_confirm"
+                            android:imeOptions="actionUnspecified"
+                            android:inputType="textPassword"
+                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="패스워드 확인"
+                        android:textSize="15sp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/OutlinedBoxTextInputLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/passwordEditChk"
+                            android:layout_width="match_parent"
+                            style="@style/EditViewStyle"
+                            android:imeActionId="6"
+                            android:imeActionLabel="@string/action_confirm"
+                            android:imeOptions="actionUnspecified"
+                            android:inputType="textPassword"
+                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="이름"
+                        android:textSize="15sp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/OutlinedBoxTextInputLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/name"
+                            android:layout_width="match_parent"
+                            style="@style/EditViewStyle"
+                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="휴대폰번호"
+                        android:textSize="15sp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/OutlinedBoxTextInputLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/phone"
+                            android:layout_width="match_parent"
+                            style="@style/EditViewStyle"
+                            android:inputType="number"
+                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="이메일"
+                        android:textSize="15sp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/OutlinedBoxTextInputLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/email"
+                            android:layout_width="match_parent"
+                            style="@style/EditViewStyle"
+                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16sp"
+                        android:gravity="left"
+                        android:text="개인정보이용동의"
+                        android:textSize="15sp" />
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="150dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/rounded_slim_grey"
+                        android:backgroundTint="#ffffff">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="5dp"
+                            android:textColor="@color/black"
+                            android:textSize="12sp"
+                            android:text="@string/polyAgree"/>
+                    </androidx.core.widget.NestedScrollView>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <CheckBox
+                            android:id="@+id/agree"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="#ffffff"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="개인정보이용에 동의합니다."/>
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnJoin"
+                        style="?android:textAppearanceSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="30sp"
+                        android:background="#2f4d6a"
+                        android:text="가입하기"
+                        android:textColor="#ffffff"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/pwHelptextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="left"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:textSize="13sp"
+                        android:paddingTop="10dp"
+                        android:text="@string/prompt_password_set_text"
+                        android:visibility="gone"/>
+
+                    <Button
+                        android:id="@+id/find_button"
+                        style="?android:textAppearanceSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="16sp"
+                        android:background="#aaaaaa"
+                        android:text="@string/action_find_idpw"
+                        android:textColor="#ffffff"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"/>
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingTop="10dp"
+                        android:visibility="gone"
+                        android:text="@string/powered_by" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

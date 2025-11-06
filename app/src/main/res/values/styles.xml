@@ -1,0 +1,414 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme.
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="color">@color/text_color_basic</item>
+        <item name="backgroundTint">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/actionbar_text_title</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowActionBar">true</item>
+        <item name="windowActionBarOverlay">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+    </style>
+    <!-- styles.xml -->
+    <style name="DarkAlertDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <!-- 강제로 다크모드 컬러 적용 -->
+        <item name="android:background">#222222</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <!-- 필요시 버튼 컬러 등 추가 지정 -->
+    </style>
+    <style name="AppCompatAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:background">@android:color/black</item>
+    </style>
+    <style name="TabLayoutTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+    <style name="TextLabel" parent="TextAppearance.Design.Hint">
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="MenuLabel" parent="TextAppearance.Design.Hint">
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="EditViewStyle">
+        <item name="android:textSize">10sp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:textColorLink">#2f4d6a</item>
+    </style>
+    <style name="OutlinedBoxTextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColorHint">#777</item>
+        <item name="boxBackgroundColor">@android:color/white</item>
+        <item name="hintTextAppearance">@style/TextLabel</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+    </style>
+    <style name="OutlinedBoxTextInputEditTextStyle">
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">5dp</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="OutlinedBoxTextInputEditTextNumberStyle" parent="OutlinedBoxTextInputEditTextStyle">
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">5dp</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:gravity">right|center_vertical</item>
+        <item name="android:inputType">number</item>
+    </style>
+    <style name="OutlinedBoxTextInputEditTextNumberDecimalStyle" parent="OutlinedBoxTextInputEditTextNumberStyle">
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">5dp</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:gravity">right|center_vertical</item>
+        <item name="android:inputType">numberDecimal</item>
+    </style>
+    <style name="titleBox">
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+    </style>
+    <style name="titleBoxText">
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="titleBoxUnitText">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#aaa</item>
+    </style>
+    <style name="titleBoxValueText">
+        <item name="android:textSize">25sp</item>
+        <item name="android:textColor">#468afa</item>
+    </style>
+    <style name="serviceBox">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">15sp</item>
+        <item name="android:paddingEnd">15sp</item>
+        <item name="android:layout_margin">5dp</item>
+    </style>
+    <style name="tableView">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="tableLeftView" parent="tableView">
+        <item name="android:gravity">left</item>
+    </style>
+    <style name="tableRightView" parent="tableView">
+        <item name="android:gravity">right</item>
+    </style>
+    <style name="tabTopTitle">
+        <item name="android:textSize">19sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+    </style>
+    <style name="rowView">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">left</item>
+    </style>
+    <style name="stateBox">
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_rowWeight">1</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+    <style name="stateTopBox">
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_rowWeight">1</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:layout_margin">5dp</item>
+        <!--        <item name="android:orientation">vertical</item>-->
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+    <style name="stateWorkingTopBox" parent="stateTopBox">
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+    </style>
+    <style name="stateTitle">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">5dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textColor">#ffffff</item>
+    </style>
+    <style name="stateValue">
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textColor">#a8c9ff</item>
+    </style>
+    <style name="stateTopTitle">
+        <item name="android:textSize">15sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+    </style>
+    <style name="stateTopValue">
+        <item name="android:textSize">16sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:paddingLeft">20sp</item>
+        <item name="android:paddingRight">20sp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:backgroundTint">@color/count_color</item>
+    </style>
+    <style name="stateWorkingTopValue" parent="stateTopValue">
+        <item name="android:paddingLeft">10sp</item>
+        <item name="android:paddingRight">10sp</item>
+    </style>
+    <style name="dataBox">
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">0dp</item>
+        <item name="android:layout_gravity">fill</item>
+    </style>
+    <style name="controlBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_gravity">fill</item>
+    </style>
+    <style name="controlEmergencyBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:orientation">vertical</item>
+<!--        <item name="android:padding">5dp</item>-->
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:layout_marginLeft">3dp</item>
+        <item name="android:layout_marginRight">3dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_gravity">fill</item>
+    </style>
+    <style name="stateManyBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">fill</item>
+        <item name="android:gravity">fill_vertical</item>
+    </style>
+    <style name="stateLegendBox" parent="stateManyBox">
+        <item name="android:layout_height">35dp</item>
+    </style>
+    <style name="stateEmptyBox" parent="stateManyBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_gravity">fill</item>
+        <item name="android:backgroundTint">#00ffffff</item>
+    </style>
+    <style name="fieldManyBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded_slim</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">fill</item>
+        <item name="android:gravity">fill_vertical</item>
+        <item name="android:backgroundTint">#555555</item>
+    </style>
+    <style name="fieldCircleBox">
+        <item name="android:background">@drawable/rounded_slim</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:backgroundTint">#404040</item>
+    </style>
+    <style name="controlRecyclerStepBox">
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_gravity">fill</item>
+    </style>
+    <style name="controlStepBox">
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_gravity">fill</item>
+    </style>
+    <style name="controlTitleText">
+        <item name="android:padding">3dp</item>
+        <item name="android:paddingBottom">7dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="controlStepTitleText">
+        <item name="android:padding">3dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="controlStepValueText">
+        <item name="android:padding">3dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="controlReadyValueText">
+        <item name="android:padding">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="stateTitleText">
+        <item name="android:padding">3dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:gravity">center|left</item>
+    </style>
+    <style name="controlMonitor">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">100dp</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:backgroundTint">#333</item>
+        <item name="android:layout_margin">2dp</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:visibility">gone</item>
+    </style>
+    <style name="controlWideMonitor">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:backgroundTint"></item>
+        <item name="android:layout_margin">2dp</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+    <style name="controlMonitItem" parent="Theme.AppCompat.Light">
+        <item name="android:padding">15sp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/rounded_stroke</item>
+    </style>
+    <style name="controlMonitItemText">
+        <item name="android:textColor">@color/date_grey</item>
+    </style>
+    <style name="controlMonitItemOn" parent="controlMonitItem">
+        <item name="android:background">@drawable/rounded_stroke</item>
+        <item name="android:backgroundTint">#333</item>
+    </style>
+    <style name="controlMonitItemOnText">
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="controlMonitItemInGrid">
+        <item name="android:padding">10dp</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:background">@drawable/rounded_stroke</item>
+    </style>
+    <style name="controlMonitItemInGridOn" parent="controlMonitItemInGrid">
+        <item name="android:backgroundTint">@color/channel_request</item>
+    </style>
+    <style name="controlButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/rounded</item>
+        <item name="android:backgroundTint">@color/search_btn</item>
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="controlButtonStyleInGrid" parent="controlButtonStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">45dp</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="moveControlButtonStyle" parent="controlButtonStyle">
+        <item name="android:layout_width">120dp</item>
+        <item name="android:layout_height">50dp</item>
+    </style>
+    <style name="moveControlJoyButtonStyle" parent="controlButtonStyle">
+        <item name="android:layout_width">110sp</item>
+        <item name="android:layout_height">60dp</item>
+    </style>
+    <style name="controlButtonOnStyle" parent="controlButtonStyleInGrid">
+        <item name="android:backgroundTint">@color/channel_request</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="moveControlButtonOnStyle" parent="moveControlButtonStyle">
+        <item name="android:backgroundTint">@color/channel_request</item>
+    </style>
+    <style name="controlWorkButtonStyle" parent="controlButtonStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+</resources>

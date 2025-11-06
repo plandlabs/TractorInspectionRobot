@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.appbar.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:id="@+id/mainHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        android:gravity="top"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/showmachine"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@color/background"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/activity_left_padding"
+            android:paddingRight="@dimen/activity_right_padding">
+
+            <LinearLayout
+                android:id="@+id/callmachine"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="50dp"
+                android:layout_marginRight="80dp"
+                android:gravity="center_vertical">
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/mTabLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/tab_bottom_bg"
+                    app:tabPaddingStart="3dp"
+                    app:tabPaddingEnd="3dp"
+                    app:tabMode="fixed"
+                    app:tabTextColor="#888888"
+                    app:tabIndicatorColor="#333333"
+                    app:tabSelectedTextColor="#ffffff"
+                    app:tabTextAppearance="@style/TabLayoutTextAppearance"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:gravity="center"
+                android:layout_marginLeft="20sp"
+                android:id="@+id/btn_robot_change">
+                <ImageView
+                    android:layout_width="25sp"
+                    android:layout_height="25sp"
+                    android:layout_marginTop="-5dp"
+                    android:layout_marginRight="-3dp"
+                    android:background="@drawable/outline_robot_2_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal" />
+                <ImageView
+                    android:layout_width="20sp"
+                    android:layout_height="20sp"
+                    android:background="@drawable/baseline_compare_arrows_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal" />
+                <ImageView
+                    android:layout_width="32sp"
+                    android:layout_height="32sp"
+                    android:layout_marginLeft="-5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/outline_robot_2_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_marginRight="20sp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/btnOpen"
+                    android:layout_width="37dp"
+                    android:layout_height="37dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/ic_baseline_menu_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnNoti"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_marginRight="43dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                >
+
+                <TextView
+                    android:layout_width="33sp"
+                    android:layout_height="33sp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/baseline_notifications_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="33sp"
+                    android:layout_height="33sp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@drawable/ic_baseline_logout_24"
+                    android:backgroundTint="#ffffff"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+</com.google.android.material.appbar.AppBarLayout>

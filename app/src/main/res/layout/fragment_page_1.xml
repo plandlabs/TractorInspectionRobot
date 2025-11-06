@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="50dp"
+    android:background="@color/background">
+        <LinearLayout
+            android:id="@+id/viewBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="vertical">
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:padding="5dp">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content">
+                                        <TextView
+                                            android:id="@+id/testBtn"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="소켓 값 보내기 테스트"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentRight="true"
+                                    >
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:textSize="17sp"
+                                            android:text="현재 "/>
+                                        <TextView
+                                            android:id="@+id/userName"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:textSize="17sp"
+                                            android:text="아자씨"/>
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:textSize="17sp"
+                                            android:text="님 로그인 중입니다."/>
+                                </LinearLayout>
+                        </RelativeLayout>
+                        <LinearLayout
+                            android:id="@+id/wrapLinear"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+                                <LinearLayout
+                                    android:id="@+id/ctrlBox"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1.5"
+                                    >
+                                        <include layout="@layout/fragment_page_1_middle"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:id="@+id/stateBox"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="2"
+                                    android:orientation="horizontal">
+                                        <LinearLayout
+                                            android:id="@+id/rightBox"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:orientation="vertical"
+                                            android:paddingBottom="15sp"
+                                            >
+                                                <include layout="@layout/fragment_page_emergency_control_speed_right"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="match_parent"/>
+                                        </LinearLayout>
+                                </LinearLayout>
+                        </LinearLayout>
+
+                </LinearLayout>
+        </LinearLayout>
+</LinearLayout>

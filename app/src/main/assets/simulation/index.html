@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>검사 구동 로봇 시뮬레이션</title>
+    <style>
+        html,body{margin:0;height:100%;background:#0f0f12;overflow:hidden}
+        #c{width:100%;height:100%;display:block}
+        .hud{position:fixed;left:10px;top:10px;color:#cfd8dc;font:12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px}
+    </style>
+    <script src="./libs/three.min.js"></script>
+    <script src="./libs/OrbitControls.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">
+    <div><b>검사 구동 로봇 시뮬레이션</b></div>
+    <div>입력단위: mm (내부 m)</div>
+    <div id="poseText">x:0 y:0 z:0 pan:0 tilt:0</div>
+</div>
+
+<script>
+    const MM_TO_M = 1/1000;
+    const SIZE_X = 1500*MM_TO_M, SIZE_Y = 1500*MM_TO_M, SIZE_Z = 500*MM_TO_M;
+
+    // ===== 기본 세팅 =====
+    const canvas = document.getElementById('c');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f0f12);
+
+    // 카메라 & 컨트롤
+    const camera = new THREE.PerspectiveCamera(45,1,0.01,50);
+    camera.position.set(2.2,1.8,2.6);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(SIZE_X/2,SIZE_Y/2,SIZE_Z/2);
+    controls.minDistance = 0.5;
+    controls.maxDistance = 8;
+    controls.screenSpacePanning = true;
+
+    // 조명
+    scene.add(new THREE.AmbientLight(0xffffff,0.6));
+    const dir = new THREE.DirectionalLight(0xffffff,0.9);
+    dir.position.set(2,3,2); scene.add(dir);
+
+    // 바닥 그리드
+    const grid = new THREE.GridHelper(3,30,0x34495e,0x263238);
+    grid.position.set(SIZE_X/2,0,SIZE_Z/2);
+    scene.add(grid);
+
+    // ===== 재질 =====
+    const matFrame = new THREE.MeshStandardMaterial({color:0x6b778c, metalness:0.2, roughness:0.75});
+    const matRail  = new THREE.MeshStandardMaterial({color:0x9aa5b1, metalness:0.2, roughness:0.8});
+    const matCart  = new THREE.MeshStandardMaterial({color:0x43a047, metalness:0.2, roughness:0.7});
+    const matHead  = new THREE.MeshStandardMaterial({color:0xff9800, metalness:0.2, roughness:0.6});
+    const matCone  = new THREE.MeshStandardMaterial({color:0x00bcd4, metalness:0.1, roughness:0.7, transparent:true, opacity:0.25});
+
+    // ===== 빔 생성기 =====
+    function makeBeam(len, axis='x', size=0.04, mat=matFrame){
+      const g = axis==='x'?[len,size,size]:axis==='y'?[size,len,size]:[size,size,len];
+      return new THREE.Mesh(new THREE.BoxGeometry(...g), mat);
+    }
+
+    // ===== 프레임 구조 =====
+    const frame = new THREE.Group(); scene.add(frame);
+
+    // 바닥
+    (() => {
+      const s=0.04, g=new THREE.Group();
+      const fx1=makeBeam(SIZE_X,'x'); fx1.position.set(SIZE_X/2,s/2,0);
+      const fx2=makeBeam(SIZE_X,'x'); fx2.position.set(SIZE_X/2,s/2,SIZE_Z);
+      const fz1=makeBeam(SIZE_Z,'z'); fz1.position.set(0,s/2,SIZE_Z/2);
+      const fz2=makeBeam(SIZE_Z,'z'); fz2.position.set(SIZE_X,s/2,SIZE_Z/2);
+      g.add(fx1,fx2,fz1,fz2);
+      frame.add(g);
+    })();
+
+    // 기둥
+    (() => {
+      const s=0.04,g=new THREE.Group();
+      const cy2=makeBeam(SIZE_Y,'y'); cy2.position.set(0,SIZE_Y/2,SIZE_Z);
+      const cy4=makeBeam(SIZE_Y,'y'); cy4.position.set(SIZE_X,SIZE_Y/2,SIZE_Z);
+      g.add(cy2,cy4); frame.add(g);
+    })();
+
+    // 상부
+    (() => {
+      const s=0.04,g=new THREE.Group();
+      const tx2=makeBeam(SIZE_X,'x'); tx2.position.set(SIZE_X/2,SIZE_Y-s/2,SIZE_Z);
+      g.add(tx2); frame.add(g);
+    })();
+
+    // ===== 이동축 그룹 =====
+    const groupY = new THREE.Group();   // 승강(Y)
+    const groupX = new THREE.Group();   // 좌우(X)
+    const groupZ = new THREE.Group();   // 전후(Z)
+    scene.add(groupY);
+    groupY.add(groupX);
+    groupX.add(groupZ);
+
+    // Y축 가이드 (오른쪽 뒤 고정)
+    const yGuide = makeBeam(SIZE_Y,'y',0.02,matRail);
+    yGuide.position.set(SIZE_X-0.02,SIZE_Y/2,SIZE_Z);
+    scene.add(yGuide);
+
+    // X축 레일 (수평)
+    const xRail = makeBeam(SIZE_X,'x',0.03,new THREE.MeshStandardMaterial({color:0xD1A50B,metalness:0.2,roughness:0.7}));
+    xRail.position.set(SIZE_X/2,0,SIZE_Z);
+    groupY.add(xRail);
+
+    // ===== Z축 레일 2개 =====
+    const zRailGap = 0.232;
+    const zRailBottom = makeBeam(SIZE_Z,'z',0.028,matRail);
+    zRailBottom.position.set(0,0.03,SIZE_Z+zRailGap);
+    groupX.add(zRailBottom);
+
+    const zRailTop = makeBeam(SIZE_Z,'z',0.028,new THREE.MeshStandardMaterial({color:0x6bd1a3,metalness:0.2,roughness:0.7}));
+    zRailTop.position.set(0,0.058,SIZE_Z+zRailGap);
+    groupZ.add(zRailTop);
+
+    // ===== 캐리지 + 카메라 =====
+    const FRONT_OFFSET = 0.3;
+    const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.10,0.06,0.10),matCart);
+    carriage.position.set(0,0.105,SIZE_Z+FRONT_OFFSET+zRailGap-0.05);
+    groupZ.add(carriage);
+
+    // 팬/틸트 그룹
+    const groupPan  = new THREE.Group();
+    const groupTilt = new THREE.Group();
+    groupPan.position.copy(carriage.position);
+    groupZ.add(groupPan);
+    groupPan.add(groupTilt);
+
+    // 카메라 본체 (Head)
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.08),matHead);
+    groupTilt.add(head);
+
+    // --- 🔹 카메라 렌즈/하우징 추가 ---
+    const lensMat = new THREE.MeshStandardMaterial({
+      color: 0x222831,
+      metalness: 0.6,
+      roughness: 0.4
+    });
+    const lensBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.03, 0.04, 32),
+      lensMat
+    );
+    lensBody.rotation.x = Math.PI / 2;
+    lensBody.position.set(0, 0, 0.06);
+    head.add(lensBody);
+
+    // 렌즈 유리 (파란빛)
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x2196f3,
+      metalness: 0.3,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.6
+    });
+    const glass = new THREE.Mesh(
+      new THREE.CircleGeometry(0.023, 32),
+      glassMat
+    );
+    glass.rotation.x = Math.PI / 2;
+    glass.position.set(0, 0, 0.08);
+    head.add(glass);
+
+    // 카메라 시야 원뿔
+    const fovDeg=50, coneLen=0.25;
+    const coneRadius = Math.tan(THREE.MathUtils.degToRad(fovDeg/2))*coneLen;
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius,coneLen,24,1,true),matCone);
+    cone.rotation.x = Math.PI/2;
+    cone.position.set(0, 0, 0.06 + coneLen * 0.8);
+    head.add(cone);
+
+    // ===== Pose 업데이트 =====
+    const poseText = document.getElementById('poseText');
+    const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+    window.updateRobotPose = (pose)=>{
+      const x=(pose.x||0)*MM_TO_M, y=(pose.y||0)*MM_TO_M, z=(pose.z||0)*MM_TO_M;
+      const pan=pose.pan||0, tilt=pose.tilt||0;
+
+      const cx=clamp(x,0,SIZE_X);
+      const cy=clamp(y,0,SIZE_Y);
+      const cz=clamp(z,0,SIZE_Z);
+
+      groupY.position.set(0,cy,0);   // Y 승강
+      groupX.position.set(cx,0,0);   // X 좌우
+      groupZ.position.set(0,0,cz);   // Z 전후 (위 레일+카메라)
+
+      groupPan.rotation.y  = pan;    // X′ (좌우)
+      groupTilt.rotation.x = tilt;   // Y′ (상하)
+
+      poseText.textContent =
+        `x:${Math.round(cx/MM_TO_M)}  y:${Math.round(cy/MM_TO_M)}  z:${Math.round(cz/MM_TO_M)}  pan:${pan.toFixed(2)}  tilt:${tilt.toFixed(2)}`;
+    };
+
+    // ===== 리사이즈 & 렌더 루프 =====
+    function resize(){
+      const w=canvas.clientWidth,h=canvas.clientHeight;
+      if(renderer.domElement.width!==w||renderer.domElement.height!==h){
+        renderer.setSize(w,h,false);
+        camera.aspect=w/h;
+        camera.updateProjectionMatrix();
+      }
+    }
+    function animate(){
+      requestAnimationFrame(animate);
+      resize(); controls.update();
+      renderer.render(scene,camera);
+    }
+    animate();
+
+    // ===== 데모 모드 (MQTT 없을 때 움직임 확인용) =====
+    (function demo(){
+      if(window.__DEMO_DISABLED__)return;
+      let t=0;
+      setInterval(()=>{
+        t+=0.02;
+        const x=(SIZE_X*0.5)+Math.sin(t)*(SIZE_X*0.4);
+        const y=(SIZE_Y*0.5)+Math.cos(t*0.6)*(SIZE_Y*0.4);
+        const z=(SIZE_Z*0.5)+Math.sin(t*0.8)*(SIZE_Z*0.45);
+        const pan=Math.sin(t*0.7)*0.6, tilt=Math.cos(t*0.9)*0.4;
+        window.updateRobotPose({x:x/MM_TO_M,y:y/MM_TO_M,z:z/MM_TO_M,pan,tilt});
+      },20);
+    })();
+</script>
+</body>
+</html>

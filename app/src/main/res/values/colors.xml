@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="background">#182a38</color>
+    <color name="rowBackground">#20AAAAAA</color>
+    <color name="squareBackground">#243541</color>
+    <color name="titleBoxBackground">#314b5c</color>
+    <color name="locationBoxBackground">#3a4a54</color>
+    <color name="houseBoxBackground">#e95d0c</color>
+    <color name="button">#2f4d6a</color>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#eeeeee</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="text_color_basic">#565656</color>
+    <color name="text_color_smaller">#888</color>
+    <color name="text_color_primary">#fdfcfc</color>
+    <color name="actionbar_text_title">#ffffff</color>
+    <color name="menu_color">#999</color>
+    <color name="menu_color_select">#454545</color>
+    <color name="background_color">#f2f5f8</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="transparent_f">#30FFFFFF</color>
+
+    <color name="count_color">#db5c1e</color>
+    <color name="value_color">#3d3d3d</color>
+    <color name="option_name">#6d6d6d</color>
+    <color name="date_grey">#8b8b8b</color>
+    <color name="list_add">#1AFFFFFF</color>
+    <color name="list_add_black">#1A000000</color>
+    <color name="actionbar_bg2">#3b7891</color>
+    <color name="node_top_def">#00b9ad</color>
+    <color name="node_top_share">#db5c1e</color>
+    <color name="channel_connect">#8b8b8b</color>
+    <color name="channel_request">#D81B60</color>
+    <color name="work_box">#843c0c</color>
+    <color name="touch_on">#D81B60</color>
+    <color name="touch_off">#3b7891</color>
+    <color name="touch_disable">#6d6d6d</color>
+    <color name="monit_on">#D81B60</color>
+    <color name="monit_off">#ffffff</color>
+
+    <color name="step_working">#006d00</color>
+    <color name="step_select">#fcff00</color>
+    <color name="step_ready">#777</color>
+    <color name="step_disable">#35aaaaaa</color>
+
+
+    <color name="search_btn">#3b7891</color>
+
+    <color name="shadow_start" tools:ignore="MissingDefaultResource">#40000000</color>
+    <color name="shadow_end" tools:ignore="MissingDefaultResource">#00000000</color>
+
+    <color name="feedValueDef">#3D3D3D</color>
+    <color name="feedValueMin">#0090ff</color>
+    <color name="feedValueMax">#d13428</color>
+    <array name="poliLines">
+        <item>#eb6868</item>
+        <item>#008eff</item>
+        <item>#ff8a00</item>
+        <item>#00db05</item>
+        <item>#fc00ff</item>
+        <item>#00fcff</item>
+        <item>#fcff00</item>
+        <item>#8e51ff</item>
+    </array>
+    <color name="hidePolyLines">@android:color/transparent</color>
+
+    <color name="chargingRobot">#f3f6f4</color>
+</resources>

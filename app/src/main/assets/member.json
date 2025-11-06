@@ -1,0 +1,17 @@
+[
+  {
+    "id" : "pro",
+    "password" : "1234",
+    "name" : "제작사"
+  },
+  {
+    "id" : "admin",
+    "password" : "1234",
+    "name" : "관리자"
+  },
+  {
+    "id" : "test",
+    "password" : "1234",
+    "name" : "사용자"
+  }
+]
