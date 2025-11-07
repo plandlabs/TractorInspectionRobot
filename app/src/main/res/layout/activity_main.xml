@@ -10,7 +10,7 @@
     tools:context=".views.activity.MainActivity"
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
-    <include layout="@layout/activity_main_top_and_left_monit_and_view_pager"
+    <include layout="@layout/activity_main_top_and_view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
     <com.google.android.material.navigation.NavigationView

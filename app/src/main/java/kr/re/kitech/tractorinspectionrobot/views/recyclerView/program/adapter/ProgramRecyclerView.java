@@ -1,4 +1,4 @@
-package kr.re.kitech.tractorinspectionrobot.views.recyclerView.logWork.adapter;
+package kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,21 +15,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.helper.ItemTouchHelper;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.logWork.model.WorkLogItem;
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.model.ProgramItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class WorkLogRecyclerView extends RecyclerView.Adapter<WorkLogRecyclerView.ViewHolder>
+public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerView.ViewHolder>
         implements ItemTouchHelper {
     private Context context;
-    private ArrayList<WorkLogItem> data;
+    private ArrayList<ProgramItem> data;
     private LayoutInflater inflater;
     public int selectPosition = 0;
     private Vibrator mVibrator;
 
-    public WorkLogRecyclerView(ArrayList<WorkLogItem> data, Context context) {
+    public ProgramRecyclerView(ArrayList<ProgramItem> data, Context context) {
         this.data = data;
         this.context = context;
         this.inflater = LayoutInflater.from(context);
@@ -71,7 +71,7 @@ public class WorkLogRecyclerView extends RecyclerView.Adapter<WorkLogRecyclerVie
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_log_work, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_program, parent, false);
 
         ViewHolder viewHolder = new ViewHolder(view);
 
@@ -87,32 +87,14 @@ public class WorkLogRecyclerView extends RecyclerView.Adapter<WorkLogRecyclerVie
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (payloads.isEmpty()) {
-            WorkLogItem item = data.get(position);
+            ProgramItem item = data.get(position);
             // 기본 뷰 설정
             holder.num.setText(String.valueOf(item.getNum()));
-            holder.startDatetime.setText(item.getStartDatetime());
-            holder.endDatetime.setText(item.getEndDatetime());
-            int diff = item.getDiff();
-            if (diff >= 60) {
-                int min = diff / 60;
-                int sec = diff % 60;
-                holder.diff.setText(min + "분 " + sec + "초");
-            } else if(diff < 1){
-                holder.diff.setText("-");
-            } else {
-                holder.diff.setText(diff + "초");
-            }
-            holder.field.setText(item.getField()+ " 구역");
-            holder.floor.setText(item.getFloor() + " 층");
-            if(item.isForced()){
-                holder.value.setText("작업중단");
-            }else {
-                if("-".equals(item.getEndDatetime())){
-                    holder.value.setText("작업중");
-                }else {
-                    holder.value.setText("작업완료");
-                }
-            }
+            holder.vx.setText(String.valueOf(item.getVx()));
+            holder.vy.setText(String.valueOf(item.getVy()));
+            holder.vz.setText(String.valueOf(item.getVz()));
+            holder.cx.setText(String.valueOf(item.getCx()));
+            holder.cy.setText(String.valueOf(item.getCy()));
             if(item.getNum() % 2 == 1) {
                 holder.background.setBackgroundResource(R.color.rowBackground);
             }else{
@@ -140,19 +122,18 @@ public class WorkLogRecyclerView extends RecyclerView.Adapter<WorkLogRecyclerVie
 
     // 뷰 바인딩 부분을 한번만 하도록, ViewHolder 패턴 의무화
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView num, startDatetime, endDatetime, diff, field, floor, value;
+        TextView num, vx, vy, vz, cx, cy;
         TableRow background;
 
         public ViewHolder(View view) {
             super(view);
 
             num = (TextView) view.findViewById(R.id.num);
-            startDatetime = (TextView) view.findViewById(R.id.start_datetime);
-            endDatetime = (TextView) view.findViewById(R.id.end_datetime);
-            diff = (TextView) view.findViewById(R.id.diff);
-            field = (TextView) view.findViewById(R.id.field);
-            floor = (TextView) view.findViewById(R.id.floor);
-            value = (TextView) view.findViewById(R.id.value);
+            vx = (TextView) view.findViewById(R.id.vx);
+            vy = (TextView) view.findViewById(R.id.vy);
+            vz = (TextView) view.findViewById(R.id.vz);
+            cx = (TextView) view.findViewById(R.id.cx);
+            cy = (TextView) view.findViewById(R.id.cy);
             background = (TableRow) view.findViewById(R.id.background);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

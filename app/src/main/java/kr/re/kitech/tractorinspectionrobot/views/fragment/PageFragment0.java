@@ -29,20 +29,23 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.detector.XScrollDetector;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModelBridge;
 import kr.re.kitech.tractorinspectionrobot.views.activity.MainActivity;
-import kr.re.kitech.tractorinspectionrobot.views.component.ControlDrivenTouchButtons;
-import kr.re.kitech.tractorinspectionrobot.views.component.ControlMovementTouchButtons;
-import kr.re.kitech.tractorinspectionrobot.views.component.ControlSpeedMonitAndButtons;
+import kr.re.kitech.tractorinspectionrobot.views.component.ControlCameraMovementTouchButtons;
+import kr.re.kitech.tractorinspectionrobot.views.component.ControlVimMovementTouchButtons;
 
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
 
 import java.text.DecimalFormat;
 
+import kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera;
+import kr.re.kitech.tractorinspectionrobot.views.component.MonitProgram;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitSimulation;
 import okhttp3.OkHttpClient;
 
@@ -80,8 +83,10 @@ public class PageFragment0 extends Fragment {
     private LinearLayout wrapLinear;
 
     private MonitSimulation monitSimulation;
-    private ControlMovementTouchButtons controlMovementTouchButtons;
-    private ControlSpeedMonitAndButtons controlSpeedMonitAndButtons;
+    private MonitProgram monitProgram;
+    private ControlVimMovementTouchButtons controlVimMovementTouchButtons;
+    private MonitCamera monitCamera;
+    private ControlCameraMovementTouchButtons controlCameraMovementTouchButtons;
 
     public static PageFragment0 newInstance(){
         PageFragment0 pageActivity = new PageFragment0();
@@ -137,8 +142,10 @@ public class PageFragment0 extends Fragment {
 
 
         monitSimulation = linearLayout.findViewById(R.id.monit_simulation);
-        controlMovementTouchButtons = linearLayout.findViewById(R.id.control_movement_touch_buttons);
-        controlSpeedMonitAndButtons =  linearLayout.findViewById(R.id.control_speed_custom_view);
+        monitProgram = linearLayout.findViewById(R.id.monit_program);
+        controlVimMovementTouchButtons = linearLayout.findViewById(R.id.control_vim_movement_touch_buttons);
+        monitCamera = linearLayout.findViewById(R.id.monit_camera);
+        controlCameraMovementTouchButtons = linearLayout.findViewById(R.id.control_camera_movement_touch_buttons);
 
         this.onConfigurationChanged(mConfiguration);
 
@@ -158,22 +165,14 @@ public class PageFragment0 extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-//        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
-//        viewModel.getCoilDataMap().observe(getViewLifecycleOwner(), coilDataMap -> {
-//            if (coilDataMap != null) {
-//                resCoilDataMap = coilDataMap;
-//            }
-//        });
-//        viewModel.getHoldingDataMap().observe(getViewLifecycleOwner(), holdingDataMap -> {
-//            if (holdingDataMap != null) {
-//                resHoldingDataMap = holdingDataMap;
-//            }
-//        });
-//        viewModel.getSocketService().observe(getViewLifecycleOwner(), socketService -> {
-//            if (socketService != null) {
-//                resCustomSocketService = socketService;
-//            }
-//        });
+        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
+        SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
+
+        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
+        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
+        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
+        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
 
 
@@ -186,10 +185,6 @@ public class PageFragment0 extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
-        controlMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
-        controlSpeedMonitAndButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
     public ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),

@@ -4,7 +4,6 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="50dp"
     android:background="@color/background">
         <LinearLayout
             android:id="@+id/viewBox"
@@ -62,17 +61,18 @@
                                     android:id="@+id/ctrlBox"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:layout_weight="1.5"
+                                    android:layout_weight="1"
                                     >
-                                        <include layout="@layout/fragment_page_1_middle"
-                                            android:layout_width="match_parent"
-                                            android:layout_height="match_parent" />
+                                    <kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera
+                                        android:id="@+id/monit_camera"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent" />
                                 </LinearLayout>
                                 <LinearLayout
                                     android:id="@+id/stateBox"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:layout_weight="2"
+                                    android:layout_weight="3"
                                     android:orientation="horizontal">
                                         <LinearLayout
                                             android:id="@+id/rightBox"
@@ -81,9 +81,10 @@
                                             android:orientation="vertical"
                                             android:paddingBottom="15sp"
                                             >
-                                                <include layout="@layout/fragment_page_emergency_control_speed_right"
-                                                    android:layout_width="match_parent"
-                                                    android:layout_height="match_parent"/>
+                                            <kr.re.kitech.tractorinspectionrobot.views.component.ControlCameraMovementTouchButtons
+                                                android:id="@+id/control_camera_movement_touch_buttons"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"/>
                                         </LinearLayout>
                                 </LinearLayout>
                         </LinearLayout>

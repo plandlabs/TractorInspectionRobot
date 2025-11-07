@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">검사 구동 로봇</string>
     <string name="app_name_short">검사 구동 로봇</string>
-    <string name="powered_by">powered by G-Tech.</string>
+    <string name="powered_by">powered by plan D labs.</string>
 
     <string name="prompt_email">Email</string>
     <string name="prompt_id">ID</string>
@@ -33,8 +33,8 @@
     <string name="set_update_text">※ 이 기기를 활용할 품목과 수확량을 입력해주세요.</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email completions."</string>
 
-    <string name="bottom_menu_00">관리자 주행</string>
-    <string name="bottom_menu_01">일반 주행</string>
+    <string name="bottom_menu_00">대시보드</string>
+    <string name="bottom_menu_01">카메라</string>
     <string name="bottom_menu_02">계단 상행</string>
     <string name="bottom_menu_03">계단 회전</string>
     <string name="bottom_menu_04">계단 하행</string>

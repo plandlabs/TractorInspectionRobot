@@ -42,17 +42,17 @@ public class StateLoops {
             } catch (Throwable t) { Log.w(TAG,"ping loop: "+t.getMessage()); }
         }, PING_SEC, PING_SEC, TimeUnit.SECONDS);
 
-        sch.scheduleAtFixedRate(() -> {
-            try {
-                if (mqtt.isConnected()) {
-                    int bat = (bm != null) ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) : -1;
-                    int rssi = -127;
-                    try { WifiInfo info = wifi.getConnectionInfo(); rssi = (info!=null)? info.getRssi():-127; } catch (SecurityException ignore) {}
-                    JSONObject state = new JSONObject().put("name", name).put("battery", bat).put("rssi", rssi).put("ts", System.currentTimeMillis());
-                    mqtt.publishJson("devices/"+name+"/state", state, MqttQos.AT_MOST_ONCE,false);
-                }
-            } catch (Throwable t) { Log.w(TAG,"state loop: "+t.getMessage()); }
-        }, 2, STATE_SEC, TimeUnit.SECONDS);
+//        sch.scheduleAtFixedRate(() -> {
+//            try {
+//                if (mqtt.isConnected()) {
+//                    int bat = (bm != null) ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) : -1;
+//                    int rssi = -127;
+//                    try { WifiInfo info = wifi.getConnectionInfo(); rssi = (info!=null)? info.getRssi():-127; } catch (SecurityException ignore) {}
+//                    JSONObject state = new JSONObject().put("name", name).put("battery", bat).put("rssi", rssi).put("ts", System.currentTimeMillis());
+//                    mqtt.publishJson("devices/"+name+"/state", state, MqttQos.AT_MOST_ONCE,false);
+//                }
+//            } catch (Throwable t) { Log.w(TAG,"state loop: "+t.getMessage()); }
+//        }, 2, STATE_SEC, TimeUnit.SECONDS);
     }
     public void stop(){ sch.shutdownNow(); }
 }

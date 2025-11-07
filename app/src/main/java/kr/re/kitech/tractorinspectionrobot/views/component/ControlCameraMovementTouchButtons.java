@@ -11,30 +11,30 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 
 import kr.re.kitech.tractorinspectionrobot.R;
-
+import kr.re.kitech.tractorinspectionrobot.listener.touch.BtnTouchUpDownListener;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 
-public class ControlMovementTouchButtons extends LinearLayout {
+public class ControlCameraMovementTouchButtons extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    public Button btnForward, btnBackward, btnLeftWard, btnRightward;
+    public Button btnUp, btnDown, btnLeftWard, btnRightward;
 
 
-    public ControlMovementTouchButtons(Context context) {
+    public ControlCameraMovementTouchButtons(Context context) {
         super(context);
         init(context);
     }
 
-    public ControlMovementTouchButtons(Context context, @Nullable AttributeSet attrs) {
+    public ControlCameraMovementTouchButtons(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
     private void init(Context context) {
-        inflate(context, R.layout.component_control_movement_touch_buttons, this);
+        inflate(context, R.layout.component_control_camera_movement_touch_buttons, this);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        btnForward = findViewById(R.id.btn_forward);
-        btnBackward = findViewById(R.id.btn_backward);
+        btnUp = findViewById(R.id.btn_up);
+        btnDown = findViewById(R.id.btn_down);
         btnLeftWard = findViewById(R.id.btn_leftward);
         btnRightward = findViewById(R.id.btn_rightward);
     }
@@ -43,6 +43,50 @@ public class ControlMovementTouchButtons extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+        btnUp.setOnTouchListener(
+                new BtnTouchUpDownListener(
+                        getContext(),
+                        "y'",
+                        R.color.touch_on,
+                        R.color.touch_off,
+                        true,
+                        1,
+                        300
+                )
+        );
+        btnDown.setOnTouchListener(
+                new BtnTouchUpDownListener(
+                        getContext(),
+                        "y'",
+                        R.color.touch_on,
+                        R.color.touch_off,
+                        false,
+                        1,
+                        300
+                )
+        );
+        btnRightward.setOnTouchListener(
+                new BtnTouchUpDownListener(
+                        getContext(),
+                        "x'",
+                        R.color.touch_on,
+                        R.color.touch_off,
+                        true,
+                        1,
+                        300
+                )
+        );
+        btnLeftWard.setOnTouchListener(
+                new BtnTouchUpDownListener(
+                        getContext(),
+                        "x'",
+                        R.color.touch_on,
+                        R.color.touch_off,
+                        false,
+                        1,
+                        300
+                )
+        );
         // 관찰 가능!
 //        viewModel.getSocketService().observe(lifecycleOwner, socketService -> {
 //            if (socketService != null) {

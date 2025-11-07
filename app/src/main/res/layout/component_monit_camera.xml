@@ -27,11 +27,11 @@
                     android:layout_height="wrap_content"
                     android:textAlignment="gravity"
                     style="@style/tabTopTitle"
-                    android:text="시뮬레이션"/>
+                    android:text="카메라"/>
             </LinearLayout>
         </LinearLayout>
         <WebView
-            android:id="@+id/robotSimulation"
+            android:id="@+id/robotCam"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
     </LinearLayout>

@@ -45,14 +45,11 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.android.material.tabs.TabLayout;
-import kr.re.kitech.tractorinspectionrobot.R;
 
+import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.views.tapPager.NonSwipeViewPager;
 import kr.re.kitech.tractorinspectionrobot.views.tapPager.TabFragmentPagerAdapter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends FragmentActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -60,7 +57,6 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     private FragmentTransaction transaction;
     private Resources mResources;
     private Configuration mConfiguration;
-    private String[] recieveKey;
     public static Context mContext;
     private BottomNavigationView mBottomNavigationView;
     private NavigationRailView mRightNavigationView;
@@ -80,48 +76,32 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
 
     String[] PERMISSIONS_M = {
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
     };
 
     String[] PERMISSIONS_S = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.POST_NOTIFICATIONS,
-            //Manifest.permission.READ_EXTERNAL_STORAGE,
-            //Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
-    private final static int REQUEST_ACCESS_FINE_LOCATION = 100;
-    private final static int REQUEST_READ_PHONE_STATE = 101;
-    private static final int REQUEST_CAMERA = 102;
-    private static final int REQUEST_WRITE_EXTERNAL_STORAGE = 103;
-    private static final int REQUEST_READ_EXTERNAL_STORAGE = 103;
 
     private NavigationView mNavView;
     private TextView memberNm;
-    private static final int SERVER_PORT = 3000; // 서버 포트
-    // LiveData 또는 ViewModel로 데이터 전달을 위해 선언
-    private SharedMqttViewModel viewModel;
 
+    // LiveData 전달용
+    private SharedMqttViewModel viewModel;
 
     TabFragmentPagerAdapter mSectionsPagerAdapter;
     NonSwipeViewPager mViewPager;
     TabLayout mTabLayout;
 
     int tabCnt = 2;
-    private Handler socketHandler = new Handler();
 
     private View btnOpen, btnRobotChange;
+    private boolean isMqttConnected = false;
 
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         mContext = this;
@@ -133,63 +113,60 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PERMISSIONS = PERMISSIONS_S;
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             PERMISSIONS = PERMISSIONS_M;
         }
-
         checkPermissions();
 
-        backHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if(msg.what == 0) {
-                    mFlag = false;
-                }
-            }
-        };
+        backHandler = new Handler() { @Override public void handleMessage(Message msg) { if(msg.what == 0) mFlag = false; } };
 
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        setting = (SharedPreferences) getSharedPreferences("setting", 0);
+        setting = getSharedPreferences("setting", 0);
         editor = setting.edit();
-
 
         mResources = Resources.getSystem();
         mConfiguration = mResources.getConfiguration();
 
-        // 첫 화면 지정
-        transaction = (FragmentTransaction) fragmentManager.beginTransaction();
+        transaction = fragmentManager.beginTransaction();
 
-
-        drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+        drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.addDrawerListener(listener);
 
-        mViewPager = (NonSwipeViewPager) findViewById(R.id.viewPager);
-        mTabLayout = (TabLayout) findViewById(R.id.mTabLayout);
+        mViewPager = findViewById(R.id.viewPager);
+        mTabLayout  = findViewById(R.id.mTabLayout);
         mSectionsPagerAdapter = new TabFragmentPagerAdapter(fragmentManager, tabCnt, mContext, setting);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mTabLayout.setupWithViewPager(mViewPager);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
 
+        btnRobotChange = findViewById(R.id.btn_robot_change);
+        btnOpen        = findViewById(R.id.btnOpen);
 
-        mNavView = (NavigationView) findViewById(R.id.navView);
-        if (mNavView != null) {
-            mNavView.setNavigationItemSelectedListener(this);
-        }
+        mNavView = findViewById(R.id.navView);
+        if (mNavView != null) mNavView.setNavigationItemSelectedListener(this);
 
-        btnOpen = (View) findViewById(R.id.btnOpen);
         btnOpen.setOnClickListener(v -> {
             mVibrator.vibrate(100);
             drawerLayout.openDrawer(mNavView);
         });
-        btnRobotChange = (View) findViewById(R.id.btn_robot_change);
-        btnRobotChange.setOnClickListener(v -> {
-            mVibrator.vibrate(100);
-        });
-
 
         viewModel = new ViewModelProvider(this).get(SharedMqttViewModel.class);
 
+        // 옵저버: 캐시 + UI 동기화
+        viewModel.getMqttConnected().observe(this, connected -> {
+            isMqttConnected = Boolean.TRUE.equals(connected);
+            updateRobotChangeButton(isMqttConnected);
+        });
+
+        // 토글 버튼
+        btnRobotChange.setOnClickListener(v -> {
+            mVibrator.vibrate(80);
+            if (isMqttConnected) {
+                showDisconnectConfirm();
+            } else {
+                showConnectConfirm();;
+            }
+        });
 
         this.onConfigurationChanged(mConfiguration);
     }
@@ -197,11 +174,7 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         mVibrator.vibrate(100);
-        Log.e("item.getItemId()", "============>"+item.getItemId());
-
-        if(item.getItemId() == R.id.nav_side_2){
-
-        }else if(item.getItemId() == R.id.nav_side_3){
+        if(item.getItemId() == R.id.nav_side_3){
             LogoutAlertDialog();
         }
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -209,32 +182,17 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     }
 
     DrawerLayout.DrawerListener listener = new DrawerLayout.DrawerListener() {
-        @Override
-        public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
-            //슬라이드 했을때
-        }
-
-        @Override
-        public void onDrawerOpened(@NonNull View drawerView) {
-            //Drawer가 오픈된 상황일때 호출
+        @Override public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
+        @Override public void onDrawerOpened(@NonNull View drawerView) {
             try {
-                memberNm = (TextView) findViewById(R.id.member_nm);
+                memberNm = findViewById(R.id.member_nm);
                 memberNm.setText(setting.getString("USER_NM", "") + "(" + setting.getString("ID", "") + ")님");
-            } catch (NullPointerException e){
-                Log.e("mUserNm", "mUserNm is null!");
-            }
+            } catch (NullPointerException e){ Log.e("mUserNm", "mUserNm is null!"); }
         }
-
-        @Override
-        public void onDrawerClosed(@NonNull View drawerView) {
-            // 닫힌 상황일 때 호출
-        }
-
-        @Override
-        public void onDrawerStateChanged(int newState) {
-            // 특정상태가 변결될 때 호출
-        }
+        @Override public void onDrawerClosed(@NonNull View drawerView) {}
+        @Override public void onDrawerStateChanged(int newState) {}
     };
+
     private void checkPermissions() {
         if (!hasPermissions(this, PERMISSIONS)) {
             Log.e(TAG, "hasPermissions = false !!");
@@ -254,57 +212,21 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         }
         return true;
     }
-    private void startPermissionRequest(int REQUEST_PERMISSIONS_REQUEST_CODE, String PERMISSIONS_NAME) {
-        ActivityCompat.requestPermissions(this,
-                new String[] {PERMISSIONS_NAME} , REQUEST_PERMISSIONS_REQUEST_CODE);
-    }
-    private class splashhandler implements Runnable {
-        public void run() {
-            setting = getSharedPreferences("setting", 0);
-            //startActivity(new Intent(getApplication(), LoginActivity.class)); // 로딩이 끝난후 이동할 Activity
-            finish();
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        int grantResultsAll = 0;
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            if(grantResults.length > 0) {
-
-                for (int i=0; i<grantResults.length; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        Log.d(TAG, "Permission: " + permissions[i] + " was " + grantResults[i]);
-                    }
-                    else {
-                        Log.d(TAG, "Permission: " + permissions[i] + " was " + grantResults[i]);
-                    }
-
-                    grantResultsAll += grantResults[i];
-                }
-
-            }
             checkBatteryOptimization();
-
-        }
-
-        if (grantResultsAll == 0) {
-
-        } else {
-            Toast.makeText(this, "승인되지 않은 권한이 있습니다.", Toast.LENGTH_LONG).show();
         }
     }
-    private final Map<String, AlertDialog> errorDialogMap = new HashMap<>();
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onResume() {
         super.onResume();
-// Tab 커스텀 뷰 설정 후
+
+        // 탭 커스텀
         for (int i = 0; i < mTabLayout.getTabCount(); i++) {
             TabLayout.Tab tab = mTabLayout.getTabAt(i);
             if (tab != null) {
@@ -312,52 +234,33 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
                 TextView tabText = customTabView.findViewById(R.id.tab_text);
                 tabText.setText(mSectionsPagerAdapter.getPageTitle(i));
                 tab.setCustomView(customTabView);
-
-                // ✅ 첫 번째 탭은 선택 배경으로 초기화
-                if (i == 0) {
-                    customTabView.setBackgroundResource(R.drawable.tab_selected_background);
-                }
+                if (i == 0) customTabView.setBackgroundResource(R.drawable.tab_selected_background);
             }
         }
-
-        // Set TabSelectedListener
         mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
+            @Override public void onTabSelected(TabLayout.Tab tab) {
                 mVibrator.vibrate(50);
                 View tabView = tab.getCustomView();
-                if (tabView != null) {
-                    tabView.setBackgroundResource(R.drawable.tab_selected_background);
-                }
-                int position = tab.getPosition();
-
-                // 관리자 여부
-                boolean isAdmin = "admin".equals(setting.getString("ID", ""));
+                if (tabView != null) tabView.setBackgroundResource(R.drawable.tab_selected_background);
             }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
+            @Override public void onTabUnselected(TabLayout.Tab tab) {
                 View tabView = tab.getCustomView();
-                if (tabView != null) {
-                    tabView.setBackgroundResource(R.drawable.tab_unselected_background);
-                }
+                if (tabView != null) tabView.setBackgroundResource(R.drawable.tab_unselected_background);
             }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) { }
-
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
+
+        // 즉시 반영(캐시)
+        Boolean last = viewModel.getMqttConnected().getValue();
+        isMqttConnected = (last != null && last);
+        updateRobotChangeButton(isMqttConnected);
+
+        // 서비스에 현재 상태 요청 → 브로드캐스트 수신 시 옵저버로 최종 동기화
+        viewModel.requestStatus();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
+    @Override protected void onPause() { super.onPause(); }
+    @Override protected void onDestroy() { super.onDestroy(); }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -365,14 +268,6 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int dpi = displayMetrics.densityDpi;
-    }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==1){
-            if(resultCode==RESULT_OK){
-            }
-        }
     }
 
     @Override
@@ -384,8 +279,7 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
             int x = (int) ev.getX(), y = (int) ev.getY();
             if (!rect.contains(x, y)) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null)
-                    imm.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
+                if (imm != null) imm.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
                 focusView.clearFocus();
             }
         }
@@ -394,16 +288,13 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
 
     @SuppressLint("GestureBackNavigation")
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-
-        // 백 키를 터치한 경우
         if(keyCode == KeyEvent.KEYCODE_BACK){
-
             drawerLayout.closeDrawer(GravityCompat.START);
             if(!mFlag) {
                 mVibrator.vibrate(100);
                 Toast.makeText(this, "'뒤로' 버튼을 한번 더 누르시면 종료하실 수 있습니다.", Toast.LENGTH_SHORT).show();
                 mFlag = true;
-                backHandler.sendEmptyMessageDelayed(0, 2000); // 2초 내로 터치시
+                backHandler.sendEmptyMessageDelayed(0, 2000);
                 return false;
             } else {
                 mVibrator.vibrate(100);
@@ -411,77 +302,51 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
                 return false;
             }
         }
-
         return super.onKeyDown(keyCode, event);
     }
 
     protected void LogoutAlertDialog() {
         drawerLayout.closeDrawer(GravityCompat.START);
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.DarkAlertDialog);
-        builder.setTitle("로그아웃");
-        builder.setMessage("로그아웃 하시겠습니까?");
-        builder.setPositiveButton("확인",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        mVibrator.vibrate(100);
-
-                        editor.remove("ID");
-                        editor.remove("PW");
-                        editor.remove("Auto_Login_enabled");
-                        editor.commit();
-                        startActivity(new Intent(getApplication(), LoginActivity.class));
-
-                        Toast.makeText(getApplication(),"로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                });
-
-        builder.setNegativeButton("취소",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        mVibrator.vibrate(100);
-                    }
-                });
-        builder.show();
+        new AlertDialog.Builder(mContext, R.style.DarkAlertDialog)
+                .setTitle("로그아웃")
+                .setMessage("로그아웃 하시겠습니까?")
+                .setPositiveButton("확인", (dialog, which) -> {
+                    mVibrator.vibrate(100);
+                    editor.remove("ID");
+                    editor.remove("PW");
+                    editor.remove("Auto_Login_enabled");
+                    editor.commit();
+                    startActivity(new Intent(getApplication(), LoginActivity.class));
+                    Toast.makeText(getApplication(),"로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .setNegativeButton("취소", (dialog, which) -> mVibrator.vibrate(100))
+                .show();
     }
+
     private void checkBatteryOptimization() {
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         String packageName = getPackageName();
-
         if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            // 배터리 최적화 예외 처리 요청
             showBatteryOptimizationDialog();
         }
     }
 
     private void showBatteryOptimizationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.DarkAlertDialog);
-        builder.setTitle("배터리 최적화 예외 요청");
-        builder.setMessage("이 앱이 백그라운드에서 안정적으로 동작하려면 배터리 최적화에서 제외해야 합니다. 설정 화면으로 이동하시겠습니까?");
-        builder.setPositiveButton("예", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // 설정 화면으로 이동
-                requestBatteryOptimizationException();
-            }
-        });
-        builder.setNegativeButton("아니요", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // 사용자가 거부했을 때 처리할 코드
-                Toast.makeText(MainActivity.this, "배터리 최적화로 인해 앱이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setCancelable(false);
-        builder.show();
+        new AlertDialog.Builder(mContext, R.style.DarkAlertDialog)
+                .setTitle("배터리 최적화 예외 요청")
+                .setMessage("이 앱이 백그라운드에서 안정적으로 동작하려면 배터리 최적화에서 제외해야 합니다. 설정 화면으로 이동하시겠습니까?")
+                .setPositiveButton("예", (dialog, which) -> requestBatteryOptimizationException())
+                .setNegativeButton("아니요", (dialog, which) ->
+                        Toast.makeText(MainActivity.this, "배터리 최적화로 인해 앱이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
+                )
+                .setCancelable(false)
+                .show();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestBatteryOptimizationException() {
         try {
-//            Intent intent = new Intent();
-//            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-//            startActivity(intent);
             Intent i = new Intent();
             String packageName = getPackageName();
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -498,6 +363,59 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         }
     }
 
+    private void updateRobotChangeButton(boolean connected) {
+        if (btnRobotChange == null) return;
+        isMqttConnected = connected; // 캐시 동기화
+
+        int color = androidx.core.content.ContextCompat.getColor(
+                this, connected ? R.color.mqtt_connected : R.color.mqtt_disconnected
+        );
+
+        try {
+            if (btnRobotChange instanceof android.widget.ImageView) {
+                ((android.widget.ImageView) btnRobotChange)
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+            } else {
+                btnRobotChange.setBackgroundColor(color);
+            }
+
+            if (btnRobotChange instanceof android.widget.TextView) {
+                ((android.widget.TextView) btnRobotChange).setText(
+                        connected ? "연결됨 • 누르면 해제" : "연결하기"
+                );
+            }
+            btnRobotChange.setContentDescription(
+                    connected ? "MQTT 연결됨, 누르면 연결 해제" : "MQTT 연결하기"
+            );
+
+        } catch (Exception e) {
+            btnRobotChange.setBackgroundColor(color);
+        }
+    }
+
+    private void showConnectConfirm() {
+        new AlertDialog.Builder(this, R.style.DarkAlertDialog)
+                .setTitle("MQTT 연결")
+                .setMessage("서버와 MQTT 연결을 하시겠습니까?")
+                .setPositiveButton("예", (d, w) -> {
+                    mVibrator.vibrate(80);
+                    viewModel.startServiceForConnect();
+                    Toast.makeText(this, "MQTT 연결 시도…", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("아니오", (d, w) -> mVibrator.vibrate(50))
+                .show();
+    }
+
+    private void showDisconnectConfirm() {
+        new AlertDialog.Builder(this, R.style.DarkAlertDialog)
+                .setTitle("MQTT 연결 중지")
+                .setMessage("연결을 중지할까요?")
+                .setPositiveButton("예", (d, w) -> {
+                    mVibrator.vibrate(80);
+                    viewModel.requestDisconnect();
+                    Toast.makeText(this, "MQTT 연결 해제", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("아니오", (d, w) -> mVibrator.vibrate(50))
+                .show();
+    }
 }
-
-

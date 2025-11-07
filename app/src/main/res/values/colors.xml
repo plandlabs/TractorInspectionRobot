@@ -17,7 +17,7 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#eeeeee</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="text_color_basic">#565656</color>
+    <color name="text_color_basic">#fff</color>
     <color name="text_color_smaller">#888</color>
     <color name="text_color_primary">#fdfcfc</color>
     <color name="actionbar_text_title">#ffffff</color>
@@ -72,4 +72,7 @@
     <color name="hidePolyLines">@android:color/transparent</color>
 
     <color name="chargingRobot">#f3f6f4</color>
+    <!--ㅡmqtt-->
+    <color name="mqtt_connected">#FFFFFF</color>
+    <color name="mqtt_disconnected">#555555</color>
 </resources>

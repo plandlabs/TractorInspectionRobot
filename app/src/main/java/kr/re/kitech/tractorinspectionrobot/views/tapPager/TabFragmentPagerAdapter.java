@@ -52,7 +52,7 @@ public class TabFragmentPagerAdapter extends FragmentPagerAdapter {
             case 0:
                 return context.getString(R.string.bottom_menu_00);
             case 1:
-                return context.getString(R.string.bottom_menu_00);
+                return context.getString(R.string.bottom_menu_01);
         }
         return null;
     }

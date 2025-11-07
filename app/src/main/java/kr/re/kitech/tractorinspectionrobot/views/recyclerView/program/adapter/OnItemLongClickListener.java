@@ -1,4 +1,4 @@
-package kr.re.kitech.tractorinspectionrobot.views.recyclerView.logWork.adapter;
+package kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter;
 
 import android.view.View;
 

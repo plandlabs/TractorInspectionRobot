@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="50dp"
     android:background="@color/background">
         <LinearLayout
             android:id="@+id/viewBox"
@@ -83,11 +83,69 @@
                                             android:orientation="vertical"
                                             android:paddingBottom="15sp"
                                             >
-                                                <include layout="@layout/fragment_page_emergency_control_speed_right"
+                                            <ScrollView
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent">
+                                                <LinearLayout
                                                     android:layout_width="match_parent"
-                                                    android:layout_height="match_parent"/>
+                                                    android:layout_height="match_parent"
+                                                    android:orientation="vertical">
+                                                    <LinearLayout
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"
+                                                        android:layout_marginBottom="5dp"
+                                                        android:orientation="vertical">
+                                                        <kr.re.kitech.tractorinspectionrobot.views.component.MonitProgram
+                                                            android:id="@+id/monit_program"
+                                                            android:layout_width="match_parent"
+                                                            android:layout_height="wrap_content"
+                                                            tools:ignore="TooDeepLayout" />
+                                                        <kr.re.kitech.tractorinspectionrobot.views.component.ControlVimMovementTouchButtons
+                                                            android:id="@+id/control_vim_movement_touch_buttons"
+                                                            android:layout_width="match_parent"
+                                                            android:layout_height="wrap_content"/>
+                                                    </LinearLayout>
+                                                </LinearLayout>
+                                            </ScrollView>
                                         </LinearLayout>
                                 </LinearLayout>
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="2"
+                                android:orientation="horizontal">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical"
+                                    android:paddingBottom="15sp"
+                                    >
+                                    <ScrollView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent">
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:orientation="vertical">
+                                            <LinearLayout
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginBottom="5dp"
+                                                android:orientation="vertical">
+                                                <kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera
+                                                    android:id="@+id/monit_camera"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="445dp"
+                                                    tools:ignore="TooDeepLayout" />
+                                                <kr.re.kitech.tractorinspectionrobot.views.component.ControlCameraMovementTouchButtons
+                                                    android:id="@+id/control_camera_movement_touch_buttons"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"/>
+                                            </LinearLayout>
+                                        </LinearLayout>
+                                    </ScrollView>
+                                </LinearLayout>
+                            </LinearLayout>
                         </LinearLayout>
 
                 </LinearLayout>

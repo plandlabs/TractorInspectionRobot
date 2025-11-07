@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -13,6 +14,8 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
+
+import org.json.JSONObject;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
@@ -23,6 +26,8 @@ public class MonitSimulation extends LinearLayout {
     private LifecycleOwner lifecycleOwner;
     private GridLayout gridLayout;
     private WebView robotSimulation;
+    private boolean pageReady = false;
+    private final java.util.ArrayList<String> pendingJs = new java.util.ArrayList<>();
 
 
     public MonitSimulation(Context context) {
@@ -34,6 +39,7 @@ public class MonitSimulation extends LinearLayout {
         super(context, attrs);
         init(context);
     }
+    @SuppressLint("SetJavaScriptEnabled")
     private void init(Context context) {
         inflate(context, R.layout.component_monit_simulation, this);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -42,10 +48,17 @@ public class MonitSimulation extends LinearLayout {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
-        if (Build.VERSION.SDK_INT >= 16) {
-            s.setAllowFileAccessFromFileURLs(true);
-            s.setAllowUniversalAccessFromFileURLs(true);
-        }
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(true);
+        WebView.setWebContentsDebuggingEnabled(true); // 콘솔 로그를 Logcat에서 보려면
+        robotSimulation.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
+                // 대기 중이던 JS 처리
+                flushPendingJs();
+            }
+        });
         robotSimulation.loadUrl("file:///android_asset/simulation/index.html");
     }
     @SuppressLint("ClickableViewAccessibility")
@@ -53,7 +66,41 @@ public class MonitSimulation extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+        viewModel.getDirectMessage().observe(lifecycleOwner, msg -> {
+            if (msg == null) return;
+            if (msg.topic.startsWith("robot/simulation/")) {
+                handleMqttMessage(msg.topic, msg.raw);
+            }
+        });
         // 관찰 가능!
+    }
+    private void handleMqttMessage(String topic, String payload) {
+        if (robotSimulation == null) return;
+
+        // JS 문자열 리터럴로 안전하게 인코딩
+        String js = "window.onMqttMessage && window.onMqttMessage("
+                + JSONObject.quote(topic)   // 'topic' 안전화
+                + ","
+                + JSONObject.quote(payload) // 'payload'를 "JSON 문자열"로 보냄
+                + ");";
+
+        runJs(js);
+    }
+    private void runJs(String js){
+        if (!pageReady){ pendingJs.add(js); return; }
+        robotSimulation.post(() -> {
+            if (Build.VERSION.SDK_INT >= 19) {
+                Log.w("robotSimulation.post 1",js);
+                robotSimulation.evaluateJavascript(js, null);
+            } else {
+                Log.w("robotSimulation.post 2",js);
+                robotSimulation.loadUrl("javascript:"+js);
+            }
+        });
+    }
+    private void flushPendingJs(){
+        for (String js : pendingJs) runJs(js);
+        pendingJs.clear();
     }
 
 }

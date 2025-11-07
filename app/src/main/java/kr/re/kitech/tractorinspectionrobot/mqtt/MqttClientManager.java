@@ -28,8 +28,10 @@ gracefulDisconnect()로 정상 종료(offline retain 후 disconnect).
  */
 public class MqttClientManager {
     public interface Listener {
-        void onConnected(); void onDisconnected(Throwable cause);
-        void onReject(String payload); void onPong(String payload); void onDirect(String subTopic, String payload);
+        void onConnected();
+        void onDisconnected(Throwable cause);
+        void onReject(String payload);
+        void onDirect(String subTopic, String payload);
     }
 
     private static final String TAG = "MqttClientManager";
@@ -59,10 +61,11 @@ public class MqttClientManager {
             String topic = p.getTopic().toString();
             String payload = new String(p.getPayloadAsBytes(), StandardCharsets.UTF_8);
             if (topic.equals("register/reject/" + clientId)) { if (listener!=null) listener.onReject(payload); }
-            else if (topic.equals("pong/" + name)) { if (listener!=null) listener.onPong(payload); }
             else if (topic.startsWith("direct/" + name + "/")) {
                 String sub = topic.substring(("direct/" + name + "/").length());
                 if (listener!=null) listener.onDirect(sub, payload);
+            } else if (topic.startsWith("robot/simulation/")) {
+                if (listener!=null) listener.onDirect(topic, payload); // subTopic 자리에 full topic 전달
             }
         });
     }
@@ -82,6 +85,7 @@ public class MqttClientManager {
             mqtt.subscribeWith().topicFilter("register/reject/"+clientId).qos(MqttQos.AT_LEAST_ONCE).send();
             mqtt.subscribeWith().topicFilter("direct/"+name+"/#").qos(MqttQos.AT_LEAST_ONCE).send();
             mqtt.subscribeWith().topicFilter("pong/"+name).qos(MqttQos.AT_MOST_ONCE).send();
+            mqtt.subscribeWith().topicFilter("robot/simulation/" + name).qos(MqttQos.AT_MOST_ONCE).send();
 
             publishJson("register", new JSONObject().put("name", name), MqttQos.AT_LEAST_ONCE,false);
             publishJson("presence/"+clientId, new JSONObject().put("name", name).put("status","online").put("ts", System.currentTimeMillis()), MqttQos.AT_LEAST_ONCE,true);
