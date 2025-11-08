@@ -66,9 +66,8 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             // 필요시 모든 메시지를 directMessage로도 남겨둠(디버깅/로그)
             postDirectMessage(topic, payload);
-            Log.w("robot/simulation/", payload);
 
-            if (topic.startsWith("robot/simulation/")) {
+            if (topic.startsWith("robot/simulation/")) {        // topic이 'robot/simulation' 일때 RobotState 아이템을 만듬
                 try {
                     JSONObject o = new JSONObject(payload);
                     RobotState cur = getOrDefault();

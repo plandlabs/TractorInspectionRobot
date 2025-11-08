@@ -13,6 +13,10 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+
+import lombok.Getter;
+import lombok.Setter;
+
 /*
 MqttClientManager (MQTT 전담)
 
@@ -40,7 +44,9 @@ public class MqttClientManager {
     private final String name;
     private final String clientId;
     private Mqtt3AsyncClient mqtt;
+    @Getter
     private volatile boolean connected = false;
+    @Setter
     private Listener listener;
 
     public MqttClientManager(String url, String name, String clientId) {
@@ -48,8 +54,6 @@ public class MqttClientManager {
         int idx = s.indexOf(':'); this.host = (idx>0)? s.substring(0,idx):s; this.port = (idx>0)? Integer.parseInt(s.substring(idx+1)):1883;
         this.name = name; this.clientId = clientId;
     }
-    public void setListener(Listener l){ this.listener = l; }
-    public boolean isConnected(){ return connected; }
 
     public void init() {
         mqtt = MqttClient.builder().useMqttVersion3().identifier(clientId)
@@ -77,27 +81,70 @@ public class MqttClientManager {
         if (mqtt == null) return;
         try {
             JSONObject will = new JSONObject().put("name", name).put("clientId", clientId).put("status","offline").put("ts", System.currentTimeMillis());
-            mqtt.connectWith().keepAlive(90).cleanSession(false)
-                    .willPublish().topic("presence/"+clientId).qos(MqttQos.AT_LEAST_ONCE).retain(true)
-                    .payload(will.toString().getBytes()).applyWillPublish().send();
+            mqtt.connectWith()
+                    .keepAlive(90)
+                    .cleanSession(false)
+                    .willPublish()
+                    .topic("presence/"+clientId)
+                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .retain(true)
+                    .payload(will
+                            .toString()
+                            .getBytes()
+                    )
+                    .applyWillPublish()
+                    .send();
         } catch (Exception e) { Log.e(TAG,"connect error: "+e.getMessage()); }
     }
 
     public void afterConnected() {
         try {
-            mqtt.subscribeWith().topicFilter("register/reject/"+clientId).qos(MqttQos.AT_LEAST_ONCE).send();
-            mqtt.subscribeWith().topicFilter("direct/"+name+"/#").qos(MqttQos.AT_LEAST_ONCE).send();
-            mqtt.subscribeWith().topicFilter("pong/"+name).qos(MqttQos.AT_MOST_ONCE).send();
-            mqtt.subscribeWith().topicFilter("robot/simulation/" + name).qos(MqttQos.AT_MOST_ONCE).send();
+            mqtt.subscribeWith()
+                    .topicFilter("register/reject/"+clientId)
+                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .send();
+            mqtt.subscribeWith()
+                    .topicFilter("direct/"+name+"/#")
+                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .send();
+            mqtt.subscribeWith()
+                    .topicFilter("pong/"+name)
+                    .qos(MqttQos.AT_MOST_ONCE)
+                    .send();
+            mqtt.subscribeWith()
+                    .topicFilter("robot/simulation/" + name)
+                    .qos(MqttQos.AT_MOST_ONCE)
+                    .send();
 
-            publishJson("register", new JSONObject().put("name", name), MqttQos.AT_LEAST_ONCE,false);
-            publishJson("presence/"+clientId, new JSONObject().put("name", name).put("status","online").put("ts", System.currentTimeMillis()), MqttQos.AT_LEAST_ONCE,true);
+            publishJson(
+                    "register",
+                    new JSONObject()
+                            .put("name", name),
+                    MqttQos.AT_LEAST_ONCE,
+                    false
+            );
+            publishJson(
+                    "presence/"+clientId,
+                    new JSONObject()
+                            .put("name", name)
+                            .put("status","online")
+                            .put("ts", System.currentTimeMillis()),
+                    MqttQos.AT_LEAST_ONCE,
+                    true
+            );
         } catch (Exception ignore) {}
     }
 
     public void gracefulDisconnect() {
         try {
-            publishJson("presence/"+clientId, new JSONObject().put("name", name).put("status","offline").put("ts", System.currentTimeMillis()), MqttQos.AT_LEAST_ONCE,true);
+            publishJson("presence/"+clientId,
+                    new JSONObject()
+                            .put("name", name)
+                            .put("status","offline")
+                            .put("ts", System.currentTimeMillis()),
+                    MqttQos.AT_LEAST_ONCE,
+                    true
+            );
         } catch (Exception ignore) {}
         if (mqtt!=null) mqtt.disconnect();
     }
