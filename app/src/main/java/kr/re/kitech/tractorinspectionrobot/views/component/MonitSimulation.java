@@ -84,26 +84,12 @@ public class MonitSimulation extends LinearLayout {
         String js = "window.onStateUpdate && window.onStateUpdate(" + JSONObject.quote(json) + ");";
         runJs(js);
     }
-    private void handleMqttMessage(String topic, String payload) {
-        if (robotSimulation == null) return;
-
-        // JS 문자열 리터럴로 안전하게 인코딩
-        String js = "window.onMqttMessage && window.onMqttMessage("
-                + JSONObject.quote(topic)   // 'topic' 안전화
-                + ","
-                + JSONObject.quote(payload) // 'payload'를 "JSON 문자열"로 보냄
-                + ");";
-
-        runJs(js);
-    }
     private void runJs(String js){
         if (!pageReady){ pendingJs.add(js); return; }
         robotSimulation.post(() -> {
             if (Build.VERSION.SDK_INT >= 19) {
-                Log.w("robotSimulation.post 1",js);
                 robotSimulation.evaluateJavascript(js, null);
             } else {
-                Log.w("robotSimulation.post 2",js);
                 robotSimulation.loadUrl("javascript:"+js);
             }
         });

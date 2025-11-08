@@ -234,6 +234,17 @@
             console.error("MQTT 수신 파싱 오류:", e, msg);
         }
     };
+
+    window.onStateUpdate = function(msg) {
+        try {
+            const pose = JSON.parse(msg);
+            if (pose && typeof pose.x === "number") {
+                window.updateRobotPose(pose);
+            }
+        } catch (e) {
+            console.error("MQTT 수신 파싱 오류:", e, msg);
+        }
+    };
     // ===== 데모 모드 (MQTT 없을 때 움직임 확인용) =====
     <!--    (function demo(){-->
     <!--      if(window.__DEMO_DISABLED__)return;-->
