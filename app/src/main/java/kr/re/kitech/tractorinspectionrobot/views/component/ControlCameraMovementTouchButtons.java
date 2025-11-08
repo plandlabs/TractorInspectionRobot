@@ -19,6 +19,7 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
     public Button btnUp, btnDown, btnLeftWard, btnRightward;
+    private String deviceName;
 
 
     public ControlCameraMovementTouchButtons(Context context) {
@@ -37,77 +38,38 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         btnDown = findViewById(R.id.btn_down);
         btnLeftWard = findViewById(R.id.btn_leftward);
         btnRightward = findViewById(R.id.btn_rightward);
+        deviceName = context.getString(R.string.controller_name);
     }
     @SuppressLint("ClickableViewAccessibility")
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
-        btnUp.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "y'",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        true,
-                        1,
-                        300
-                )
-        );
-        btnDown.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "y'",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        false,
-                        1,
-                        300
-                )
-        );
-        btnRightward.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "x'",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        true,
-                        1,
-                        300
-                )
-        );
-        btnLeftWard.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "x'",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        false,
-                        1,
-                        300
-                )
-        );
-        // 관찰 가능!
-//        viewModel.getSocketService().observe(lifecycleOwner, socketService -> {
-//            if (socketService != null) {
-//                resCustomSocketService = socketService;
-//
-//            }
-//        });
-//        viewModel.getCoilDataMap().observe(lifecycleOwner, coilDataMap -> {
-//            if (coilDataMap != null) {
-//                resCoilDataMap = coilDataMap;
-//                // 예시: 11번 value를 UI에 표시
-//
-//            }
-//        });
-//        viewModel.getHoldingDataMap().observe(lifecycleOwner, holdingDataMap -> {
-//            if (holdingDataMap != null) {
-//                resHoldingDataMap = holdingDataMap;
-//                // 예시: 11번 value를 UI에 표시
-//                int coil11 = holdingDataMap.getValue(3);
-//            }
-//        });
+        BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
+            @Override
+            public void applyDelta(String axis, double delta) {
+                viewModel.applyDeltaAndPublish(deviceName, axis, delta);
+            }
+
+            @Override
+            public void onStop() {
+                // 선택: 손 뗄 때 현재 전체 상태 한 번 더 전송
+                viewModel.publishCurrent(deviceName);
+            }
+        };
+        final int on = R.color.touch_on;
+        final int off = R.color.touch_off;
+        final float step = .01f;
+        final int intervalMillis = 20;
+
+        // tilt (상/하)
+        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tilt", on, off, false, step, intervalMillis, req));
+        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tilt", on, off, true, step, intervalMillis, req));
+
+        // pan
+        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "pan", on, off, true, step, intervalMillis, req));
+        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "pan", on, off, false, step, intervalMillis, req));
+
     }
 
 }

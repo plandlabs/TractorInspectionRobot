@@ -17,7 +17,10 @@ import androidx.lifecycle.LifecycleOwner;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 import kr.re.kitech.tractorinspectionrobot.R;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 
 public class MonitSimulation extends LinearLayout {
@@ -27,7 +30,8 @@ public class MonitSimulation extends LinearLayout {
     private GridLayout gridLayout;
     private WebView robotSimulation;
     private boolean pageReady = false;
-    private final java.util.ArrayList<String> pendingJs = new java.util.ArrayList<>();
+    private final ArrayList<String> pendingJs = new ArrayList<>();
+    private RobotState lastState = null;
 
 
     public MonitSimulation(Context context) {
@@ -66,13 +70,19 @@ public class MonitSimulation extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
-        viewModel.getDirectMessage().observe(lifecycleOwner, msg -> {
-            if (msg == null) return;
-            if (msg.topic.startsWith("robot/simulation/")) {
-                handleMqttMessage(msg.topic, msg.raw);
-            }
+        viewModel.getState().observe(lifecycleOwner, s -> {
+            if (s == null) return;
+            lastState = s;                    // 페이지 재로딩 시 재전송용 캐시
+            sendStateToWeb(s);
         });
         // 관찰 가능!
+    }
+    private void sendStateToWeb(RobotState s) {
+        if (robotSimulation == null) return;
+        // s.toJson() 사용: {"x":...,"y":...,"z":...,"pan":...,"tilt":...,"ts":...}
+        String json = s.toJson().toString();
+        String js = "window.onStateUpdate && window.onStateUpdate(" + JSONObject.quote(json) + ");";
+        runJs(js);
     }
     private void handleMqttMessage(String topic, String payload) {
         if (robotSimulation == null) return;

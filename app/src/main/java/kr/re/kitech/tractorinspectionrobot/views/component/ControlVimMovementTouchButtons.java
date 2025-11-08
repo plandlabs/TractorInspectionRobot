@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 
 import kr.re.kitech.tractorinspectionrobot.R;
-
 import kr.re.kitech.tractorinspectionrobot.listener.touch.BtnTouchUpDownListener;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 
@@ -19,8 +18,9 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    public Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
+    private String deviceName;
 
+    public Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
 
     public ControlVimMovementTouchButtons(Context context) {
         super(context);
@@ -31,6 +31,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         super(context, attrs);
         init(context);
     }
+
     private void init(Context context) {
         inflate(context, R.layout.component_control_vim_movement_touch_buttons, this);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -40,99 +41,42 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         btnRightward = findViewById(R.id.btn_rightward);
         btnForward = findViewById(R.id.btn_forward);
         btnBackward = findViewById(R.id.btn_backward);
+        deviceName = context.getString(R.string.controller_name);
     }
+
     @SuppressLint("ClickableViewAccessibility")
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
-        btnUp.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "y",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        true,
-                        1,
-                        300
-                )
-        );
-        btnDown.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "y",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        false,
-                        1,
-                        300
-                )
-        );
-        btnRightward.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "x",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        true,
-                        1,
-                        300
-                )
-        );
-        btnLeftWard.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "x",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        false,
-                        1,
-                        300
-                )
-        );
-        btnForward.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "z",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        true,
-                        1,
-                        300
-                )
-        );
-        btnBackward.setOnTouchListener(
-                new BtnTouchUpDownListener(
-                        getContext(),
-                        "z",
-                        R.color.touch_on,
-                        R.color.touch_off,
-                        false,
-                        1,
-                        300
-                )
-        );
-        // 관찰 가능!
-//        viewModel.getSocketService().observe(lifecycleOwner, socketService -> {
-//            if (socketService != null) {
-//                resCustomSocketService = socketService;
-//
-//            }
-//        });
-//        viewModel.getCoilDataMap().observe(lifecycleOwner, coilDataMap -> {
-//            if (coilDataMap != null) {
-//                resCoilDataMap = coilDataMap;
-//                // 예시: 11번 value를 UI에 표시
-//
-//            }
-//        });
-//        viewModel.getHoldingDataMap().observe(lifecycleOwner, holdingDataMap -> {
-//            if (holdingDataMap != null) {
-//                resHoldingDataMap = holdingDataMap;
-//                // 예시: 11번 value를 UI에 표시
-//                int coil11 = holdingDataMap.getValue(3);
-//            }
-//        });
-    }
+        BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
+            @Override
+            public void applyDelta(String axis, double delta) {
+                viewModel.applyDeltaAndPublish(deviceName, axis, delta);
+            }
 
+            @Override
+            public void onStop() {
+                // 선택: 손 뗄 때 현재 전체 상태 한 번 더 전송
+                viewModel.publishCurrent(deviceName);
+            }
+        };
+
+        final int on = R.color.touch_on;
+        final int off = R.color.touch_off;
+        final float step = 1f;
+        final int intervalMillis = 20;
+        // Y축 (상/하)
+        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, true, step, intervalMillis, req));
+        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, false, step, intervalMillis, req));
+
+        // X축 (좌/우)
+        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "x", on, off, true, step, intervalMillis, req));
+        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "x", on, off, false, step, intervalMillis, req));
+
+        // Z축 (전/후) — 네이밍에 맞춰 forward=+z, backward=-z
+        btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "z", on, off, true, step, intervalMillis, req));
+        btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "z", on, off, false, step, intervalMillis, req));
+
+    }
 }

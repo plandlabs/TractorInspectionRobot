@@ -35,9 +35,12 @@ public class MqttClientManager {
     }
 
     private static final String TAG = "MqttClientManager";
-    private final String host; private final int port;
-    private final String name; private final String clientId;
-    private Mqtt3AsyncClient mqtt; private volatile boolean connected = false;
+    private final String host;
+    private final int port;
+    private final String name;
+    private final String clientId;
+    private Mqtt3AsyncClient mqtt;
+    private volatile boolean connected = false;
     private Listener listener;
 
     public MqttClientManager(String url, String name, String clientId) {
@@ -104,5 +107,16 @@ public class MqttClientManager {
     }
     public void publishText(String topic, String text, MqttQos qos, boolean retain) {
         mqtt.publishWith().topic(topic).qos(qos).retain(retain).payload(text.getBytes()).send();
+    }
+    public void publish(String topic, String payload, int qos, boolean retain) {
+        if (mqtt == null) return;
+        mqtt.publishWith()
+                .topic(topic)
+                .qos(qos == 2 ? com.hivemq.client.mqtt.datatypes.MqttQos.EXACTLY_ONCE
+                        : qos == 1 ? com.hivemq.client.mqtt.datatypes.MqttQos.AT_LEAST_ONCE
+                        : com.hivemq.client.mqtt.datatypes.MqttQos.AT_MOST_ONCE)
+                .retain(retain)
+                .payload(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                .send();
     }
 }

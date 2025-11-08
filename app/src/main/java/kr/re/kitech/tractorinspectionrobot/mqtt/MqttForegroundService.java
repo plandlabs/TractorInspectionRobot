@@ -8,6 +8,9 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Objects;
+import java.util.Queue;
 import java.util.UUID;
 
 import kr.re.kitech.tractorinspectionrobot.R;
@@ -48,6 +51,15 @@ public class MqttForegroundService extends Service {
     public static final String EXTRA_STATUS = "status"; // "initializing" | "connected" | "reconnecting" | "disconnected" | "rejected"
     public static final String EXTRA_CAUSE  = "cause";
 
+    public static final String ACTION_PUBLISH     = "kr.re.kitech.tractorinspectionrobot.MQTT_PUBLISH";
+    public static final String EXTRA_PUB_TOPIC    = "pub_topic";
+    public static final String EXTRA_PUB_PAYLOAD  = "pub_payload";
+    public static final String EXTRA_PUB_QOS      = "pub_qos";     // int 0/1/2 (선택)
+    public static final String EXTRA_PUB_RETAIN   = "pub_retain";  // boolean (선택)
+
+    public static final String ACTION_MQTT_MESSAGE = "kr.re.kitech.tractorinspectionrobot.MQTT_MESSAGE";
+    public static final String EXTRA_TOPIC         = "topic";
+    public static final String EXTRA_PAYLOAD       = "payload";
     // 상태 캐시
     private volatile String  lastStatus = "initializing";
     private volatile String  lastCause  = null;
@@ -57,7 +69,12 @@ public class MqttForegroundService extends Service {
     private static final String PREF = "mqtt_pref";
     private static final String KEY_USER_PAUSED = "user_paused";
     private boolean userPaused = false;
-
+    // ★ NEW: 연결 전/중단 시 publish를 안전하게 보관할 간단한 큐
+    private static class PendingPub {
+        final String topic; final String payload; final int qos; final boolean retain;
+        PendingPub(String t, String p, int q, boolean r) { topic=t; payload=p; qos=q; retain=r; }
+    }
+    private final Queue<PendingPub> pendingQueue = new ArrayDeque<>();
     private void sendStatus(String status, @Nullable String cause) {
         lastStatus = status;
         lastCause  = cause;
@@ -73,7 +90,7 @@ public class MqttForegroundService extends Service {
 
         // setting = getSharedPreferences("setting", 0);
         // DEVICE_NAME = setting.getString("DEVICE_NAME", "tester");
-        DEVICE_NAME = "tester";
+        DEVICE_NAME = getString(R.string.controller_name);
 
         SharedPreferences sp = getSharedPreferences(PREF, MODE_PRIVATE);
         userPaused = sp.getBoolean(KEY_USER_PAUSED, false);
@@ -130,6 +147,12 @@ public class MqttForegroundService extends Service {
 
             @Override public void onDirect(String topicOrSub, String payload) {
                 SharedMqttViewModelBridge.getInstance().postDirectMessage(topicOrSub, payload);
+
+                Intent intent = new Intent(ACTION_MQTT_MESSAGE);   // "kr.re.kitech.tractorinspectionrobot.MQTT_MESSAGE"
+                intent.setPackage(getPackageName());               // 앱 내부로만
+                intent.putExtra(EXTRA_TOPIC, topicOrSub);          // "topic"
+                intent.putExtra(EXTRA_PAYLOAD, payload);           // "payload"
+                sendBroadcast(intent);
             }
         });
 
@@ -173,6 +196,18 @@ public class MqttForegroundService extends Service {
                     stopSelf();
                     break;
                 }
+                // ★ NEW: 외부에서 들어온 publish 요청 처리
+                case ACTION_PUBLISH: {
+                    String topic   = i.getStringExtra(EXTRA_PUB_TOPIC);
+                    String payload = i.getStringExtra(EXTRA_PUB_PAYLOAD);
+                    int qos        = i.getIntExtra(EXTRA_PUB_QOS, 1);       // 기본 QoS1
+                    boolean retain = i.getBooleanExtra(EXTRA_PUB_RETAIN, false);
+
+                    if (topic != null && payload != null) {
+                        handlePublish(topic, payload, qos, retain);
+                    }
+                    break;
+                }
 
                 default:
                     // 기본 분기에서는 아무 것도 하지 않음 (자동 재연결 금지)
@@ -181,6 +216,29 @@ public class MqttForegroundService extends Service {
         }
         // 사용자가 끊은 뒤 OS가 임의로 재시작해도 자동 복구되지 않게
         return START_NOT_STICKY;
+    }
+    private void handlePublish(String topic, String payload, int qos, boolean retain) {
+        // null 방지
+        topic = Objects.toString(topic, "");
+        payload = Objects.toString(payload, "");
+        if (topic.isEmpty()) return;
+
+        if (mqtt != null && mqtt.isConnected()) {
+            mqtt.publish(topic, payload, qos, retain);
+        } else {
+            // ★ NEW: 아직 연결 전이라면 보관
+            pendingQueue.offer(new PendingPub(topic, payload, qos, retain));
+            // 필요시 알림/로그 남기기
+            // Log.d(TAG, "Publish queued (not connected): " + topic);
+        }
+    }
+
+    private void flushPendingPublishes() {
+        if (mqtt == null || !mqtt.isConnected()) return;
+        PendingPub p;
+        while ((p = pendingQueue.poll()) != null) {
+            mqtt.publish(p.topic, p.payload, p.qos, p.retain);
+        }
     }
 
     @Override public void onDestroy() {
