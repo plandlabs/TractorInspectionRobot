@@ -59,16 +59,16 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         };
         final int on = R.color.touch_on;
         final int off = R.color.touch_off;
-        final float step = .01f;
-        final int intervalMillis = 20;
+        final float step = Float.parseFloat(getContext().getString(R.string.camera_move_step));
+        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis));
 
-        // tilt (상/하)
-        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tilt", on, off, false, step, intervalMillis, req));
-        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tilt", on, off, true, step, intervalMillis, req));
+        // tiltDeg (상/하)
+        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tiltDeg", on, off, true, step, intervalMillis, req));
+        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tiltDeg", on, off, false, step, intervalMillis, req));
 
-        // pan
-        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "pan", on, off, true, step, intervalMillis, req));
-        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "pan", on, off, false, step, intervalMillis, req));
+        // panDeg
+        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "panDeg", on, off, true, step, intervalMillis, req));
+        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "panDeg", on, off, false, step, intervalMillis, req));
 
     }
 

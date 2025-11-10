@@ -7,7 +7,7 @@
     <style>
         html,body{margin:0;height:100%;background:#0f0f12;overflow:hidden}
         #c{width:100%;height:100%;display:block}
-        .hud{position:fixed;left:10px;top:10px;color:#cfd8dc;font:12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px}
+        .hud{position:fixed;left:10px;top:10px;color:#cfd8dc;font:17px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px}
     </style>
     <script src="./libs/three.min.js"></script>
     <script src="./libs/OrbitControls.js"></script>
@@ -15,14 +15,14 @@
 <body>
 <canvas id="c"></canvas>
 <div class="hud">
-    <!--    <div><b>검사 구동 로봇 시뮬레이션</b></div>-->
     <div>입력단위: mm (내부 m)</div>
-    <div id="poseText"><b>x:0 y:0 z:0 pan:0 tilt:0</b></div>
+    <div id="poseText"><b>x:0 <br/>y:0 <br/>z:0 <br/>pan:0 <br/>tilt:0</b></div>
 </div>
 
 <script>
     const MM_TO_M = 1/1000;
     const SIZE_X = 1500*MM_TO_M, SIZE_Y = 1500*MM_TO_M, SIZE_Z = 500*MM_TO_M;
+    const HALF_X = SIZE_X/2, HALF_Y = SIZE_Y/2; // 중심 기준 범위용
 
     // === 각도/라디안 헬퍼 ===
     const deg2rad = THREE.MathUtils.degToRad;
@@ -42,7 +42,7 @@
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.target.set(SIZE_X/2,SIZE_Y/2,SIZE_Z/2);
+    controls.target.set(0, SIZE_Y/2, SIZE_Z/2); // 중심(0,·,·) 기준
     const initialZoomOut = 2.0;
     {
         const v = new THREE.Vector3().subVectors(camera.position, controls.target);
@@ -59,9 +59,9 @@
     const dir = new THREE.DirectionalLight(0xffffff,0.9);
     dir.position.set(2,3,2); scene.add(dir);
 
-    // 바닥 그리드
+    // 바닥 그리드 (X는 중심 0, Z는 여전히 0~SIZE_Z이므로 가운데 Z는 SIZE_Z/2)
     const grid = new THREE.GridHelper(3,30,0x34495e,0x263238);
-    grid.position.set(SIZE_X/2,0,SIZE_Z/2);
+    grid.position.set(0,0,SIZE_Z/2);
     scene.add(grid);
 
     // ===== 재질 =====
@@ -77,25 +77,31 @@
         return new THREE.Mesh(new THREE.BoxGeometry(...g), mat);
     }
 
-    // ===== 프레임 구조 =====
+    // ===== 프레임 구조 (X축 중심 기준으로 재배치) =====
     const frame = new THREE.Group(); scene.add(frame);
+
+    // 바닥
     (() => {
         const s=0.04, g=new THREE.Group();
-        const fx1=makeBeam(SIZE_X+.04,'x'); fx1.position.set(SIZE_X/2,s/2,0);
-        const fx2=makeBeam(SIZE_X,'x'); fx2.position.set(SIZE_X/2,s/2,SIZE_Z);
-        const fz1=makeBeam(SIZE_Z,'z'); fz1.position.set(0,s/2,SIZE_Z/2);
-        const fz2=makeBeam(SIZE_Z,'z'); fz2.position.set(SIZE_X,s/2,SIZE_Z/2);
+        const fx1=makeBeam(SIZE_X,'x'); fx1.position.set(0,      s/2, 0);        // z=0
+        const fx2=makeBeam(SIZE_X,'x'); fx2.position.set(0,      s/2, SIZE_Z);   // z=SIZE_Z
+        const fz1=makeBeam(SIZE_Z,'z'); fz1.position.set(-HALF_X,s/2, SIZE_Z/2); // x=-HALF_X
+        const fz2=makeBeam(SIZE_Z,'z'); fz2.position.set( HALF_X,s/2, SIZE_Z/2); // x=+HALF_X
         g.add(fx1,fx2,fz1,fz2); frame.add(g);
     })();
+
+    // 기둥 (뒤쪽 두 개만 쓰는 현재 구조 유지, X만 중심 반영)
     (() => {
         const s=0.04,g=new THREE.Group();
-        const cy2=makeBeam(SIZE_Y,'y'); cy2.position.set(0,SIZE_Y/2,SIZE_Z);
-        const cy4=makeBeam(SIZE_Y,'y'); cy4.position.set(SIZE_X,SIZE_Y/2,SIZE_Z);
+        const cy2=makeBeam(SIZE_Y,'y'); cy2.position.set(-HALF_X, SIZE_Y/2, SIZE_Z);
+        const cy4=makeBeam(SIZE_Y,'y'); cy4.position.set( HALF_X, SIZE_Y/2, SIZE_Z);
         g.add(cy2,cy4); frame.add(g);
     })();
+
+    // 상부
     (() => {
         const s=0.04,g=new THREE.Group();
-        const tx2=makeBeam(SIZE_X,'x'); tx2.position.set(SIZE_X/2,SIZE_Y-s/2,SIZE_Z);
+        const tx2=makeBeam(SIZE_X,'x'); tx2.position.set(0, SIZE_Y-s/2, SIZE_Z);
         g.add(tx2); frame.add(g);
     })();
 
@@ -107,17 +113,17 @@
     groupY.add(groupX);
     groupX.add(groupZ);
 
-    // Y축 가이드
+    // Y축 가이드 (오른쪽 뒤 고정, X만 중심 기준으로 조정)
     const yGuide = makeBeam(SIZE_Y,'y',0.02,matRail);
-    yGuide.position.set(SIZE_X-0.02,SIZE_Y/2,SIZE_Z);
+    yGuide.position.set(HALF_X-0.02, SIZE_Y/2, SIZE_Z);
     scene.add(yGuide);
 
-    // X축 레일
+    // X축 레일 (X 중심 0에 위치)
     const xRail = makeBeam(SIZE_X,'x',0.03,new THREE.MeshStandardMaterial({color:0xD1A50B,metalness:0.2,roughness:0.7}));
-    xRail.position.set(SIZE_X/2,0,SIZE_Z);
+    xRail.position.set(0,0,SIZE_Z);
     groupY.add(xRail);
 
-    // Z축 레일 2개
+    // ===== Z축 레일 2개 =====
     const zRailGap = 0.232;
     const zRailBottom = makeBeam(SIZE_Z,'z',0.028,matRail);
     zRailBottom.position.set(0,0.03,SIZE_Z+zRailGap);
@@ -127,7 +133,7 @@
     zRailTop.position.set(0,0.058,SIZE_Z+zRailGap);
     groupZ.add(zRailTop);
 
-    // 캐리지 + 카메라
+    // ===== 캐리지 + 카메라 =====
     const FRONT_OFFSET = 0.3;
     const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.10,0.06,0.10),matCart);
     carriage.position.set(0,0.105,SIZE_Z+FRONT_OFFSET+zRailGap-0.05);
@@ -144,21 +150,19 @@
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.08),matHead);
     groupTilt.add(head);
 
-    // 렌즈 하우징
+    // 렌즈 하우징/유리/시야 원뿔
     const lensMat = new THREE.MeshStandardMaterial({color: 0x222831, metalness: 0.6, roughness: 0.4});
     const lensBody = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.04, 32), lensMat);
     lensBody.rotation.x = Math.PI / 2;
     lensBody.position.set(0, 0, 0.06);
     head.add(lensBody);
 
-    // 렌즈 유리
     const glassMat = new THREE.MeshStandardMaterial({color: 0x2196f3, metalness: 0.3, roughness: 0.1, transparent: true, opacity: 0.6});
     const glass = new THREE.Mesh(new THREE.CircleGeometry(0.023, 32), glassMat);
     glass.rotation.x = Math.PI / 2;
     glass.position.set(0, 0, 0.08);
     head.add(glass);
 
-    // 시야 원뿔
     const fovDeg=50, coneLen=0.25;
     const coneRadius = Math.tan(deg2rad(fovDeg/2))*coneLen;
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius,coneLen,24,1,true),matCone);
@@ -172,28 +176,29 @@
 
     /**
      * degree 입출력 버전
-     * { x:mm, y:mm, z:mm, panDeg:° , tiltDeg:° }
+     * { x:mm(-750~750), y:mm(-750~750), z:mm(0~500), panDeg:°, tiltDeg:° }
      */
     window.updateRobotPose = (pose)=>{
         const x=(pose.x||0)*MM_TO_M, y=(pose.y||0)*MM_TO_M, z=(pose.z||0)*MM_TO_M;
+
         // 입력은 도(°)
         let panDeg = Number(pose.panDeg ?? pose.pan ?? 0);
         let tiltDeg = Number(pose.tiltDeg ?? pose.tilt ?? 0);
-
-        // (선택) 틸트의 직관적 부호: 위로 +각도
-        if (TILT_UP_POSITIVE) tiltDeg = -tiltDeg;
+        if (TILT_UP_POSITIVE) tiltDeg = -tiltDeg; // 위로 +각도
 
         // 내부는 라디안
         const panRad  = deg2rad(panDeg);
         const tiltRad = deg2rad(tiltDeg);
 
-        const cx=clamp(x,0,SIZE_X);
-        const cy=clamp(y,0,SIZE_Y);
-        const cz=clamp(z,0,SIZE_Z);
+        // 중심 기준으로 클램프 (x,y: -HALF~+HALF), z는 0~SIZE_Z
+        const cx=clamp(x, -HALF_X, HALF_X);
+        const cy=clamp(y, -HALF_Y, HALF_Y);
+        const cz=clamp(z, 0, SIZE_Z);
 
-        groupY.position.set(0,cy,0);
-        groupX.position.set(cx,0,0);
-        groupZ.position.set(0,0,cz);
+        // 배치 (Y는 물리 0~SIZE_Y 공간이므로 HALF_Y 만큼 올려줌)
+        groupY.position.set(0, cy + HALF_Y, 0);
+        groupX.position.set(cx, 0, 0);
+        groupZ.position.set(0, 0, cz);
 
         groupPan.rotation.y  = panRad;
         groupTilt.rotation.x = tiltRad;
@@ -202,6 +207,7 @@
         const outPanDeg  = rad2deg(groupPan.rotation.y);
         const outTiltDeg = TILT_UP_POSITIVE ? -rad2deg(groupTilt.rotation.x) : rad2deg(groupTilt.rotation.x);
 
+        // 표시값은 중심 기준(mm)
         poseText.textContent =
             `x:${Math.round(cx/MM_TO_M)}  y:${Math.round(cy/MM_TO_M)}  z:${Math.round(cz/MM_TO_M)}  pan:${outPanDeg.toFixed(1)}°  tilt:${outTiltDeg.toFixed(1)}°`;
     };
@@ -246,19 +252,19 @@
         }
     };
 
-    // ===== 데모 (원하면 주석 해제) - degree로 동작 =====
+    // ===== 데모 (원하면 주석 해제) - degree & 중심 기준 =====
 <!--    (function demo(){-->
-<!--        let t=0;-->
-<!--        setInterval(()=>{-->
-<!--            t+=0.02;-->
-<!--            const x=(SIZE_X*0.5)+Math.sin(t)*(SIZE_X*0.4);-->
-<!--            const y=(SIZE_Y*0.5)+Math.cos(t*0.6)*(SIZE_Y*0.4);-->
-<!--            const z=(SIZE_Z*0.5)+Math.sin(t*0.8)*(SIZE_Z*0.45);-->
-<!--            const panDeg = Math.sin(t*0.7)*60;   // ±60°-->
-<!--            const tiltDeg = Math.cos(t*0.9)*60;  // ±60°-->
-<!--            window.updateRobotPose({x:x/MM_TO_M,y:y/MM_TO_M,z:z/MM_TO_M,panDeg,tiltDeg});-->
-<!--        },20);-->
-<!--    })();-->
+<!--       let t=0;-->
+<!--       setInterval(()=>{-->
+<!--         t+=0.02;-->
+<!--         const x = Math.sin(t)     * (HALF_X*0.8);   // -HALF_X ~ +HALF_X-->
+<!--         const y = Math.cos(t*0.6) * (HALF_Y*0.8);   // -HALF_Y ~ +HALF_Y-->
+<!--         const z = (SIZE_Z*0.5) + Math.sin(t*0.8)*(SIZE_Z*0.45); // 0~SIZE_Z 내 변화-->
+<!--         const panDeg  = Math.sin(t*0.7)*60;-->
+<!--         const tiltDeg = Math.cos(t*0.9)*30;-->
+<!--         window.updateRobotPose({x:x/MM_TO_M, y:y/MM_TO_M, z:z/MM_TO_M, panDeg, tiltDeg});-->
+<!--       }, 20);-->
+<!--     })();-->
 </script>
 </body>
 </html>

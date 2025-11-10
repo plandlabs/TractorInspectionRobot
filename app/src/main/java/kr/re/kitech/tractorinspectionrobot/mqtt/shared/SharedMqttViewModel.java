@@ -34,7 +34,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mqttConnected = new MutableLiveData<>(false);
     public LiveData<Boolean> getMqttConnected() { return mqttConnected; }
 
-    // 3) 로봇 전체 상태 (x,y,z,pan,tilt,ts)
+    // 3) 로봇 전체 상태 (x,y,z,panDeg,tiltDeg,ts)
     private final MutableLiveData<RobotState> state = new MutableLiveData<>(new RobotState(0,0,0,0,0,0));
     public LiveData<RobotState> getState() { return state; }
     private RobotState getOrDefault() {
@@ -125,19 +125,19 @@ public class SharedMqttViewModel extends AndroidViewModel {
     /** 버튼 델타 적용 → 전체 상태로 publish */
     public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
         RobotState cur = getOrDefault();
-        double x=cur.x, y=cur.y, z=cur.z, pan=cur.pan, tilt=cur.tilt;
+        double x=cur.x, y=cur.y, z=cur.z, panDeg=cur.panDeg, tiltDeg=cur.tiltDeg;
 
         switch (axis) {
-            case "x":    x    = clamp(cur.x   + delta, 0, 1500); break;
-            case "y":    y    = clamp(cur.y   + delta, 0, 1500); break;
-            case "z":    z    = clamp(cur.z   + delta, 0, 1500); break;
-            case "pan":  pan  = clamp(cur.pan + delta, -0.6, 0.6); break;
-            case "tilt": tilt = clamp(cur.tilt+ delta, -0.4, 0.4); break;
+            case "x":    x    = clamp(cur.x   + delta, -750, 750); break;
+            case "y":    y    = clamp(cur.y   + delta, -750, 750); break;
+            case "z":    z    = clamp(cur.z   + delta, 0, 500); break;
+            case "panDeg":  panDeg  = clamp(cur.panDeg + delta, -60, 60); break;
+            case "tiltDeg": tiltDeg = clamp(cur.tiltDeg+ delta, -60, 60); break;
             default: return;
         }
 
         long ts = System.currentTimeMillis();
-        RobotState next = new RobotState(x, y, z, pan, tilt, ts);
+        RobotState next = new RobotState(x, y, z, panDeg, tiltDeg, ts);
         state.setValue(next); // UI 즉시 반영
         publishFull(deviceName, next);
     }

@@ -63,7 +63,8 @@ public class MonitSimulation extends LinearLayout {
                 flushPendingJs();
             }
         });
-        robotSimulation.loadUrl("file:///android_asset/simulation/index.html");
+//        robotSimulation.loadUrl("file:///android_asset/simulation/index.html");
+        robotSimulation.loadUrl("file:///android_asset/simulation/half.html");
     }
     @SuppressLint("ClickableViewAccessibility")
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
