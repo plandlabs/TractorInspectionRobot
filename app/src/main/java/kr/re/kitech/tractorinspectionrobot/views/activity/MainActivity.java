@@ -30,6 +30,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
@@ -48,11 +49,13 @@ import com.google.android.material.tabs.TabLayout;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
+import kr.re.kitech.tractorinspectionrobot.ui.BackPressHandler;
+import kr.re.kitech.tractorinspectionrobot.ui.TouchHideKeyboardHelper;
 import kr.re.kitech.tractorinspectionrobot.views.tapPager.NonSwipeViewPager;
 import kr.re.kitech.tractorinspectionrobot.views.tapPager.TabFragmentPagerAdapter;
 
 public class MainActivity extends FragmentActivity implements NavigationView.OnNavigationItemSelectedListener {
-
+    private BackPressHandler backPress = new BackPressHandler();
     private FragmentManager fragmentManager = getSupportFragmentManager();
     private FragmentTransaction transaction;
     private Resources mResources;
@@ -169,6 +172,48 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         });
 
         this.onConfigurationChanged(mConfiguration);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // 1) 드로어가 열려 있으면 먼저 닫기
+                if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                    mVibrator.vibrate(10);
+                    return;
+                }
+
+                // 2) ViewPager가 첫 탭이 아니면 첫 탭으로 이동
+                if (mViewPager != null && mViewPager.getCurrentItem() != 0) {
+                    mViewPager.setCurrentItem(0, true);
+                    mVibrator.vibrate(10);
+                    return;
+                }
+
+                // 3) 프래그먼트 백스택이 있으면 pop
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStack();
+                    mVibrator.vibrate(10);
+                    return;
+                }
+
+                // 4) 위 케이스 모두 아니면: 두 번 눌러 종료
+                mVibrator.vibrate(10);
+                backPress.handle(
+                        () -> {
+                            // finish 동작
+                            finish();
+                            // 필요하면 애니메이션 제거
+                            // overridePendingTransition(0, 0);
+                        },
+                        Toast.makeText(
+                                MainActivity.this,
+                                "'뒤로' 버튼을 한번 더 누르시면 종료됩니다.",
+                                Toast.LENGTH_SHORT
+                        )
+                );
+            }
+        });
     }
 
     @Override
@@ -179,6 +224,16 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         }
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }// 뒤로 두 번 눌러 종료
+    @SuppressLint("GestureBackNavigation")
+    @Override
+    public boolean onKeyDown(int code, KeyEvent e) {
+        if (code == KeyEvent.KEYCODE_BACK) {
+            mVibrator.vibrate(10);
+            return backPress.handle(this::finish,
+                    Toast.makeText(this, "'뒤로' 버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT));
+        }
+        return super.onKeyDown(code, e);
     }
 
     DrawerLayout.DrawerListener listener = new DrawerLayout.DrawerListener() {
@@ -272,37 +327,8 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        View focusView = getCurrentFocus();
-        if (focusView != null) {
-            Rect rect = new Rect();
-            focusView.getGlobalVisibleRect(rect);
-            int x = (int) ev.getX(), y = (int) ev.getY();
-            if (!rect.contains(x, y)) {
-                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null) imm.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
-                focusView.clearFocus();
-            }
-        }
+        TouchHideKeyboardHelper.dispatch(this, ev);
         return super.dispatchTouchEvent(ev);
-    }
-
-    @SuppressLint("GestureBackNavigation")
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK){
-            drawerLayout.closeDrawer(GravityCompat.START);
-            if(!mFlag) {
-                mVibrator.vibrate(100);
-                Toast.makeText(this, "'뒤로' 버튼을 한번 더 누르시면 종료하실 수 있습니다.", Toast.LENGTH_SHORT).show();
-                mFlag = true;
-                backHandler.sendEmptyMessageDelayed(0, 2000);
-                return false;
-            } else {
-                mVibrator.vibrate(100);
-                finish();
-                return false;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
     }
 
     protected void LogoutAlertDialog() {

@@ -28,7 +28,7 @@ public class Notifier {
 
     public void ensureChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel ch = new NotificationChannel(channelId, "MQTT", NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel ch = new NotificationChannel(channelId, "MQTT-01", NotificationManager.IMPORTANCE_LOW);
             ((NotificationManager)ctx.getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(ch);
         }
     }
@@ -36,8 +36,10 @@ public class Notifier {
     public Notification build(String text) {
         Notification.Builder b = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 ? new Notification.Builder(ctx, channelId) : new Notification.Builder(ctx);
-        return b.setContentTitle("Wear MQTT").setContentText(text)
-                .setSmallIcon(R.drawable.outline_action_key_24).setOngoing(true).build();
+        return b.setContentTitle(ctx.getString(R.string.app_name)).setContentText(text)
+                .setSmallIcon(R.drawable.outline_robot_2_24)
+                .setOngoing(true)
+                .build();
     }
 
     public void update(String text) {

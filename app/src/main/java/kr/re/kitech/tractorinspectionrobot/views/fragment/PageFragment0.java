@@ -186,6 +186,7 @@ public class PageFragment0 extends Fragment {
     public void onResume() {
         super.onResume();
     }
+
     public ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
