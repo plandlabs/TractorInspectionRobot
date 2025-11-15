@@ -18,7 +18,7 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    public Button btnUp, btnDown, btnLeftWard, btnRightward;
+    public Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
     private String deviceName;
 
 
@@ -37,7 +37,12 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         btnUp = findViewById(R.id.btn_up);
         btnDown = findViewById(R.id.btn_down);
         btnLeftWard = findViewById(R.id.btn_leftward);
+
         btnRightward = findViewById(R.id.btn_rightward);
+        btnBackward = findViewById(R.id.btn_backward);
+
+        btnForward = findViewById(R.id.btn_forward);
+        btnBackward = findViewById(R.id.btn_backward);
         deviceName = context.getString(R.string.controller_name);
     }
     @SuppressLint("ClickableViewAccessibility")
@@ -70,6 +75,8 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));
         btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, false, step, intervalMillis, req));
 
+        btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, true, step, intervalMillis, req));
+        btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, false, step, intervalMillis, req));
     }
 
 }

@@ -128,12 +128,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
         double x=cur.x, y=cur.y, z=cur.z, xPrimeDeg=cur.xPrimeDeg, yPrimeDeg=cur.yPrimeDeg, zPrimeDeg=cur.zPrimeDeg;
 
         switch (axis) {
-            case "x":         x         = clamp(cur.x         + delta, -750, 750); break;
-            case "y":         y         = clamp(cur.y         + delta, -750, 750); break;
+            case "x":         x         = clamp(cur.x         + delta, 0, 1500); break;
+            case "y":         y         = clamp(cur.y         + delta, 0, 1500); break;
             case "z":         z         = clamp(cur.z         + delta, 0,   500); break;
-            case "xPrimeDeg": xPrimeDeg = clamp(cur.xPrimeDeg + delta, -60,  60); break;
-            case "yPrimeDeg": yPrimeDeg = clamp(cur.yPrimeDeg + delta, -60,  60); break;
-            case "zPrimeDeg": zPrimeDeg = clamp(cur.zPrimeDeg + delta, -90,  90); break; // zPrimeDeg 범위 (필요 시 수정)
+            case "xPrimeDeg": xPrimeDeg = clamp(cur.xPrimeDeg + delta, 0,  180); break;
+            case "yPrimeDeg": yPrimeDeg = clamp(cur.yPrimeDeg + delta, 0,  180); break;
+            case "zPrimeDeg": zPrimeDeg = clamp(cur.zPrimeDeg + delta, 0,  360); break; // zPrimeDeg 범위 (필요 시 수정)
             default: return;
         }
 
