@@ -273,7 +273,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         if (connected == null || !connected) {
             Log.w(TAG, "applyDeltaAndPublish() called while MQTT not connected. Ignored.");
             long now = System.currentTimeMillis();
-            if (now - lastNotConnectedToastMs > 1500) {
+            if (now - lastNotConnectedToastMs > 2_000) {
                 Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }

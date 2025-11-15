@@ -1,0 +1,54 @@
+#브로커로 부터 sta 받음
+토픽 ingsys/ing_w00001/sta
+{
+  "mt": "sta",
+  "tm": "2025-01-01 12:00:02",
+  "fp": "broker",
+  "ct": {
+    "reason": "servoMove_rel",
+    "motion": {
+      "pos": { "x": 0, "y": 0, "z": 0 },
+      "homed": { "x": true, "y": true, "z": true }
+    },
+   }
+}
+
+#브로커에게 x,y,z를 보냄
+토픽 ingsys/ing_w00001/req
+{
+  "mt": "req",
+  "tm": "2025-01-01 12:00:01",
+  "fp": "pc-controller",
+  "ct": {
+    "tg": "ing_w00001",
+    "cmd": 2001,
+    "opid": 22,
+    "param": {
+      "mode": "abs",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "scurve": true
+    }
+  }
+}
+
+#브로커에게 s1(xPrimeDeg),s2(yPrimeDeg),s3(zPrimeDeg)를 보냄
+토픽 ingsys/ing_w00001/req
+{
+  "mt": "req",
+  "tm": "2025-01-01 12:00:01",
+  "fp": "pc-controller",
+  "ct": {
+    "tg": "ing_w00001",
+    "cmd": 3002,
+    "opid": 13,
+    "param": {
+      "mode": "abs",
+      "s1": 0,
+      "s2": 0,
+      "s3": 0
+    }
+  }
+}
+
