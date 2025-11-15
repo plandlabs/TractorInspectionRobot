@@ -102,8 +102,8 @@
     <string name="controller_name">controller01</string>
     <string name="mqtt_connect_url">tcp://192.168.0.201:1883</string>
 <!--    <string name="mqtt_connect_url">tcp://192.168.219.126:1883</string>-->
-    <string name="vim_move_step">2F</string><!-- 1mm 실제 0.1m -->
-    <string name="camera_move_step">.5F</string><!-- 각도 -->
+    <string name="vim_move_step">1F</string><!-- 1mm 실제 0.1m -->
+    <string name="camera_move_step">1F</string><!-- 각도 -->
     <string name="interval_millis">20</string><!-- 변경 반영 텀 0.02초 -->
 
     <string name="vim_x_min">-750</string>

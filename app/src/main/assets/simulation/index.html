@@ -266,53 +266,63 @@
     function animate(){ requestAnimationFrame(animate); resize(); controls.update(); renderer.render(scene,camera); }
     animate();
 
-<!--    window.updateRobotPose({x:700, y:700, z:100, xPrimeDeg:0, yPrimeDeg:0, zPrimeDeg:0});-->
+    window.onStateUpdate = function(msg) {
+        try {
+            const pose = JSON.parse(msg);
+            if (pose) {
+                window.updateRobotPose(pose);
+            }
+        } catch (e) {
+            console.error("StateUpdate 파싱 오류:", e, msg);
+        }
+    };
+    //window.updateRobotPose({x:0, y:0, z:0, xPrimeDeg:0, yPrimeDeg:0, zPrimeDeg:0});
     /* ====================== 데모 ====================== */
-<!--    (function demo(){-->
-<!--        let t = 0;-->
-<!--        let zDir = 1;-->
-<!--        let zAngle = 0;-->
-
-<!--        // === 이동 및 회전 최대/최소 설정(mm, °) ===-->
-<!--        const X_MIN = 0,    X_MAX = 1500;-->
-<!--        const Y_MIN = 0,    Y_MAX = 1500;-->
-<!--        const Z_MIN = 0,    Z_MAX = 500;-->
-<!--        const ANG_MIN = 0,  ANG_MAX = 180;-->
-<!--        const ZANG_MIN = 0, ZANG_MAX = 360;-->
-
-<!--        setInterval(() => {-->
-<!--            t += 0.02; // 시간 진행-->
-
-<!--            // === 위치 (mm) ===-->
-<!--            // 각 축별로 주기와 위상 다르게: 서로 독립적으로 움직이는 느낌-->
-<!--            const xPhase = (Math.sin(t * 1.0 + 0) * 0.5 + 0.5);           // 0~1-->
-<!--            const yPhase = (Math.sin(t * 0.8 + Math.PI/3) * 0.5 + 0.5);   // 0~1-->
-<!--            const zPhase = (Math.sin(t * 1.3 + Math.PI/2) * 0.5 + 0.5);   // 0~1-->
-
-<!--            const x = X_MIN + (X_MAX - X_MIN) * xPhase;-->
-<!--            const y = Y_MIN + (Y_MAX - Y_MIN) * yPhase;-->
-<!--            const z = Z_MIN + (Z_MAX - Z_MIN) * zPhase;-->
-
-<!--            // === 각도 (°) ===-->
-<!--            // X′: 0~180 왕복-->
-<!--            const xAngPhase = (Math.sin(t * 0.7 + Math.PI/4) * 0.5 + 0.5);-->
-<!--            const xPrimeDeg = ANG_MIN + (ANG_MAX - ANG_MIN) * xAngPhase;-->
-
-<!--            // Y′: 180~0 반대위상 왕복-->
-<!--            const yAngPhase = (Math.sin(t * 0.9 + Math.PI) * 0.5 + 0.5);-->
-<!--            const yPrimeDeg = ANG_MIN + (ANG_MAX - ANG_MIN) * yAngPhase;-->
-
-<!--            // Z′: 0~360 왕복 (방향 반전 포함)-->
-<!--            zAngle += zDir * 2.2; // 회전 속도-->
-<!--            if (zAngle >= ZANG_MAX) { zAngle = ZANG_MAX; zDir = -1; }-->
-<!--            if (zAngle <= ZANG_MIN) { zAngle = ZANG_MIN; zDir = 1; }-->
-<!--            const zPrimeDeg = zAngle;-->
-
-<!--            // === 적용 ===-->
-<!--            window.updateRobotPose({ x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg });-->
-
-<!--        }, 30);-->
-<!--    })();-->
+    // (function demo(){
+    //     let t = 0;
+    //     let zDir = 1;
+    //     let zAngle = 0;
+    //
+    //     // === 이동 및 회전 최대/최소 설정(mm, °) ===
+    //     const X_MIN = 0,    X_MAX = 1500;
+    //     const Y_MIN = 0,    Y_MAX = 1500;
+    //     const Z_MIN = 0,    Z_MAX = 500;
+    //     const ANG_MIN = 0,  ANG_MAX = 180;
+    //     const ZANG_MIN = 0, ZANG_MAX = 360;
+    //
+    //     setInterval(() => {
+    //         t += 0.02; // 시간 진행
+    //
+    //         // === 위치 (mm) ===
+    //         // 각 축별로 주기와 위상 다르게: 서로 독립적으로 움직이는 느낌
+    //         const xPhase = (Math.sin(t * 1.0 + 0) * 0.5 + 0.5);           // 0~1
+    //         const yPhase = (Math.sin(t * 0.8 + Math.PI/3) * 0.5 + 0.5);   // 0~1
+    //         const zPhase = (Math.sin(t * 1.3 + Math.PI/2) * 0.5 + 0.5);   // 0~1
+    //
+    //         const x = X_MIN + (X_MAX - X_MIN) * xPhase;
+    //         const y = Y_MIN + (Y_MAX - Y_MIN) * yPhase;
+    //         const z = Z_MIN + (Z_MAX - Z_MIN) * zPhase;
+    //
+    //         // === 각도 (°) ===
+    //         // X′: 0~180 왕복
+    //         const xAngPhase = (Math.sin(t * 0.7 + Math.PI/4) * 0.5 + 0.5);
+    //         const xPrimeDeg = ANG_MIN + (ANG_MAX - ANG_MIN) * xAngPhase;
+    //
+    //         // Y′: 180~0 반대위상 왕복
+    //         const yAngPhase = (Math.sin(t * 0.9 + Math.PI) * 0.5 + 0.5);
+    //         const yPrimeDeg = ANG_MIN + (ANG_MAX - ANG_MIN) * yAngPhase;
+    //
+    //         // Z′: 0~360 왕복 (방향 반전 포함)
+    //         zAngle += zDir * 2.2; // 회전 속도
+    //         if (zAngle >= ZANG_MAX) { zAngle = ZANG_MAX; zDir = -1; }
+    //         if (zAngle <= ZANG_MIN) { zAngle = ZANG_MIN; zDir = 1; }
+    //         const zPrimeDeg = zAngle;
+    //
+    //         // === 적용 ===
+    //         window.updateRobotPose({ x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg });
+    //
+    //     }, 30);
+    // })();
 
 
 </script>

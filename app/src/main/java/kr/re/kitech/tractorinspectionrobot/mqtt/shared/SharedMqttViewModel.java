@@ -34,12 +34,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mqttConnected = new MutableLiveData<>(false);
     public LiveData<Boolean> getMqttConnected() { return mqttConnected; }
 
-    // 3) 로봇 전체 상태 (x,y,z,panDeg,tiltDeg,ts)
-    private final MutableLiveData<RobotState> state = new MutableLiveData<>(new RobotState(0,0,0,0,0,0));
+    // 3) 로봇 전체 상태 (x,y,z,xPrimeDeg,yPrimeDeg,zPrimeDeg,ts)
+    private final MutableLiveData<RobotState> state = new MutableLiveData<>(new RobotState(0,0,0,0,0,0,0));
     public LiveData<RobotState> getState() { return state; }
     private RobotState getOrDefault() {
         RobotState s = state.getValue();
-        return (s == null) ? new RobotState(0,0,0,0,0,0) : s;
+        return (s == null) ? new RobotState(0,0,0,0,0,0,0) : s;
     }
 
     // ---- 연결 상태 수신 ----
@@ -125,19 +125,20 @@ public class SharedMqttViewModel extends AndroidViewModel {
     /** 버튼 델타 적용 → 전체 상태로 publish */
     public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
         RobotState cur = getOrDefault();
-        double x=cur.x, y=cur.y, z=cur.z, panDeg=cur.panDeg, tiltDeg=cur.tiltDeg;
+        double x=cur.x, y=cur.y, z=cur.z, xPrimeDeg=cur.xPrimeDeg, yPrimeDeg=cur.yPrimeDeg, zPrimeDeg=cur.zPrimeDeg;
 
         switch (axis) {
-            case "x":    x    = clamp(cur.x   + delta, -750, 750); break;
-            case "y":    y    = clamp(cur.y   + delta, -750, 750); break;
-            case "z":    z    = clamp(cur.z   + delta, 0, 500); break;
-            case "panDeg":  panDeg  = clamp(cur.panDeg + delta, -60, 60); break;
-            case "tiltDeg": tiltDeg = clamp(cur.tiltDeg+ delta, -60, 60); break;
+            case "x":         x         = clamp(cur.x         + delta, -750, 750); break;
+            case "y":         y         = clamp(cur.y         + delta, -750, 750); break;
+            case "z":         z         = clamp(cur.z         + delta, 0,   500); break;
+            case "xPrimeDeg": xPrimeDeg = clamp(cur.xPrimeDeg + delta, -60,  60); break;
+            case "yPrimeDeg": yPrimeDeg = clamp(cur.yPrimeDeg + delta, -60,  60); break;
+            case "zPrimeDeg": zPrimeDeg = clamp(cur.zPrimeDeg + delta, -90,  90); break; // zPrimeDeg 범위 (필요 시 수정)
             default: return;
         }
 
         long ts = System.currentTimeMillis();
-        RobotState next = new RobotState(x, y, z, panDeg, tiltDeg, ts);
+        RobotState next = new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
         state.setValue(next); // UI 즉시 반영
         publishFull(deviceName, next);
     }

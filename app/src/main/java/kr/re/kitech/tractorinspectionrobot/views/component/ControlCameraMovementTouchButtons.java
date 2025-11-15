@@ -62,13 +62,13 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         final float step = Float.parseFloat(getContext().getString(R.string.camera_move_step));
         final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis));
 
-        // tiltDeg (상/하)
-        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tiltDeg", on, off, true, step, intervalMillis, req));
-        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "tiltDeg", on, off, false, step, intervalMillis, req));
+        // yPrimeDeg (상/하) - tiltDeg에서 변경
+        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, true, step, intervalMillis, req));
+        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, false, step, intervalMillis, req));
 
-        // panDeg
-        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "panDeg", on, off, true, step, intervalMillis, req));
-        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "panDeg", on, off, false, step, intervalMillis, req));
+        // xPrimeDeg (좌/우) - panDeg에서 변경
+        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));
+        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, false, step, intervalMillis, req));
 
     }
 
