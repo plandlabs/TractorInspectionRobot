@@ -60,13 +60,13 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
             @Override
             public void onStop() {
                 // 선택: 손 뗄 때 현재 전체 상태 한 번 더 전송
-                viewModel.publishCurrent(deviceName);
+//                viewModel.publishCurrent(deviceName);
             }
         };
         final int on = R.color.touch_on;
         final int off = R.color.touch_off;
         final float step = Float.parseFloat(getContext().getString(R.string.camera_move_step));
-        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis));
+        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_c));
 
         // xPrimeDeg (카메라 헤드 서보모터 상/하) - s1에서 변경
         btn_x_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));

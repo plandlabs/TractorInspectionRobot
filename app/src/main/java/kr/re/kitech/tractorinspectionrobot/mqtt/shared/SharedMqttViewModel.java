@@ -1,11 +1,15 @@
 package kr.re.kitech.tractorinspectionrobot.mqtt.shared;
 
+import static android.content.ContentValues.TAG;
+
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -38,6 +42,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
     // 1) 임의 직접 메시지 (기존 호환용)
     private final MutableLiveData<MqttDirectMessage> directMessage = new MutableLiveData<>();
     public LiveData<MqttDirectMessage> getDirectMessage() { return directMessage; }
+    private long lastNotConnectedToastMs = 0L;
     public void postDirectMessage(String topic, String payload) {
         try {
             directMessage.postValue(new MqttDirectMessage(topic, new JSONObject(payload)));
@@ -71,11 +76,13 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             if ("connected".equalsIgnoreCase(status)) {
                 mqttConnected.postValue(true);
+                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
                 // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
                 sendInitialServoZero();
             } else if ("disconnected".equalsIgnoreCase(status)
                     || "rejected".equalsIgnoreCase(status)) {
                 mqttConnected.postValue(false);
+                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -262,7 +269,16 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
         // UI 즉시 반영
         state.setValue(next);
-
+        Boolean connected = mqttConnected.getValue();
+        if (connected == null || !connected) {
+            Log.w(TAG, "applyDeltaAndPublish() called while MQTT not connected. Ignored.");
+            long now = System.currentTimeMillis();
+            if (now - lastNotConnectedToastMs > 1500) {
+                Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
+                lastNotConnectedToastMs = now;
+            }
+            return;
+        }
         // 🔀 분기: 좌표/서보 각각 해당하는 cmd만 전송
         if (movedPos) {
             publishMoveAbs(next);   // cmd=2001, x,y,z

@@ -65,7 +65,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         final int on = R.color.touch_on;
         final int off = R.color.touch_off;
         final float step = Float.parseFloat(getContext().getString(R.string.vim_move_step));
-        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis));
+        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_v));
         // Y축 (상/하)
         btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, true, step, intervalMillis, req));
         btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, false, step, intervalMillis, req));
