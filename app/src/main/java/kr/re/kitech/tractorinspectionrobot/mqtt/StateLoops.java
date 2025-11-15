@@ -36,11 +36,6 @@ public class StateLoops {
     }
 
     public void start() {
-        sch.scheduleAtFixedRate(() -> {
-            try {
-                if (mqtt.isConnected()) mqtt.publishText("ping/"+name, String.valueOf(System.currentTimeMillis()), MqttQos.AT_MOST_ONCE,false);
-            } catch (Throwable t) { Log.w(TAG,"ping loop: "+t.getMessage()); }
-        }, PING_SEC, PING_SEC, TimeUnit.SECONDS);
 
 //        sch.scheduleAtFixedRate(() -> {
 //            try {

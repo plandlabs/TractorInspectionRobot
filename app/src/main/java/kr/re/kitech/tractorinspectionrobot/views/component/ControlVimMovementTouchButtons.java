@@ -58,7 +58,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
             @Override
             public void onStop() {
                 // 선택: 손 뗄 때 현재 전체 상태 한 번 더 전송
-                viewModel.publishCurrent(deviceName);
+//                viewModel.publishCurrent(deviceName);
             }
         };
 

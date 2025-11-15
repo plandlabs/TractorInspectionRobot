@@ -3,7 +3,6 @@ package kr.re.kitech.tractorinspectionrobot.mqtt;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.BatteryManager;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -25,22 +24,17 @@ import kr.re.kitech.tractorinspectionrobot.net.NetworkHelper;
  * - ACTION_QUERY_STATUS: 현재 상태 재브로드캐스트
  */
 public class MqttForegroundService extends Service {
-    private SharedPreferences setting;
-
-    private static final String TAG = "MqttService";
     private static final String CHANNEL_ID = "mqtt_fg";
     private static final int NOTI_ID = 1001;
 
     // 설정
     private String MQTT_URL;
     private String DEVICE_NAME;
-    private static final long PING_SEC = 15, STATE_SEC = 10;
 
     // 구성요소
     private Notifier notifier;
     private NetworkHelper net;
     public  MqttClientManager mqtt;
-    private StateLoops loops;
 
     // 브로드캐스트/액션
     public static final String ACTION_MQTT_STATUS   = "kr.re.kitech.tractorinspectionrobot.MQTT_STATUS";
@@ -75,6 +69,12 @@ public class MqttForegroundService extends Service {
         PendingPub(String t, String p, int q, boolean r) { topic=t; payload=p; qos=q; retain=r; }
     }
     private final Queue<PendingPub> pendingQueue = new ArrayDeque<>();
+
+    private String rootTopic;
+    private String baseTopic;
+    private String reqTopic;
+    private String mqttUsername;
+    private String mqttPassword;
     private void sendStatus(String status, @Nullable String cause) {
         lastStatus = status;
         lastCause  = cause;
@@ -107,25 +107,28 @@ public class MqttForegroundService extends Service {
         String clientId = DEVICE_NAME + "-" + UUID.randomUUID().toString().substring(0, 8);
         MQTT_URL = getString(R.string.mqtt_connect_url);
 
-        mqtt = new MqttClientManager(MQTT_URL, DEVICE_NAME, clientId);
+        rootTopic = getString(R.string.mqtt_root_topic);
+        baseTopic = getString(R.string.mqtt_base_topic);
+        mqttUsername = getString(R.string.mqtt_username);
+        mqttPassword = getString(R.string.mqtt_password);
+
+        reqTopic = rootTopic + "/" + baseTopic + "/req";
+
+        mqtt = new MqttClientManager(
+                MQTT_URL,
+                clientId,
+                rootTopic,
+                baseTopic,
+                mqttUsername,
+                mqttPassword
+        );
         mqtt.setListener(new MqttClientManager.Listener() {
             @Override public void onConnected() {
                 isConnected = true;
                 notifier.update("Connected");
                 sendStatus("connected", null);
                 mqtt.afterConnected();
-
-                // 연결 성공 후 루프 시작
-                if (loops == null) {
-                    loops = new StateLoops(
-                            mqtt,
-                            DEVICE_NAME,
-                            (BatteryManager) getSystemService(BATTERY_SERVICE),
-                            (android.net.wifi.WifiManager) getSystemService(WIFI_SERVICE),
-                            PING_SEC, STATE_SEC
-                    );
-                }
-                loops.start();
+                flushPendingPublishes();
             }
 
             @Override public void onDisconnected(Throwable cause) {
@@ -139,18 +142,12 @@ public class MqttForegroundService extends Service {
                 sendStatus("reconnecting", (cause != null ? cause.getMessage() : null));
             }
 
-            @Override public void onReject(String payload) {
-                isConnected = false;
-                sendStatus("rejected", payload);
-                stopSelf();
-            }
-
-            @Override public void onDirect(String topicOrSub, String payload) {
-                SharedMqttViewModelBridge.getInstance().postDirectMessage(topicOrSub, payload);
+            @Override public void onMessage(String topic, String payload) {
+                SharedMqttViewModelBridge.getInstance().postDirectMessage(topic, payload);
 
                 Intent intent = new Intent(ACTION_MQTT_MESSAGE);   // "kr.re.kitech.tractorinspectionrobot.MQTT_MESSAGE"
                 intent.setPackage(getPackageName());               // 앱 내부로만
-                intent.putExtra(EXTRA_TOPIC, topicOrSub);          // "topic"
+                intent.putExtra(EXTRA_TOPIC, topic);               // "topic"
                 intent.putExtra(EXTRA_PAYLOAD, payload);           // "payload"
                 sendBroadcast(intent);
             }
@@ -188,7 +185,6 @@ public class MqttForegroundService extends Service {
                     userPaused = true;
                     getSharedPreferences(PREF, MODE_PRIVATE).edit().putBoolean(KEY_USER_PAUSED, true).apply();
 
-                    if (loops != null) loops.stop();
                     if (mqtt != null) mqtt.gracefulDisconnect();
                     isConnected = false;
                     notifier.update("Disconnected");
@@ -243,7 +239,6 @@ public class MqttForegroundService extends Service {
 
     @Override public void onDestroy() {
         super.onDestroy();
-        if (loops != null) loops.stop();
         if (mqtt != null) mqtt.gracefulDisconnect();
         if (net != null) { net.releaseWifiHighPerf(); net.unbindWifiNetwork(); }
         isConnected = false;

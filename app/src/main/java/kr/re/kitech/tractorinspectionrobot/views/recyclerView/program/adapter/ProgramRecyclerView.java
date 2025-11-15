@@ -95,6 +95,7 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
             holder.vz.setText(String.valueOf(item.getVz()));
             holder.cx.setText(String.valueOf(item.getCx()));
             holder.cy.setText(String.valueOf(item.getCy()));
+            holder.cz.setText(String.valueOf(item.getCz()));
             if(item.getNum() % 2 == 1) {
                 holder.background.setBackgroundResource(R.color.rowBackground);
             }else{
@@ -122,7 +123,7 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
 
     // 뷰 바인딩 부분을 한번만 하도록, ViewHolder 패턴 의무화
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView num, vx, vy, vz, cx, cy;
+        TextView num, vx, vy, vz, cx, cy, cz;
         TableRow background;
 
         public ViewHolder(View view) {
@@ -134,6 +135,7 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
             vz = (TextView) view.findViewById(R.id.vz);
             cx = (TextView) view.findViewById(R.id.cx);
             cy = (TextView) view.findViewById(R.id.cy);
+            cz = (TextView) view.findViewById(R.id.cz);
             background = (TableRow) view.findViewById(R.id.background);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

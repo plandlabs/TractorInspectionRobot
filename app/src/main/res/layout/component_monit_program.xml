@@ -62,7 +62,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/rounded"
                     android:backgroundTint="#00454545"
-                    android:stretchColumns="1,2,3,4,5">
+                    android:stretchColumns="1,2,3,4,5,6">
 
                     <!-- 헤더 -->
                     <TableRow
@@ -111,6 +111,14 @@
 
                         <TextView
                             android:text="Y'"
+                            android:layout_width="50dp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:text="z'"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"

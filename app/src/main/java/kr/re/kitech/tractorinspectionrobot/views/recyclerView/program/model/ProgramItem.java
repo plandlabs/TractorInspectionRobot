@@ -15,6 +15,7 @@ public class ProgramItem {
     private int vz;
     private int cx;
     private int cy;
+    private int cz;
     private String datetime;
 
     public ProgramItem(JSONObject arr) throws JSONException {
@@ -23,6 +24,7 @@ public class ProgramItem {
         this.vz = arr.getInt("z");
         this.cx = arr.getInt("x'");
         this.cy = arr.getInt("y'");
+        this.cz = arr.getInt("z'");
         this.datetime = arr.getString("datetime");
     }
 }

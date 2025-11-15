@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -16,18 +15,35 @@ import androidx.lifecycle.MutableLiveData;
 
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
 
 public class SharedMqttViewModel extends AndroidViewModel {
 
     private final Context app;
+    private final String staTopic;
+    private final String reqTopic;
+    private final String baseTopic;
 
-    // 1) 임의 직접 메시지 (기존 호환)
+    // MQTT opid 증가용
+    private int opidCounter = 1;
+
+    // from-point (클라이언트 식별자)
+    private static final String FP = "pc-controller";
+
+    // 1) 임의 직접 메시지 (기존 호환용)
     private final MutableLiveData<MqttDirectMessage> directMessage = new MutableLiveData<>();
     public LiveData<MqttDirectMessage> getDirectMessage() { return directMessage; }
     public void postDirectMessage(String topic, String payload) {
-        try { directMessage.postValue(new MqttDirectMessage(topic, new JSONObject(payload))); }
-        catch (Exception e) { directMessage.postValue(new MqttDirectMessage(topic, payload)); }
+        try {
+            directMessage.postValue(new MqttDirectMessage(topic, new JSONObject(payload)));
+        } catch (Exception e) {
+            directMessage.postValue(new MqttDirectMessage(topic, payload));
+        }
     }
 
     // 2) MQTT 연결 상태
@@ -35,54 +51,125 @@ public class SharedMqttViewModel extends AndroidViewModel {
     public LiveData<Boolean> getMqttConnected() { return mqttConnected; }
 
     // 3) 로봇 전체 상태 (x,y,z,xPrimeDeg,yPrimeDeg,zPrimeDeg,ts)
-    private final MutableLiveData<RobotState> state = new MutableLiveData<>(new RobotState(0,0,0,0,0,0,0));
+    private final MutableLiveData<RobotState> state =
+            new MutableLiveData<>(new RobotState(0, 0, 0, 0, 0, 0, 0));
     public LiveData<RobotState> getState() { return state; }
+
     private RobotState getOrDefault() {
         RobotState s = state.getValue();
-        return (s == null) ? new RobotState(0,0,0,0,0,0,0) : s;
+        return (s == null) ? new RobotState(0, 0, 0, 0, 0, 0, 0) : s;
     }
 
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
-            if (intent == null || !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
+            if (intent == null ||
+                    !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
+
             String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
             if (status == null) return;
+
             if ("connected".equalsIgnoreCase(status)) {
                 mqttConnected.postValue(true);
-            } else if ("disconnected".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
+                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
+                sendInitialServoZero();
+            } else if ("disconnected".equalsIgnoreCase(status)
+                    || "rejected".equalsIgnoreCase(status)) {
                 mqttConnected.postValue(false);
             }
         }
     };
 
-    // ---- 수신 메시지(예: robot/simulation) 수신 ----
+    // ---- 수신 메시지 수신 (MQTT → ForegroundService → 브로드캐스트) ----
     private final BroadcastReceiver messageReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
-            if (intent == null || !MqttForegroundService.ACTION_MQTT_MESSAGE.equals(intent.getAction())) return;
+            if (intent == null ||
+                    !MqttForegroundService.ACTION_MQTT_MESSAGE.equals(intent.getAction())) return;
+
             String topic   = intent.getStringExtra(MqttForegroundService.EXTRA_TOPIC);
             String payload = intent.getStringExtra(MqttForegroundService.EXTRA_PAYLOAD);
             if (topic == null || payload == null) return;
 
-            // 필요시 모든 메시지를 directMessage로도 남겨둠(디버깅/로그)
+            // 모든 메시지를 directMessage에도 남김(디버깅/로그용)
             postDirectMessage(topic, payload);
 
-            if (topic.startsWith("robot/simulation/")) {        // topic이 'robot/simulation' 일때 RobotState 아이템을 만듬
-                try {
-                    JSONObject o = new JSONObject(payload);
-                    RobotState cur = getOrDefault();
-                    RobotState next = RobotState.fromJson(o, cur);
-                    next = RobotState.clamp(next);
-                    state.postValue(next);
-                } catch (Exception ignore) {}
+            // STA 토픽이면 로봇 상태로 반영
+            if (topic.equals(staTopic)) {
+                handleStaPayload(payload);
             }
         }
     };
+
+    /**
+     * STA(JSON) → RobotState 갱신
+     * 현재 STA는
+     * {
+     *   "mt": "sta",
+     *   "ct": {
+     *     "motion": { "pos": { "x":..., "y":..., "z":... }, ... }
+     *   }
+     * }
+     * 형태이고, servo 정보는 없으므로 x,y,z만 갱신되고
+     * xPrimeDeg,yPrimeDeg,zPrimeDeg는 기존 값을 유지한다.
+     */
+    private void handleStaPayload(String payload) {
+        try {
+            JSONObject root = new JSONObject(payload);
+            JSONObject ct = root.optJSONObject("ct");
+            if (ct == null) return;
+
+            RobotState cur = getOrDefault();
+            double x = cur.x;
+            double y = cur.y;
+            double z = cur.z;
+            double xPrimeDeg = cur.xPrimeDeg;
+            double yPrimeDeg = cur.yPrimeDeg;
+            double zPrimeDeg = cur.zPrimeDeg;
+
+            // motion.pos → x,y,z
+            JSONObject motion = ct.optJSONObject("motion");
+            if (motion != null) {
+                JSONObject pos = motion.optJSONObject("pos");
+                if (pos != null) {
+                    x = pos.optDouble("x", x);
+                    y = pos.optDouble("y", y);
+                    z = pos.optDouble("z", z);
+                }
+            }
+
+            // 현재 STA에는 servo가 없으므로, servo 파트가 없으면 기존 값 유지
+            JSONObject servo = null;
+            JSONObject servoContainer = ct.optJSONObject("servo");
+            if (servoContainer != null) {
+                servo = servoContainer.optJSONObject("angles");
+                if (servo == null && servoContainer.has("s1")) {
+                    // angles 없이 바로 s1/s2/s3가 있을 수도 있음
+                    servo = servoContainer;
+                }
+            }
+            if (servo != null) {
+                xPrimeDeg = servo.optDouble("s1", xPrimeDeg);
+                yPrimeDeg = servo.optDouble("s2", yPrimeDeg);
+                zPrimeDeg = servo.optDouble("s3", zPrimeDeg);
+            }
+
+            long ts = System.currentTimeMillis();
+            RobotState next = new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
+            next = RobotState.clamp(next);
+            state.postValue(next);
+        } catch (Exception ignore) {}
+    }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public SharedMqttViewModel(@NonNull Application application) {
         super(application);
         this.app = application.getApplicationContext();
+
+        String rootTopic = application.getString(R.string.mqtt_root_topic); // ex) "ingsys"
+        baseTopic = application.getString(R.string.mqtt_base_topic);        // ex) "ing_w00001"
+
+        staTopic = rootTopic + "/" + baseTopic + "/sta";
+        reqTopic = rootTopic + "/" + baseTopic + "/req";
 
         // 상태 브로드캐스트 수신
         IntentFilter f1 = new IntentFilter(MqttForegroundService.ACTION_MQTT_STATUS);
@@ -122,35 +209,195 @@ public class SharedMqttViewModel extends AndroidViewModel {
         app.startService(i);
     }
 
-    /** 버튼 델타 적용 → 전체 상태로 publish */
+    /**
+     * 버튼 델타 적용 → 내부 상태 갱신 + 분기해서 브로커에 publish
+     *
+     * - axis가 x,y,z → cmd=2001 (ABS, x,y,z)
+     * - axis가 xPrimeDeg,yPrimeDeg,zPrimeDeg → cmd=3002 (ABS, s1,s2,s3)
+     */
     public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
         RobotState cur = getOrDefault();
-        double x=cur.x, y=cur.y, z=cur.z, xPrimeDeg=cur.xPrimeDeg, yPrimeDeg=cur.yPrimeDeg, zPrimeDeg=cur.zPrimeDeg;
+        double x         = cur.x;
+        double y         = cur.y;
+        double z         = cur.z;
+        double xPrimeDeg = cur.xPrimeDeg;
+        double yPrimeDeg = cur.yPrimeDeg;
+        double zPrimeDeg = cur.zPrimeDeg;
+
+        boolean movedPos   = false;
+        boolean movedServo = false;
 
         switch (axis) {
-            case "x":         x         = clamp(cur.x         + delta, 0, 1500); break;
-            case "y":         y         = clamp(cur.y         + delta, 0, 1500); break;
-            case "z":         z         = clamp(cur.z         + delta, 0,   500); break;
-            case "xPrimeDeg": xPrimeDeg = clamp(cur.xPrimeDeg + delta, 0,  180); break;
-            case "yPrimeDeg": yPrimeDeg = clamp(cur.yPrimeDeg + delta, 0,  180); break;
-            case "zPrimeDeg": zPrimeDeg = clamp(cur.zPrimeDeg + delta, 0,  360); break; // zPrimeDeg 범위 (필요 시 수정)
-            default: return;
+            case "x":
+                x = clamp(cur.x + delta, 0, 1500);
+                movedPos = true;
+                break;
+            case "y":
+                y = clamp(cur.y + delta, 0, 1500);
+                movedPos = true;
+                break;
+            case "z":
+                z = clamp(cur.z + delta, 0, 500);
+                movedPos = true;
+                break;
+            case "xPrimeDeg":
+                xPrimeDeg = clamp(cur.xPrimeDeg + delta, 0, 180);
+                movedServo = true;
+                break;
+            case "yPrimeDeg":
+                yPrimeDeg = clamp(cur.yPrimeDeg + delta, 0, 180);
+                movedServo = true;
+                break;
+            case "zPrimeDeg":
+                zPrimeDeg = clamp(cur.zPrimeDeg + delta, 0, 360); // 필요 시 범위 조정
+                movedServo = true;
+                break;
+            default:
+                return;
         }
 
         long ts = System.currentTimeMillis();
         RobotState next = new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
-        state.setValue(next); // UI 즉시 반영
-        publishFull(deviceName, next);
+        next = RobotState.clamp(next);
+
+        // UI 즉시 반영
+        state.setValue(next);
+
+        // 🔀 분기: 좌표/서보 각각 해당하는 cmd만 전송
+        if (movedPos) {
+            publishMoveAbs(next);   // cmd=2001, x,y,z
+        }
+        if (movedServo) {
+            publishServoAbs(next);  // cmd=3002, s1,s2,s3
+        }
     }
 
-    /** 손을 뗄 때 등, 현재 전체 상태를 재전송하고 싶을 때 */
+    /**
+     * 현재 상태를 그대로 다시 보내고 싶을 때 (손 뗄 때 등)
+     * - 좌표/서보 모두 ABS로 재전송
+     */
     public void publishCurrent(String deviceName) {
-        publishFull(deviceName, getOrDefault());
+        RobotState s = getOrDefault();
+        publishMoveAbs(s);
+        publishServoAbs(s);
     }
 
-    private void publishFull(String deviceName, RobotState s) {
-        String topic = "robot/send/" + deviceName;
-        String payload = s.toJson().toString();
+    /**
+     * MQTT 연결 직후 한 번 호출되는 서보 초기화:
+     * s1(xPrimeDeg), s2(yPrimeDeg), s3(zPrimeDeg) = 0도로 맞추는 ABS 명령
+     *
+     * 토픽: ingsys/<baseTopic>/req
+     * JSON:
+     * {
+     *   "mt": "req",
+     *   "tm": "...",
+     *   "fp": "pc-controller",
+     *   "ct": {
+     *     "tg": "ing_w00001",
+     *     "cmd": 3002,
+     *     "opid": N,
+     *     "param": { "mode": "abs", "s1": 0, "s2": 0, "s3": 0 }
+     *   }
+     * }
+     */
+    private void sendInitialServoZero() {
+        try {
+            JSONObject root = new JSONObject();
+            root.put("mt", "req");
+            root.put("tm", nowIso());
+            root.put("fp", FP);
+
+            JSONObject ct = new JSONObject();
+            ct.put("tg", baseTopic);
+            ct.put("cmd", 3002);
+            ct.put("opid", opidCounter++);
+
+            JSONObject p = new JSONObject();
+            p.put("mode", "abs");
+            p.put("s1", 0);
+            p.put("s2", 0);
+            p.put("s3", 0);
+
+            ct.put("param", p);
+            root.put("ct", ct);
+
+            sendMqtt(reqTopic, root.toString());
+
+            // 내부 상태도 같이 0으로 맞춰주고 싶으면 주석 해제
+            /*
+            long ts = System.currentTimeMillis();
+            RobotState cur = getOrDefault();
+            RobotState next = new RobotState(cur.x, cur.y, cur.z, 0, 0, 0, ts);
+            state.postValue(next);
+            */
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * MoveAxes ABS (cmd=2001, x,y,z)
+     */
+    private void publishMoveAbs(RobotState s) {
+        try {
+            JSONObject root = new JSONObject();
+            root.put("mt", "req");
+            root.put("tm", nowIso());
+            root.put("fp", FP);
+
+            JSONObject ct = new JSONObject();
+            ct.put("tg", baseTopic);   // ex) "ing_w00001"
+            ct.put("cmd", 2001);
+            ct.put("opid", opidCounter++);
+
+            JSONObject p = new JSONObject();
+            p.put("mode", "abs");
+            p.put("x", s.x);
+            p.put("y", s.y);
+            p.put("z", s.z);
+            p.put("scurve", true);
+
+            ct.put("param", p);
+            root.put("ct", ct);
+
+            sendMqtt(reqTopic, root.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * ServoMove ABS (cmd=3002, s1,s2,s3)
+     */
+    private void publishServoAbs(RobotState s) {
+        try {
+            JSONObject root = new JSONObject();
+            root.put("mt", "req");
+            root.put("tm", nowIso());
+            root.put("fp", FP);
+
+            JSONObject ct = new JSONObject();
+            ct.put("tg", baseTopic);
+            ct.put("cmd", 3002);
+            ct.put("opid", opidCounter++);
+
+            JSONObject p = new JSONObject();
+            p.put("mode", "abs");
+            p.put("s1", s.xPrimeDeg); // s1
+            p.put("s2", s.yPrimeDeg); // s2
+            p.put("s3", s.zPrimeDeg); // s3
+
+            ct.put("param", p);
+            root.put("ct", ct);
+
+            sendMqtt(reqTopic, root.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** 실제로 ForegroundService에 MQTT publish 요청 */
+    private void sendMqtt(String topic, String payload) {
         Intent i = new Intent(app, MqttForegroundService.class);
         i.setAction(MqttForegroundService.ACTION_PUBLISH);
         i.putExtra(MqttForegroundService.EXTRA_PUB_TOPIC, topic);
@@ -160,6 +407,13 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
     private static double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    /** "yyyy-MM-dd HH:mm:ss" 형식 현재 시각 */
+    private static String nowIso() {
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
     @Override
@@ -174,7 +428,15 @@ public class SharedMqttViewModel extends AndroidViewModel {
         public final String topic;
         public final JSONObject json; // null 가능
         public final String raw;
-        public MqttDirectMessage(String topic, JSONObject json) { this.topic = topic; this.json = json; this.raw = json.toString(); }
-        public MqttDirectMessage(String topic, String rawPayload) { this.topic = topic; this.json = null; this.raw = rawPayload; }
+        public MqttDirectMessage(String topic, JSONObject json) {
+            this.topic = topic;
+            this.json = json;
+            this.raw = json.toString();
+        }
+        public MqttDirectMessage(String topic, String rawPayload) {
+            this.topic = topic;
+            this.json = null;
+            this.raw = rawPayload;
+        }
     }
 }

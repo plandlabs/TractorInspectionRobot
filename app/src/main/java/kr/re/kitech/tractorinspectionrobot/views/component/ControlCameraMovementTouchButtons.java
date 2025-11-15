@@ -18,7 +18,7 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    public Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
+    public Button btn_y_up, btn_y_down, btnForward, btnBackward, btn_x_up, btn_x_down;
     private String deviceName;
 
 
@@ -34,11 +34,12 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     private void init(Context context) {
         inflate(context, R.layout.component_control_camera_movement_touch_buttons, this);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        btnUp = findViewById(R.id.btn_up);
-        btnDown = findViewById(R.id.btn_down);
-        btnLeftWard = findViewById(R.id.btn_leftward);
+        btn_y_up = findViewById(R.id.btn_y_up);
+        btn_y_down = findViewById(R.id.btn_y_down);
 
-        btnRightward = findViewById(R.id.btn_rightward);
+        btn_x_up = findViewById(R.id.btn_x_up);
+        btn_x_down = findViewById(R.id.btn_x_down);
+
         btnBackward = findViewById(R.id.btn_backward);
 
         btnForward = findViewById(R.id.btn_forward);
@@ -67,14 +68,15 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         final float step = Float.parseFloat(getContext().getString(R.string.camera_move_step));
         final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis));
 
-        // yPrimeDeg (상/하) - tiltDeg에서 변경
-        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, true, step, intervalMillis, req));
-        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, false, step, intervalMillis, req));
+        // xPrimeDeg (카메라 헤드 서보모터 상/하) - s1에서 변경
+        btn_x_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));
+        btn_x_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, false, step, intervalMillis, req));
 
-        // xPrimeDeg (좌/우) - panDeg에서 변경
-        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));
-        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, false, step, intervalMillis, req));
+        // yPrimeDeg (중앙 서보모터 상/하) - s2에서 변경
+        btn_y_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, true, step, intervalMillis, req));
+        btn_y_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, false, step, intervalMillis, req));
 
+        // zPrimeDeg (끝 서보모터 회전) - s3에서 변경
         btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, true, step, intervalMillis, req));
         btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, false, step, intervalMillis, req));
     }
