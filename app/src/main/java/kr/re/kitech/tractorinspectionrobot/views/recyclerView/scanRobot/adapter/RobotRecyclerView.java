@@ -97,8 +97,7 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
 
             String ssid = item.getSsid();
             String mac = item.getMac();
-            holder.name.setText(ssid);
-            holder.mac.setText(mac);
+            holder.deviceName.setText(ssid);
 
             // 초기 뷰 상태
             holder.imgView.setVisibility(View.VISIBLE);
@@ -107,16 +106,6 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
             holder.isConnected.setVisibility(View.GONE);
             holder.isNotNetworkConnected.setVisibility(View.GONE);
             holder.viewChildItem.setAlpha(1f);
-            holder.bandView.setVisibility(View.VISIBLE);
-            if (item.getFreq() >= 2400 && item.getFreq() <= 2500) {
-                holder.bandView.setText("2.4GHz");
-            } else if (item.getFreq() >= 4900 && item.getFreq() <= 5900) {
-                holder.bandView.setText("5GHz");
-            } else if (item.getFreq() >= 5925 && item.getFreq() <= 7125) {
-                holder.bandView.setText("6GHz");
-            } else {
-                holder.bandView.setVisibility(View.GONE);
-            }
 
             if (item.getIsSaved()) {
                 // 저장된 항목
@@ -189,7 +178,7 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
 
     // 뷰 바인딩 부분을 한번만 하도록, ViewHolder 패턴 의무화
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name, mac, bandView;
+        TextView deviceName;
 
         View imgView, deleteBtn, isNotNetworkConnected, emptyView;
         LinearLayout viewChildItem, addViewItem;
@@ -200,7 +189,7 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
         public ViewHolder(View view) {
             super(view);
 
-            name = (TextView) view.findViewById(R.id.name);
+            deviceName = (TextView) view.findViewById(R.id.device_name);
             imgView = (View) view.findViewById(R.id.imgView);
             emptyView = (View) view.findViewById(R.id.emptyView);
             deleteBtn = (View) view.findViewById(R.id.deleteBtn);
