@@ -68,17 +68,17 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         final float step = Float.parseFloat(getContext().getString(R.string.camera_move_step));
         final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_c));
 
-        // xPrimeDeg (카메라 헤드 서보모터 상/하) - s1에서 변경
-        btn_x_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, true, step, intervalMillis, req));
-        btn_x_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "xPrimeDeg", on, off, false, step, intervalMillis, req));
+        // s1 (카메라 헤드 서보모터 상/하) - s1에서 변경
+        btn_x_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s1", on, off, true, step, intervalMillis, req));
+        btn_x_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s1", on, off, false, step, intervalMillis, req));
 
-        // yPrimeDeg (중앙 서보모터 상/하) - s2에서 변경
-        btn_y_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, true, step, intervalMillis, req));
-        btn_y_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "yPrimeDeg", on, off, false, step, intervalMillis, req));
+        // s2 (중앙 서보모터 상/하) - s2에서 변경
+        btn_y_up.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s2", on, off, true, step, intervalMillis, req));
+        btn_y_down.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s2", on, off, false, step, intervalMillis, req));
 
-        // zPrimeDeg (끝 서보모터 회전) - s3에서 변경
-        btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, true, step, intervalMillis, req));
-        btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "zPrimeDeg", on, off, false, step, intervalMillis, req));
+        // s3 (끝 서보모터 회전) - s3에서 변경
+        btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s3", on, off, true, step, intervalMillis, req));
+        btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "s3", on, off, false, step, intervalMillis, req));
     }
 
 }

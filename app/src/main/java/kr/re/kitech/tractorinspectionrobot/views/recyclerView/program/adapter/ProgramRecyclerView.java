@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.helper.ItemTouchHelper;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.model.ProgramItem;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,12 +24,12 @@ import java.util.List;
 public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerView.ViewHolder>
         implements ItemTouchHelper {
     private Context context;
-    private ArrayList<ProgramItem> data;
+    private ArrayList<RobotState> data;
     private LayoutInflater inflater;
     public int selectPosition = 0;
     private Vibrator mVibrator;
 
-    public ProgramRecyclerView(ArrayList<ProgramItem> data, Context context) {
+    public ProgramRecyclerView(ArrayList<RobotState> data, Context context) {
         this.data = data;
         this.context = context;
         this.inflater = LayoutInflater.from(context);
@@ -87,15 +87,15 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (payloads.isEmpty()) {
-            ProgramItem item = data.get(position);
+            RobotState item = data.get(position);
             // 기본 뷰 설정
             holder.num.setText(String.valueOf(item.getNum()));
-            holder.vx.setText(String.valueOf(item.getVx()));
-            holder.vy.setText(String.valueOf(item.getVy()));
-            holder.vz.setText(String.valueOf(item.getVz()));
-            holder.cx.setText(String.valueOf(item.getCx()));
-            holder.cy.setText(String.valueOf(item.getCy()));
-            holder.cz.setText(String.valueOf(item.getCz()));
+            holder.x.setText(String.valueOf(item.getX()));
+            holder.y.setText(String.valueOf(item.getY()));
+            holder.z.setText(String.valueOf(item.getZ()));
+            holder.s1.setText(String.valueOf(item.getS1()));
+            holder.s2.setText(String.valueOf(item.getS2()));
+            holder.s3.setText(String.valueOf(item.getS3()));
             if(item.getNum() % 2 == 1) {
                 holder.background.setBackgroundResource(R.color.rowBackground);
             }else{
@@ -123,19 +123,19 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
 
     // 뷰 바인딩 부분을 한번만 하도록, ViewHolder 패턴 의무화
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView num, vx, vy, vz, cx, cy, cz;
+        TextView num, x, y, z, s1, s2, s3;
         TableRow background;
 
         public ViewHolder(View view) {
             super(view);
 
             num = (TextView) view.findViewById(R.id.num);
-            vx = (TextView) view.findViewById(R.id.vx);
-            vy = (TextView) view.findViewById(R.id.vy);
-            vz = (TextView) view.findViewById(R.id.vz);
-            cx = (TextView) view.findViewById(R.id.cx);
-            cy = (TextView) view.findViewById(R.id.cy);
-            cz = (TextView) view.findViewById(R.id.cz);
+            x = (TextView) view.findViewById(R.id.x);
+            y = (TextView) view.findViewById(R.id.y);
+            z = (TextView) view.findViewById(R.id.z);
+            s1 = (TextView) view.findViewById(R.id.s1);
+            s2 = (TextView) view.findViewById(R.id.s2);
+            s3 = (TextView) view.findViewById(R.id.s3);
             background = (TableRow) view.findViewById(R.id.background);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

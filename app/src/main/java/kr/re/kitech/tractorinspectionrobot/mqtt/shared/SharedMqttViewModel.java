@@ -55,7 +55,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mqttConnected = new MutableLiveData<>(false);
     public LiveData<Boolean> getMqttConnected() { return mqttConnected; }
 
-    // 3) 로봇 전체 상태 (x,y,z,xPrimeDeg,yPrimeDeg,zPrimeDeg,ts)
+    // 3) 로봇 전체 상태 (x,y,z,s1,s2,s3,ts)
     private final MutableLiveData<RobotState> state =
             new MutableLiveData<>(new RobotState(0, 0, 0, 0, 0, 0, 0));
     public LiveData<RobotState> getState() { return state; }
@@ -117,7 +117,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      *   }
      * }
      * 형태이고, servo 정보는 없으므로 x,y,z만 갱신되고
-     * xPrimeDeg,yPrimeDeg,zPrimeDeg는 기존 값을 유지한다.
+     * s1,s2,s3는 기존 값을 유지한다.
      */
     private void handleStaPayload(String payload) {
         try {
@@ -129,9 +129,9 @@ public class SharedMqttViewModel extends AndroidViewModel {
             double x = cur.x;
             double y = cur.y;
             double z = cur.z;
-            double xPrimeDeg = cur.xPrimeDeg;
-            double yPrimeDeg = cur.yPrimeDeg;
-            double zPrimeDeg = cur.zPrimeDeg;
+            double s1 = cur.s1;
+            double s2 = cur.s2;
+            double s3 = cur.s3;
 
             // motion.pos → x,y,z
             JSONObject motion = ct.optJSONObject("motion");
@@ -155,13 +155,13 @@ public class SharedMqttViewModel extends AndroidViewModel {
                 }
             }
             if (servo != null) {
-                xPrimeDeg = servo.optDouble("s1", xPrimeDeg);
-                yPrimeDeg = servo.optDouble("s2", yPrimeDeg);
-                zPrimeDeg = servo.optDouble("s3", zPrimeDeg);
+                s1 = servo.optDouble("s1", s1);
+                s2 = servo.optDouble("s2", s2);
+                s3 = servo.optDouble("s3", s3);
             }
 
             long ts = System.currentTimeMillis();
-            RobotState next = new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
+            RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
             next = RobotState.clamp(next);
             state.postValue(next);
         } catch (Exception ignore) {}
@@ -220,16 +220,16 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * 버튼 델타 적용 → 내부 상태 갱신 + 분기해서 브로커에 publish
      *
      * - axis가 x,y,z → cmd=2001 (ABS, x,y,z)
-     * - axis가 xPrimeDeg,yPrimeDeg,zPrimeDeg → cmd=3002 (ABS, s1,s2,s3)
+     * - axis가 s1,s2,s3 → cmd=3002 (ABS, s1,s2,s3)
      */
     public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
         RobotState cur = getOrDefault();
         double x         = cur.x;
         double y         = cur.y;
         double z         = cur.z;
-        double xPrimeDeg = cur.xPrimeDeg;
-        double yPrimeDeg = cur.yPrimeDeg;
-        double zPrimeDeg = cur.zPrimeDeg;
+        double s1 = cur.s1;
+        double s2 = cur.s2;
+        double s3 = cur.s3;
 
         boolean movedPos   = false;
         boolean movedServo = false;
@@ -247,16 +247,16 @@ public class SharedMqttViewModel extends AndroidViewModel {
                 z = clamp(cur.z + delta, 0, 500);
                 movedPos = true;
                 break;
-            case "xPrimeDeg":
-                xPrimeDeg = clamp(cur.xPrimeDeg + delta, 0, 180);
+            case "s1":
+                s1 = clamp(cur.s1 + delta, 0, 180);
                 movedServo = true;
                 break;
-            case "yPrimeDeg":
-                yPrimeDeg = clamp(cur.yPrimeDeg + delta, 0, 180);
+            case "s2":
+                s2 = clamp(cur.s2 + delta, 0, 180);
                 movedServo = true;
                 break;
-            case "zPrimeDeg":
-                zPrimeDeg = clamp(cur.zPrimeDeg + delta, 0, 360); // 필요 시 범위 조정
+            case "s3":
+                s3 = clamp(cur.s3 + delta, 0, 360); // 필요 시 범위 조정
                 movedServo = true;
                 break;
             default:
@@ -264,7 +264,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         }
 
         long ts = System.currentTimeMillis();
-        RobotState next = new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
+        RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
         // UI 즉시 반영
@@ -300,7 +300,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
     /**
      * MQTT 연결 직후 한 번 호출되는 서보 초기화:
-     * s1(xPrimeDeg), s2(yPrimeDeg), s3(zPrimeDeg) = 0도로 맞추는 ABS 명령
+     * s1(s1), s2(s2), s3(s3) = 0도로 맞추는 ABS 명령
      *
      * 토픽: ingsys/<baseTopic>/req
      * JSON:
@@ -399,9 +399,9 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             JSONObject p = new JSONObject();
             p.put("mode", "abs");
-            p.put("s1", s.xPrimeDeg); // s1
-            p.put("s2", s.yPrimeDeg); // s2
-            p.put("s3", s.zPrimeDeg); // s3
+            p.put("s1", s.s1); // s1
+            p.put("s2", s.s2); // s2
+            p.put("s3", s.s3); // s3
 
             ct.put("param", p);
             root.put("ct", ct);

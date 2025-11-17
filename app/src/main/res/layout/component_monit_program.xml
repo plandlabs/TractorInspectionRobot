@@ -102,7 +102,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="X'"
+                            android:text="S1"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -110,7 +110,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="Y'"
+                            android:text="S2"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -118,7 +118,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="z'"
+                            android:text="S3"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"

@@ -1,7 +1,7 @@
+// app/src/main/java/kr/re/kitech/tractorinspectionrobot/views/activity/RobotListActivity.java
 package kr.re.kitech.tractorinspectionrobot.views.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,15 +17,18 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStore;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
+import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.OnItemClickListener;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.RobotRecyclerView;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
@@ -37,31 +40,53 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class RobotListActivity extends Activity {
+public class RobotListActivity extends android.app.Activity implements LifecycleOwner, ViewModelStoreOwner {
 
     private RecyclerView robotRecyclerView;
     private RobotRecyclerView robotRecyclerViewAdapter;
     private ArrayList<RobotItem> robotItemArrayList;
     private SharedPreferences setting;
     private SharedPreferences.Editor editor;
-    private SharedMqttViewModel viewModel;
+    private WifiConnector wifiConnector;
     private Vibrator mVibrator;
     private View btnBack;
+    private SharedMqttViewModel viewModel;
     private boolean isMqttConnected = false;
+    private final LifecycleRegistry lifecycleRegistry = new LifecycleRegistry(this);
+    private ViewModelStore viewModelStore = new ViewModelStore();
+
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+        return lifecycleRegistry;
+    }
+
+    @NonNull
+    @Override
+    public ViewModelStore getViewModelStore() {
+        if (viewModelStore == null) {
+            viewModelStore = new ViewModelStore();
+        }
+        return viewModelStore;
+    }
+
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onResume() {
         super.onResume();
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
     }
 
     @Override
     protected void onPause() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
         super.onPause();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE);
         setContentView(R.layout.activity_robot_list);
 
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -74,16 +99,28 @@ public class RobotListActivity extends Activity {
             finish();
         });
 
-        viewModel = new ViewModelProvider((ViewModelStoreOwner) this).get(SharedMqttViewModel.class);
+        viewModel = new ViewModelProvider(this).get(SharedMqttViewModel.class);
 
         // 옵저버: 캐시 + UI 동기화
-        viewModel.getMqttConnected().observe((LifecycleOwner) this, connected -> {
+        viewModel.getMqttConnected().observe(this, connected -> {
             isMqttConnected = Boolean.TRUE.equals(connected);
         });
 
         initUI();
 
         this.cleanUpRobotsJson();  // 여기서 한 번 호출! 불필요한(빈 값) 데이터 제거 후 저장
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START);
+    }
+
+    @Override
+    protected void onStop() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        super.onStop();
     }
 
     private void initUI() {
@@ -159,6 +196,36 @@ public class RobotListActivity extends Activity {
                     Toast.makeText(getApplicationContext(), "이미 연결된 로봇입니다.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                if (item.getIsSaved()) {
+                    if(item.getIsScan()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext(), R.style.DarkAlertDialog);
+                        builder.setTitle("Wi-Fi 연결");
+                        builder.setMessage("로봇(SSID: " + item.getSsid() + ")에 연결하시겠습니까?");
+                        builder.setPositiveButton("확인", (dialog, which) -> {
+                            mVibrator.vibrate(100);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                wifiConnector.connectWithNetworkSpecifier(item.getSsid(), item.getPassword(), success -> {
+                                    if (success) {
+                                        Toast.makeText(getApplicationContext(), "Wi-Fi 연결 성공", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        // 저장된 잘못된 정보를 삭제
+                                        removeRobotFromSavedList(item.getSsid(), item.getMac());
+                                        // 비밀번호 재입력 창
+                                        promptPasswordAndConnect(item);
+                                    }
+                                });
+                            }
+                        });
+                        builder.setNegativeButton("취소", null);
+                        builder.show();
+                    }else{
+                        Toast.makeText(getApplicationContext(), "스캔 목록에 없는 로봇입니다.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    promptPasswordAndConnect(item);
+                }
             }
 
             @Override
@@ -202,6 +269,10 @@ public class RobotListActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
+        if (viewModelStore != null) {
+            viewModelStore.clear();
+        }
         super.onDestroy();
     }
 

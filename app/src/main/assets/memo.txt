@@ -33,7 +33,7 @@
   }
 }
 
-#브로커에게 s1(xPrimeDeg),s2(yPrimeDeg),s3(zPrimeDeg)를 보냄
+#브로커에게 s1(s1),s2(s2),s3(s3)를 보냄
 토픽 ingsys/ing_w00001/req
 {
   "mt": "req",

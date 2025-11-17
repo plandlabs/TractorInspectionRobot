@@ -22,19 +22,18 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import kr.re.kitech.tractorinspectionrobot.R;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.utils.JsonFileUtil;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter.ProgramRecyclerView;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.model.ProgramItem;
 
 public class MonitProgram extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
     private GridLayout gridLayout;
-    private RecyclerView programRecyclerView;
     private ProgramRecyclerView programRecyclerViewAdapter;
-    private ArrayList<ProgramItem> programItems = new ArrayList<>();
+    private final ArrayList<RobotState> robotStateItems = new ArrayList<>();
     private String programJson;
 
 
@@ -50,9 +49,9 @@ public class MonitProgram extends LinearLayout {
     private void init(Context context) {
         inflate(context, R.layout.component_monit_program, this);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        programRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        RecyclerView programRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-        programRecyclerViewAdapter = new ProgramRecyclerView(programItems, context);
+        programRecyclerViewAdapter = new ProgramRecyclerView(robotStateItems, context);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(context);
         programRecyclerView.setLayoutManager(mLayoutManager);
         programRecyclerView.setAdapter(programRecyclerViewAdapter);
@@ -64,14 +63,14 @@ public class MonitProgram extends LinearLayout {
 
         programJson = JsonFileUtil.readJSONFromAsset(getContext(), "test.json");
 
-        programItems.clear();
+        robotStateItems.clear();
         try {
             JSONArray jsonArray = new JSONArray(programJson);
             for (int j = 0; j < jsonArray.length(); j++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(j);
-                ProgramItem programItem = new ProgramItem(jsonObject);
-                programItem.setNum(jsonArray.length() - j);
-                programItems.add(j, programItem);
+                RobotState robotStateItem = new RobotState(jsonObject);
+                robotStateItem.setNum(jsonArray.length() - j);
+                robotStateItems.add(j, robotStateItem);
             }
             programRecyclerViewAdapter.notifyDataSetChanged();
         } catch (JSONException e) {

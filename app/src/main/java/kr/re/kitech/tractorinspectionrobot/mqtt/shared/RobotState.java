@@ -7,20 +7,21 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RobotState {
-    public final double x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg; // 필드명 변경 및 zPrimeDeg 추가
+    private int num;
+    public final double x, y, z, s1, s2, s3; // 필드명 변경 및 s3 추가
     public final long ts;
 
     public RobotState(JSONObject object) throws JSONException {
         this.x = object.getDouble("x");
         this.y = object.getDouble("y");
         this.z = object.getDouble("z");
-        this.xPrimeDeg = object.getDouble("xPrimeDeg"); // panDeg -> xPrimeDeg
-        this.yPrimeDeg = object.getDouble("yPrimeDeg"); // tiltDeg -> yPrimeDeg
-        this.zPrimeDeg = object.getDouble("zPrimeDeg"); // zPrimeDeg 추가
+        this.s1 = object.getDouble("s1"); // panDeg -> s1
+        this.s2 = object.getDouble("s2"); // tiltDeg -> s2
+        this.s3 = object.getDouble("s3"); // s3 추가
         this.ts = object.getLong("ts");
     }
-    public RobotState(double x, double y, double z, double xPrimeDeg, double yPrimeDeg, double zPrimeDeg, long ts) {
-        this.x = x; this.y = y; this.z = z; this.xPrimeDeg = xPrimeDeg; this.yPrimeDeg = yPrimeDeg; this.zPrimeDeg = zPrimeDeg; this.ts = ts;
+    public RobotState(double x, double y, double z, double s1, double s2, double s3, long ts) {
+        this.x = x; this.y = y; this.z = z; this.s1 = s1; this.s2 = s2; this.s3 = s3; this.ts = ts;
     }
 
     public JSONObject toJson() {
@@ -29,9 +30,9 @@ public class RobotState {
                     .put("x", x)
                     .put("y", y)
                     .put("z", z)
-                    .put("xPrimeDeg", xPrimeDeg) // panDeg -> xPrimeDeg
-                    .put("yPrimeDeg", yPrimeDeg) // tiltDeg -> yPrimeDeg
-                    .put("zPrimeDeg", zPrimeDeg) // zPrimeDeg 추가
+                    .put("s1", s1) // panDeg -> s1
+                    .put("s2", s2) // tiltDeg -> s2
+                    .put("s3", s3) // s3 추가
                     .put("ts", ts);
         } catch (Exception e) { return new JSONObject(); }
     }
@@ -39,12 +40,12 @@ public class RobotState {
         double x         = o.optDouble("x",         fallback == null ? 0.0 : fallback.x);
         double y         = o.optDouble("y",         fallback == null ? 0.0 : fallback.y);
         double z         = o.optDouble("z",         fallback == null ? 0.0 : fallback.z);
-        double xPrimeDeg = o.optDouble("xPrimeDeg", fallback == null ? 0.0 : fallback.xPrimeDeg); // panDeg -> xPrimeDeg
-        double yPrimeDeg = o.optDouble("yPrimeDeg", fallback == null ? 0.0 : fallback.yPrimeDeg); // tiltDeg -> yPrimeDeg
-        double zPrimeDeg = o.optDouble("zPrimeDeg", fallback == null ? 0.0 : fallback.zPrimeDeg); // zPrimeDeg 추가
-        long   ts        = o.optLong("ts", System.currentTimeMillis());
+        double s1        = o.optDouble("s1",        fallback == null ? 0.0 : fallback.s1); // panDeg -> s1
+        double s2        = o.optDouble("s2",        fallback == null ? 0.0 : fallback.s2); // tiltDeg -> s2
+        double s3        = o.optDouble("s3",        fallback == null ? 0.0 : fallback.s3); // s3 추가
+        long   ts        = o.optLong("ts",          System.currentTimeMillis());
         // BUG FIX: 생성자에 직접 값을 전달하여 JSONException 방지
-        return new RobotState(x, y, z, xPrimeDeg, yPrimeDeg, zPrimeDeg, ts);
+        return new RobotState(x, y, z, s1, s2, s3, ts);
     }
 
     public static RobotState clamp(RobotState s) {
@@ -52,9 +53,9 @@ public class RobotState {
                 clamp(s.x,   0, 1500),
                 clamp(s.y,   0, 1500),
                 clamp(s.z,   0, 500),   // 필요 시 수정
-                clamp(s.xPrimeDeg,  0, 180), // xPrimeDeg
-                clamp(s.yPrimeDeg, 0, 180), // yPrimeDeg
-                clamp(s.zPrimeDeg, 0, 360), // zPrimeDeg
+                clamp(s.s1,  0, 180), // s1
+                clamp(s.s2, 0, 180), // s2
+                clamp(s.s3, 0, 360), // s3
                 s.ts
         );
     }
