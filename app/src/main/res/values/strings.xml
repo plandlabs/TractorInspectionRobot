@@ -44,7 +44,7 @@
     <string name="bottom_menu_08">알람 이력</string>
 
     <string name="side_menu_01">내 정보</string>
-    <string name="side_menu_02">연결된 로봇 목록</string>
+    <string name="side_menu_02">연결 로봇 목록</string>
     <string name="side_menu_03">로그아웃</string>
 
     <string name="empty_string">값을 추가해주세요.</string>

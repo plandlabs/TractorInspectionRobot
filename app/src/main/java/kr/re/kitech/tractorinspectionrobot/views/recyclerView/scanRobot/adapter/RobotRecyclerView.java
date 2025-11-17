@@ -125,7 +125,7 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
 
                 if (item.getIsScan()) {
                     if (item.getIsConnected()) {
-                        // 연결된 로봇
+                        // 연결 로봇
                         holder.viewChildItem.setAlpha(1f);
                         holder.isConnected.setVisibility(View.VISIBLE);
                         holder.deleteBtn.setVisibility(View.GONE);
@@ -147,7 +147,7 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
                 holder.emptyView.setVisibility(View.VISIBLE);
             }
             if (item.getIsConnected()) {
-                // 연결된 로봇
+                // 연결 로봇
                 holder.isConnected.setVisibility(View.VISIBLE);
             } else {
                 // 스캔되었지만 연결 안됨

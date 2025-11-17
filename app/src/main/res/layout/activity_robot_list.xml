@@ -9,7 +9,7 @@
     android:orientation="vertical"
     android:theme="@style/Theme.TractorInspectionRobot"
     android:background="@color/background"
-    tools:context=".views.activity.LoginActivity">
+    tools:context=".views.activity.RobotListActivity">
 
     <!-- progressCircle -->
     <ProgressBar
@@ -70,7 +70,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="연결된 로봇 목록"
+                    android:text="연결 로봇 목록"
                     android:textColor="#fff"
                     android:textSize="21sp"
                     android:textStyle="bold" />

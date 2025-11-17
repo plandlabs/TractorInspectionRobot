@@ -78,12 +78,12 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     String[] PERMISSIONS = null;
 
     String[] PERMISSIONS_M = {
-            Manifest.permission.ACCESS_FINE_LOCATION,
+//            Manifest.permission.ACCESS_FINE_LOCATION,
     };
 
     String[] PERMISSIONS_S = {
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
+//            Manifest.permission.ACCESS_COARSE_LOCATION,
+//            Manifest.permission.ACCESS_FINE_LOCATION,
     };
 
     private NavigationView mNavView;
@@ -219,6 +219,9 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         mVibrator.vibrate(100);
+        if(item.getItemId() == R.id.nav_side_2){
+            startActivity(new Intent(getApplication(), RobotListActivity.class));
+        }
         if(item.getItemId() == R.id.nav_side_3){
             LogoutAlertDialog();
         }

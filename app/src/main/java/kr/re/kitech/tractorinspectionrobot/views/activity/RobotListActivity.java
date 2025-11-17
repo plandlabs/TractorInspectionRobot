@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.InputType;
@@ -26,7 +25,6 @@ import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.RobotRecyclerView;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
 import kr.re.kitech.tractorinspectionrobot.wifi.WifiConnector;
-import kr.re.kitech.tractorinspectionrobot.wifi.WifiScanService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,11 +40,6 @@ public class RobotListActivity extends Activity {
     private SharedPreferences setting;
     private SharedPreferences.Editor editor;
     private WifiConnector wifiConnector;
-    private WifiScanService wifiScanService;
-    private boolean isBound = false;
-    private final Handler scanHandler = new Handler();
-    private boolean scanningPhase = true;
-    private boolean isSocketBound = false;
     private Vibrator mVibrator;
     private View btnBack;
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -63,12 +56,11 @@ public class RobotListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scan_robot_list);
+        setContentView(R.layout.activity_robot_list);
 
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         setting = getSharedPreferences("setting", 0);
         editor = setting.edit();
-        wifiConnector = new WifiConnector(getApplicationContext());
         robotItemArrayList = new ArrayList<>();
         btnBack = (View) findViewById(R.id.btnBack);
         btnBack.setOnClickListener(view -> {
@@ -122,43 +114,6 @@ public class RobotListActivity extends Activity {
                 builder.setPositiveButton("확인", (dialog, which) -> {
                     mVibrator.vibrate(100);
                     String password = input.getText().toString();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        wifiConnector.connectWithNetworkSpecifier(item.getSsid(), password, success -> {
-                            if (success) {
-                                Toast.makeText(getApplicationContext(), "Wi-Fi 연결 및 비밀번호 저장 성공", Toast.LENGTH_SHORT).show();
-                                try {
-                                    String robotsJson = setting.getString("Robots_json", "[]");
-                                    JSONArray jsonArray = new JSONArray(robotsJson);
-                                    boolean isDuplicate = false;
-
-                                    for (int i = 0; i < jsonArray.length(); i++) {
-                                        JSONObject obj = jsonArray.getJSONObject(i);
-                                        if (obj.optString("ssid").equals(item.getSsid()) &&
-                                                obj.optString("mac").equals(item.getMac())) {
-                                            isDuplicate = true;
-                                            break;
-                                        }
-                                    }
-
-                                    if (!isDuplicate) {
-                                        JSONObject newItem = new JSONObject();
-                                        newItem.put("ssid", item.getSsid());
-                                        newItem.put("mac", item.getMac());
-                                        newItem.put("robot", item.getRobot());
-                                        newItem.put("password", password);
-                                        jsonArray.put(newItem);
-                                        editor.putString("Robots_json", jsonArray.toString());
-                                        editor.apply();
-                                    }
-                                } catch (JSONException e) {
-                                    Log.e("SaveRobot", "저장 중 오류", e);
-                                }
-                            } else {
-                                removeRobotFromSavedList(item.getSsid(), item.getMac());
-                                Toast.makeText(getApplicationContext(), "Wi-Fi 연결 실패\n비밀번호를 다시 확인해 주세요.", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
                 });
 
                 builder.setNegativeButton("취소", null);
@@ -166,7 +121,7 @@ public class RobotListActivity extends Activity {
             }
             private void removeRobotFromSavedList(String ssid, String mac) {
                 try {
-                    String robotsJson = setting.getString("Robots_json", "[]");
+                    String robotsJson = setting.getString("ROBOTS_JSON", "[]");
                     JSONArray jsonArray = new JSONArray(robotsJson);
                     JSONArray newArray = new JSONArray();
 
@@ -176,7 +131,7 @@ public class RobotListActivity extends Activity {
                             newArray.put(obj);
                         }
                     }
-                    editor.putString("Robots_json", newArray.toString());
+                    editor.putString("ROBOTS_JSON", newArray.toString());
                     editor.apply();
                 } catch (JSONException e) {
                     Log.e("RemoveRobot", "로봇 삭제 중 오류", e);
@@ -232,7 +187,7 @@ public class RobotListActivity extends Activity {
                 builder.setPositiveButton("확인", (dialog, which) -> {
                     mVibrator.vibrate(100);
                     RobotItem targetItem = robotItemArrayList.get(pos);
-                    String robotsJson = setting.getString("Robots_json", "[]");
+                    String robotsJson = setting.getString("ROBOTS_JSON", "[]");
                     try {
                         JSONArray jsonArray = new JSONArray(robotsJson);
                         JSONArray newArray = new JSONArray();
@@ -242,7 +197,7 @@ public class RobotListActivity extends Activity {
                                 newArray.put(obj);
                             }
                         }
-                        editor.putString("Robots_json", newArray.toString());
+                        editor.putString("ROBOTS_JSON", newArray.toString());
                         editor.apply();
                         robotItemArrayList.remove(pos);
                         robotRecyclerViewAdapter.notifyItemRemoved(pos);
@@ -269,7 +224,7 @@ public class RobotListActivity extends Activity {
 
     private void cleanUpRobotsJson() {
         try {
-            String robotsJson = setting.getString("Robots_json", "[]");
+            String robotsJson = setting.getString("ROBOTS_JSON", "[]");
             JSONArray jsonArray = new JSONArray(robotsJson);
             JSONArray newArray = new JSONArray();
 
@@ -283,7 +238,7 @@ public class RobotListActivity extends Activity {
                 }
             }
 
-            editor.putString("Robots_json", newArray.toString());
+            editor.putString("ROBOTS_JSON", newArray.toString());
             editor.apply();
         } catch (JSONException e) {
             Log.e("CleanUpRobot", "정리 중 오류", e);
