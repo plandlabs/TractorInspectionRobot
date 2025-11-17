@@ -140,7 +140,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".views.activity.RobotListAndScanActivity"
+            android:name=".views.activity.RobotListActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true"
             android:screenOrientation="landscape"

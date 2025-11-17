@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RobotChangeRecyclerView extends RecyclerView.Adapter<RobotChangeRecyclerView.ViewHolder>
+public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.ViewHolder>
         implements ItemTouchHelper {
     private Context context;
     private ArrayList<RobotItem> data;
@@ -32,7 +32,7 @@ public class RobotChangeRecyclerView extends RecyclerView.Adapter<RobotChangeRec
     public int selectPosition = 0;
     private Vibrator mVibrator;
 
-    public RobotChangeRecyclerView(ArrayList<RobotItem> data, Context context) {
+    public RobotRecyclerView(ArrayList<RobotItem> data, Context context) {
         this.data = data;
         this.context = context;
         this.inflater = LayoutInflater.from(context);
