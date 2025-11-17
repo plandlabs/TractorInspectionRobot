@@ -201,12 +201,10 @@ public class RobotRecyclerView extends RecyclerView.Adapter<RobotRecyclerView.Vi
             super(view);
 
             name = (TextView) view.findViewById(R.id.name);
-            mac = (TextView) view.findViewById(R.id.mac);
             imgView = (View) view.findViewById(R.id.imgView);
             emptyView = (View) view.findViewById(R.id.emptyView);
             deleteBtn = (View) view.findViewById(R.id.deleteBtn);
             isNotNetworkConnected = (View) view.findViewById(R.id.isNotNetworkConnected);
-            bandView = (TextView) view.findViewById(R.id.bandView);
             viewItem = (RelativeLayout) view.findViewById(R.id.viewItem);
             isConnected = (RelativeLayout) view.findViewById(R.id.isConnected);
             viewChildItem = (LinearLayout) view.findViewById(R.id.viewChildItem);
