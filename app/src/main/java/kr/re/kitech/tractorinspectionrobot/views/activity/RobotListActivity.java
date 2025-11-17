@@ -99,7 +99,7 @@ public class RobotListActivity extends android.app.Activity implements Lifecycle
             finish();
         });
 
-        viewModel = new ViewModelProvider(this).get(SharedMqttViewModel.class);
+        viewModel = new SharedMqttViewModel(getApplication());
 
         // 옵저버: 캐시 + UI 동기화
         viewModel.getMqttConnected().observe(this, connected -> {
