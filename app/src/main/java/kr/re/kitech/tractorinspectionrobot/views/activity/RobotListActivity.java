@@ -17,10 +17,15 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import kr.re.kitech.tractorinspectionrobot.R;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.OnItemClickListener;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.RobotRecyclerView;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
@@ -39,9 +44,10 @@ public class RobotListActivity extends Activity {
     private ArrayList<RobotItem> robotItemArrayList;
     private SharedPreferences setting;
     private SharedPreferences.Editor editor;
-    private WifiConnector wifiConnector;
+    private SharedMqttViewModel viewModel;
     private Vibrator mVibrator;
     private View btnBack;
+    private boolean isMqttConnected = false;
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onResume() {
@@ -66,6 +72,13 @@ public class RobotListActivity extends Activity {
         btnBack.setOnClickListener(view -> {
             mVibrator.vibrate(100);
             finish();
+        });
+
+        viewModel = new ViewModelProvider((ViewModelStoreOwner) this).get(SharedMqttViewModel.class);
+
+        // 옵저버: 캐시 + UI 동기화
+        viewModel.getMqttConnected().observe((LifecycleOwner) this, connected -> {
+            isMqttConnected = Boolean.TRUE.equals(connected);
         });
 
         initUI();
@@ -145,36 +158,6 @@ public class RobotListActivity extends Activity {
                 if (item.getIsConnected() && item.getIsSaved()) {
                     Toast.makeText(getApplicationContext(), "이미 연결된 로봇입니다.", Toast.LENGTH_SHORT).show();
                     return;
-                }
-
-                if (item.getIsSaved()) {
-                    if(item.getIsScan()) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext(), R.style.DarkAlertDialog);
-                        builder.setTitle("Wi-Fi 연결");
-                        builder.setMessage("로봇(SSID: " + item.getSsid() + ")에 연결하시겠습니까?");
-                        builder.setPositiveButton("확인", (dialog, which) -> {
-                            mVibrator.vibrate(100);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                wifiConnector.connectWithNetworkSpecifier(item.getSsid(), item.getPassword(), success -> {
-                                    if (success) {
-                                        Toast.makeText(getApplicationContext(), "Wi-Fi 연결 성공", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        // 저장된 잘못된 정보를 삭제
-                                        removeRobotFromSavedList(item.getSsid(), item.getMac());
-                                        // 비밀번호 재입력 창
-                                        promptPasswordAndConnect(item);
-                                    }
-                                });
-                            }
-                        });
-                        builder.setNegativeButton("취소", null);
-                        builder.show();
-                    }else{
-                        Toast.makeText(getApplicationContext(), "스캔 목록에 없는 로봇입니다.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                } else {
-                    promptPasswordAndConnect(item);
                 }
             }
 
