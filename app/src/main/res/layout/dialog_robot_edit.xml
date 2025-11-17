@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <EditText
+            android:id="@+id/editDeviceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="로봇 이름" />
+
+        <EditText
+            android:id="@+id/editMqttHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="MQTT 호스트 (예: 192.168.0.100)"
+            android:inputType="textUri"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/editMqttPort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="포트 (예: 1883)"
+            android:inputType="number"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/editMqttUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="MQTT Username"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/editMqttPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="MQTT Password"
+            android:inputType="textPassword"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/editMqttRootTopic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Root Topic (예: ingsys)"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/editMqttBaseTopic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Base Topic (예: ing_w00001)"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+</ScrollView>

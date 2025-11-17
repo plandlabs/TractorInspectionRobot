@@ -8,7 +8,6 @@
     android:fitsSystemWindows="true"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:theme="@style/Theme.TractorInspectionRobot"
     android:background="@color/background"
     tools:context=".views.activity.RobotListActivity">
 
@@ -102,7 +101,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="로봇을 터치하시면 선택하실 수 있습니다."
+        android:text="로봇을 터치하시면 연결하실 수 있습니다.(길게 터치시 수정)"
         android:gravity="center"
         android:padding="10dp"
         android:layout_marginLeft="10dp"
@@ -150,7 +149,8 @@
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/robotRecyclerView"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="match_parent"
+                        android:paddingBottom="72dp" />
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -189,6 +189,15 @@
                             </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fabAddRobot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="16dp"
+                        android:contentDescription="로봇 추가"
+                        app:srcCompat="@android:drawable/ic_input_add"
+                        app:layout_anchorGravity="bottom|end"
+                        app:layout_anchor="@id/robotRecyclerView" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

@@ -167,7 +167,7 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
             if (isMqttConnected) {
                 showDisconnectConfirm();
             } else {
-                showConnectConfirm();;
+                startActivity(new Intent(getApplication(), RobotListActivity.class));
             }
         });
 
@@ -338,13 +338,14 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         drawerLayout.closeDrawer(GravityCompat.START);
         new AlertDialog.Builder(mContext, R.style.DarkAlertDialog)
                 .setTitle("로그아웃")
-                .setMessage("로그아웃 하시겠습니까?")
+                .setMessage("로그아웃 하시겠습니까? 로그아웃 시 연결중인 로봇도 연결 해제 됩니다.")
                 .setPositiveButton("확인", (dialog, which) -> {
                     mVibrator.vibrate(100);
                     editor.remove("ID");
                     editor.remove("PW");
                     editor.remove("Auto_Login_enabled");
                     editor.commit();
+                    viewModel.requestDisconnect();
                     startActivity(new Intent(getApplication(), LoginActivity.class));
                     Toast.makeText(getApplication(),"로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
                     finish();

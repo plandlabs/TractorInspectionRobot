@@ -2,9 +2,9 @@ package kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.callbac
 
 import androidx.recyclerview.widget.DiffUtil;
 
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
-
 import java.util.List;
+
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
 
 public class RobotDiffCallback extends DiffUtil.Callback {
     private final List<RobotItem> oldList;
@@ -28,8 +28,8 @@ public class RobotDiffCallback extends DiffUtil.Callback {
     @Override
     public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
         // 고유 식별자(예: mac 주소 등)로 비교
-        return oldList.get(oldItemPosition).getMac()
-                .equals(newList.get(newItemPosition).getMac());
+        return oldList.get(oldItemPosition).getDeviceName()
+                .equals(newList.get(newItemPosition).getDeviceName());
     }
 
     @Override

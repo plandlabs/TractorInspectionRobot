@@ -20,7 +20,7 @@ import kr.re.kitech.tractorinspectionrobot.net.NetworkHelper;
 /**
  * MQTT Foreground Service
  * - onCreate: 초기화만 (자동 연결 금지)
- * - ACTION_CONNECT: 명시적 연결
+ * - ACTION_CONNECT: 명시적 연결 (RobotListActivity 에서 넘어온 설정 있으면 그걸로 연결)
  * - ACTION_DISCONNECT: 명시적 해제 + userPaused=true
  * - ACTION_QUERY_STATUS: 현재 상태 재브로드캐스트
  */
@@ -35,7 +35,7 @@ public class MqttForegroundService extends Service {
     // 구성요소
     private Notifier notifier;
     private NetworkHelper net;
-    public  MqttClientManager mqtt;
+    public MqttClientManager mqtt;
 
     // 브로드캐스트/액션
     public static final String ACTION_MQTT_STATUS   = "kr.re.kitech.tractorinspectionrobot.MQTT_STATUS";
@@ -55,6 +55,16 @@ public class MqttForegroundService extends Service {
     public static final String ACTION_MQTT_MESSAGE = "kr.re.kitech.tractorinspectionrobot.MQTT_MESSAGE";
     public static final String EXTRA_TOPIC         = "topic";
     public static final String EXTRA_PAYLOAD       = "payload";
+
+    // ✅ RobotListActivity 에서 넘겨줄 수 있는 Extra (선택)
+    public static final String EXTRA_MQTT_HOST        = "extra_mqtt_host";
+    public static final String EXTRA_MQTT_PORT        = "extra_mqtt_port";
+    public static final String EXTRA_MQTT_ROOT_TOPIC  = "extra_mqtt_root_topic";
+    public static final String EXTRA_MQTT_BASE_TOPIC  = "extra_mqtt_base_topic";
+    public static final String EXTRA_MQTT_USERNAME    = "extra_mqtt_username";
+    public static final String EXTRA_MQTT_PASSWORD    = "extra_mqtt_password";
+    public static final String EXTRA_DEVICE_NAME      = "extra_device_name";
+
     // 상태 캐시
     private volatile String  lastStatus = "initializing";
     private volatile String  lastCause  = null;
@@ -64,7 +74,8 @@ public class MqttForegroundService extends Service {
     private static final String PREF = "mqtt_pref";
     private static final String KEY_USER_PAUSED = "user_paused";
     private boolean userPaused = false;
-    // ★ NEW: 연결 전/중단 시 publish를 안전하게 보관할 간단한 큐
+
+    // 연결 전/중단 시 publish를 안전하게 보관할 간단한 큐
     private static class PendingPub {
         final String topic; final String payload; final int qos; final boolean retain;
         PendingPub(String t, String p, int q, boolean r) { topic=t; payload=p; qos=q; retain=r; }
@@ -76,6 +87,7 @@ public class MqttForegroundService extends Service {
     private String reqTopic;
     private String mqttUsername;
     private String mqttPassword;
+
     private void sendStatus(String status, @Nullable String cause) {
         lastStatus = status;
         lastCause  = cause;
@@ -89,8 +101,6 @@ public class MqttForegroundService extends Service {
     @Override public void onCreate() {
         super.onCreate();
 
-        // setting = getSharedPreferences("setting", 0);
-        // DEVICE_NAME = setting.getString("DEVICE_NAME", "tester");
         DEVICE_NAME = getString(R.string.controller_name);
 
         SharedPreferences sp = getSharedPreferences(PREF, MODE_PRIVATE);
@@ -105,15 +115,24 @@ public class MqttForegroundService extends Service {
         net.acquireWifiHighPerf();
         net.bindWifiNetwork();
 
-        String clientId = DEVICE_NAME + "-" + UUID.randomUUID().toString().substring(0, 8);
+        // 기본 설정은 strings.xml 기준 (RobotListActivity 에서 안 넘겨줄 때 사용)
         MQTT_URL = getString(R.string.mqtt_connect_url);
-
         rootTopic = getString(R.string.mqtt_root_topic);
         baseTopic = getString(R.string.mqtt_base_topic);
         mqttUsername = getString(R.string.mqtt_username);
         mqttPassword = getString(R.string.mqtt_password);
-
         reqTopic = rootTopic + "/" + baseTopic + "/req";
+
+        // MQTT 클라이언트 초기화 (connect는 호출하지 않음)
+        initMqttClient();
+    }
+
+    /**
+     * 현재 필드 값(MQTT_URL, rootTopic, baseTopic, mqttUsername, mqttPassword, DEVICE_NAME)을 기반으로
+     * MqttClientManager를 새로 생성하고 리스너/초기화까지 수행한다.
+     */
+    private void initMqttClient() {
+        String clientId = DEVICE_NAME + "-" + UUID.randomUUID().toString().substring(0, 8);
 
         mqtt = new MqttClientManager(
                 MQTT_URL,
@@ -155,8 +174,7 @@ public class MqttForegroundService extends Service {
         });
 
         mqtt.init();
-        // ❌ 자동 연결 금지: mqtt.connect() 호출하지 않음
-        // ❌ 루프도 연결 성공 후에만 시작
+        // ❌ 여기서 connect()는 호출하지 않는다. (ACTION_CONNECT에서만 명시적으로 호출)
     }
 
     @Override public int onStartCommand(Intent i, int f, int id) {
@@ -172,6 +190,51 @@ public class MqttForegroundService extends Service {
                 case ACTION_CONNECT: {
                     userPaused = false;
                     getSharedPreferences(PREF, MODE_PRIVATE).edit().putBoolean(KEY_USER_PAUSED, false).apply();
+
+                    // ✅ RobotListActivity 에서 넘어온 설정이 있으면 여기서 덮어쓴다.
+                    String hostExtra       = i.getStringExtra(EXTRA_MQTT_HOST);
+                    int portExtra          = i.getIntExtra(EXTRA_MQTT_PORT, -1);
+                    String rootExtra       = i.getStringExtra(EXTRA_MQTT_ROOT_TOPIC);
+                    String baseExtra       = i.getStringExtra(EXTRA_MQTT_BASE_TOPIC);
+                    String usernameExtra   = i.getStringExtra(EXTRA_MQTT_USERNAME);
+                    String passwordExtra   = i.getStringExtra(EXTRA_MQTT_PASSWORD);
+                    String deviceNameExtra = i.getStringExtra(EXTRA_DEVICE_NAME);
+
+                    boolean hasHostConfig = (hostExtra != null && !hostExtra.isEmpty() && portExtra > 0);
+
+                    if (deviceNameExtra != null && !deviceNameExtra.isEmpty()) {
+                        DEVICE_NAME = deviceNameExtra;
+                    }
+
+                    if (hasHostConfig) {
+                        // RobotListActivity에서 보낸 정보로 MQTT 설정 변경
+                        String host = hostExtra;
+                        int port = portExtra;
+
+                        MQTT_URL = "tcp://" + host + ":" + port;
+
+                        if (rootExtra != null && !rootExtra.isEmpty()) {
+                            rootTopic = rootExtra;
+                        }
+                        if (baseExtra != null && !baseExtra.isEmpty()) {
+                            baseTopic = baseExtra;
+                        }
+                        if (usernameExtra != null && !usernameExtra.isEmpty()) {
+                            mqttUsername = usernameExtra;
+                        }
+                        if (passwordExtra != null) { // 비밀번호는 빈 문자열도 유효할 수 있음
+                            mqttPassword = passwordExtra;
+                        }
+
+                        reqTopic = rootTopic + "/" + baseTopic + "/req";
+
+                        // 기존 mqtt가 있으면 정리하고 새로 만든다.
+                        if (mqtt != null) {
+                            mqtt.gracefulDisconnect();
+                            isConnected = false;
+                        }
+                        initMqttClient();
+                    }
 
                     if (mqtt != null && !mqtt.isConnected()) {
                         sendStatus("reconnecting", null);
@@ -193,7 +256,8 @@ public class MqttForegroundService extends Service {
                     stopSelf();
                     break;
                 }
-                // ★ NEW: 외부에서 들어온 publish 요청 처리
+
+                // 외부에서 들어온 publish 요청 처리
                 case ACTION_PUBLISH: {
                     String topic   = i.getStringExtra(EXTRA_PUB_TOPIC);
                     String payload = i.getStringExtra(EXTRA_PUB_PAYLOAD);
@@ -214,6 +278,7 @@ public class MqttForegroundService extends Service {
         // 사용자가 끊은 뒤 OS가 임의로 재시작해도 자동 복구되지 않게
         return START_NOT_STICKY;
     }
+
     private void handlePublish(String topic, String payload, int qos, boolean retain) {
         // null 방지
         topic = Objects.toString(topic, "");
@@ -223,10 +288,8 @@ public class MqttForegroundService extends Service {
         if (mqtt != null && mqtt.isConnected()) {
             mqtt.publish(topic, payload, qos, retain);
         } else {
-            // ★ NEW: 아직 연결 전이라면 보관
+            // 아직 연결 전이라면 보관
             pendingQueue.offer(new PendingPub(topic, payload, qos, retain));
-            // 필요시 알림/로그 남기기
-            // Log.d(TAG, "Publish queued (not connected): " + topic);
         }
     }
 

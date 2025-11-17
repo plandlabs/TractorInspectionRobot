@@ -6,5 +6,4 @@ public interface OnItemClickListener
 {
     void onItemClick(View v, int pos);
     void onItemDeleteClick(View v, int pos);
-    void onItemAddClick(View v, int pos);
 }
