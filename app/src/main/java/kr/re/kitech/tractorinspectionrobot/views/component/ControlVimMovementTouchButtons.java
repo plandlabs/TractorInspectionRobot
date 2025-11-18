@@ -65,19 +65,20 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         textSeekMills = findViewById(R.id.textSeekMills);
 
         int defaultMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_v));
-        intervalMillis = setting.getInt("v_millis", 0) > 0
-                ? setting.getInt("v_millis", 0)
-                : defaultMillis;
+//        intervalMillis = setting.getInt("v_millis", 0) > 0
+//                ? setting.getInt("v_millis", 0)
+//                : defaultMillis;
+        intervalMillis = defaultMillis;
 
         // 범위 10 ~ 2000 보정
-        if (intervalMillis < 10) intervalMillis = 10;
-        if (intervalMillis > 2000) intervalMillis = 2000;
+//        if (intervalMillis < 10) intervalMillis = 10;
+//        if (intervalMillis > 2000) intervalMillis = 2000;
 
         // SeekBar 범위: 0 ~ (2000 - 10)
 //        seekBarMills.setMax(2000 - 10);
 //        seekBarMills.setProgress(intervalMillis - 10);
 //        textSeekMills.setText(String.valueOf(intervalMillis));
-
+//
 //        seekBarMills.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 //            @Override
 //            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -89,21 +90,22 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 //                editor.apply();
 //
 //                // 최신 값으로 리스너 다시 세팅
-////                attachTouchListeners(getContext());
+//                attachTouchListeners();
 //            }
 //
 //            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
 //            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
 //        });
-//
-//        // ========= step SeekBar =========
-//        seekBarStep = findViewById(R.id.seekBarStep);
-//        textSeekStep = findViewById(R.id.textSeekStep);
+
+        // ========= step SeekBar =========
+        seekBarStep = findViewById(R.id.seekBarStep);
+        textSeekStep = findViewById(R.id.textSeekStep);
 //
         int defaultStep = Integer.parseInt(getContext().getString(R.string.vim_move_step));
-        step = setting.getInt("v_step", 0) > 0
-                ? setting.getInt("v_step", 0)
-                : defaultStep;
+//        step = setting.getInt("v_step", 0) > 0
+//                ? setting.getInt("v_step", 0)
+//                : defaultStep;
+        step = defaultStep;
 //
 //        // 범위 1 ~ 50 보정
 //        if (step < 1) step = 1;
@@ -125,7 +127,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 //                editor.apply();
 //
 //                // 최신 값으로 리스너 다시 세팅
-//                attachTouchListeners(getContext());
+//                attachTouchListeners();
 //            }
 //
 //            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
@@ -138,7 +140,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
      * 항상 이 메서드를 호출해서 버튼 리스너를 최신 값으로 교체한다.
      */
     @SuppressLint("ClickableViewAccessibility")
-    private void attachTouchListeners(Context context) {
+    private void attachTouchListeners() {
         if (viewModel == null) {
             Log.w("touch", "viewModel is null");
             return; // 아직 ViewModel 안 들어왔으면 패스
@@ -201,7 +203,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 //        };
 
         // ViewModel 세팅될 때 현재 step/intervalMillis 기준으로 리스너 부착
-        attachTouchListeners(getContext());
+        attachTouchListeners();
 //        btnUp.setOnTouchListener(
 //                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, true, step, intervalMillis, req)
 //        );
