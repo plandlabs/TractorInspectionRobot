@@ -1,4 +1,4 @@
-package kr.re.kitech.tractorinspectionrobot.mqtt.shared;
+package kr.re.kitech.tractorinspectionrobot.mqtt.shared.item;
 
 import org.json.JSONException;
 import org.json.JSONObject;import lombok.Getter;

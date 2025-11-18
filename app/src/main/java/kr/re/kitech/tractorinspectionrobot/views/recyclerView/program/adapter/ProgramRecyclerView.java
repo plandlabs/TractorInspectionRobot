@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.helper.ItemTouchHelper;
-import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 
 import java.util.ArrayList;
 import java.util.Collections;

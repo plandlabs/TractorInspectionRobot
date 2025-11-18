@@ -2,11 +2,8 @@ package kr.re.kitech.tractorinspectionrobot.views.component;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Build;
 import android.os.Vibrator;
 import android.util.AttributeSet;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 
@@ -22,7 +19,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import kr.re.kitech.tractorinspectionrobot.R;
-import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.utils.JsonFileUtil;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter.ProgramRecyclerView;

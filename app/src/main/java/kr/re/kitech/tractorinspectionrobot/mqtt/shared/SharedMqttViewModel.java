@@ -25,6 +25,7 @@ import java.util.Locale;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 
 public class SharedMqttViewModel extends AndroidViewModel {
 

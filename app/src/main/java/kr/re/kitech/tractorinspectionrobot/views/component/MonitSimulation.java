@@ -5,10 +5,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Vibrator;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 
@@ -20,7 +18,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import kr.re.kitech.tractorinspectionrobot.R;
-import kr.re.kitech.tractorinspectionrobot.mqtt.shared.RobotState;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 
 public class MonitSimulation extends LinearLayout {
@@ -79,7 +77,7 @@ public class MonitSimulation extends LinearLayout {
     }
     private void sendStateToWeb(RobotState s) {
         if (robotSimulation == null) return;
-        // s.toJson() 사용: {"x":...,"y":...,"z":...,"pan":...,"tilt":...,"ts":...}
+        // s.toJson() 사용: {"x":...,"y":...,"z":...,"s1":...,"s2":...,"s3":...,"ts":...}
         String json = s.toJson().toString();
         String js = "window.onStateUpdate && window.onStateUpdate(" + JSONObject.quote(json) + ");";
         runJs(js);
