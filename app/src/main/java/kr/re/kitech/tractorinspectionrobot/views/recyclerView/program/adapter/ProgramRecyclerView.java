@@ -28,6 +28,16 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
     private LayoutInflater inflater;
     public int selectPosition = 0;
     private Vibrator mVibrator;
+    private static OnItemClickListener mListener = null;
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        this.mListener = listener;
+    }
+    private static OnItemLongClickListener mLongListener = null;
+    public void setOnItemLongClickListener(OnItemLongClickListener listener)
+    {
+        this.mLongListener = listener;
+    }
 
     public ProgramRecyclerView(ArrayList<RobotState> data, Context context) {
         this.data = data;
@@ -54,18 +64,6 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
     @Override
     public void onItemDismiss(int pos) {
 
-    }
-    private static OnItemClickListener mListener = null;
-    private static OnItemLongClickListener mLongListener = null;
-
-    public void setOnItemClickListener(OnItemClickListener listener)
-    {
-        this.mListener = listener;
-    }
-
-    public void setOnItemLongClickListener(OnItemLongClickListener listener)
-    {
-        this.mLongListener = listener;
     }
 
     @NonNull
@@ -101,6 +99,18 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
             }else{
                 holder.background.setBackgroundResource(android.R.color.transparent);
             }
+            holder.itemView.setOnClickListener(v -> {
+                if (position != RecyclerView.NO_POSITION && mListener != null) {
+                    mListener.onItemClick(v, position);
+                }
+            });
+            holder.itemView.setOnLongClickListener(v -> {
+                if (position != RecyclerView.NO_POSITION && mLongListener != null) {
+                    mLongListener.onItemLongClick(v, position);
+                    return true;
+                }
+                return false;
+            });
         } else {
             // Payload가 있을 경우, 선택적 처리 가능 (예: Partial Update)
             for (Object payload : payloads) {
@@ -137,32 +147,6 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
             s2 = (TextView) view.findViewById(R.id.s2);
             s3 = (TextView) view.findViewById(R.id.s3);
             background = (TableRow) view.findViewById(R.id.background);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int pos = getAdapterPosition();
-                    if (pos != RecyclerView.NO_POSITION) {
-                        // 리스너 객체의 메서드 호출.
-                        if (mListener != null) {
-                            mListener.onItemClick(v, pos);
-                            //toggleSelection(pos);
-                        }
-                    }
-                }
-            });
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    int pos = getAdapterPosition();
-                    if (pos != RecyclerView.NO_POSITION) {
-                        // 리스너 객체의 메서드 호출.
-                        if (mListener != null) {
-                            mListener.onItemClick(v, pos);
-                        }
-                    }
-                    return true;
-                }
-            });
         }
     }
 }

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/robot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     card_view:cardCornerRadius="8dp"
+    android:background="#777777"
     card_view:cardUseCompatPadding="true">
 
     <RelativeLayout
@@ -18,48 +20,163 @@
 
             <TextView
                 android:id="@+id/textDeviceName"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="5dp"
                 android:text="로봇 이름"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/textBroker"
-                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="192.168.0.201:1883"
-                android:textSize="14sp"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:id="@+id/textTopic"
-                android:layout_width="wrap_content"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="MQTT 호스트 :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:gravity="center_vertical|right"
+                    android:layout_weight="1"
+                    />
+                <TextView
+                    android:id="@+id/textHost"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="192.168.0.201"
+                    android:layout_weight="1"
+                    android:textSize="17sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ingsys/tractor01"
-                android:textSize="14sp"
-                android:layout_marginTop="2dp" />
-
-            <TextView
-                android:id="@+id/textTopic"
-                android:layout_width="wrap_content"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="포트 :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|right"
+                    />
+                <TextView
+                    android:id="@+id/textPort"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="textPort"
+                    android:textSize="17sp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ingsys/tractor01"
-                android:textSize="14sp"
-                android:layout_marginTop="2dp" />
-
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="Username :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|right"
+                    />
+                <TextView
+                    android:id="@+id/textUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="textUser"
+                    android:textSize="17sp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="Password :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|right"
+                    />
+                <TextView
+                    android:id="@+id/textPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="123123"
+                    android:textSize="17sp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="Root Topic :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|right"
+                    />
+                <TextView
+                    android:id="@+id/textRootTopic"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="textRootTopic"
+                    android:textSize="17sp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:text="Base Topic :"
+                    android:textSize="17sp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|right"
+                    />
+                <TextView
+                    android:id="@+id/textBaseTopic"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="textBaseTopic"
+                    android:textSize="17sp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
         </LinearLayout>
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:layout_marginRight="10dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="10dp"
             >
             <Button
                 android:id="@+id/btnDelete"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/baseline_close_24"
                 android:backgroundTint="@color/white"/>
         </LinearLayout>

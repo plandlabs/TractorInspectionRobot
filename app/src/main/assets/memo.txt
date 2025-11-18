@@ -41,7 +41,7 @@
   "fp": "pc-controller",
   "ct": {
     "tg": "ing_w00001",
-    "cmd": 3002,
+    "cmd": 2003,
     "opid": 13,
     "param": {
       "mode": "abs",

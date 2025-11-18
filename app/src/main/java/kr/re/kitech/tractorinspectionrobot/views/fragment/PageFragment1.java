@@ -127,7 +127,6 @@ public class PageFragment1 extends Fragment {
         leftWrap = (LinearLayout) linearLayout.findViewById(R.id.leftWrap);
         stateBox = (LinearLayout) linearLayout.findViewById(R.id.stateBox);
         ctrlBox = (LinearLayout) linearLayout.findViewById(R.id.ctrlBox);
-        stateGrid = (GridLayout) linearLayout.findViewById(R.id.stateGrid);
         wrapLinear = (LinearLayout) linearLayout.findViewById(R.id.wrapLinear);
 
         userName = (TextView) linearLayout.findViewById(R.id.userName);
@@ -137,11 +136,6 @@ public class PageFragment1 extends Fragment {
         controlCameraMovementTouchButtons = linearLayout.findViewById(R.id.control_camera_movement_touch_buttons);
 
         this.onConfigurationChanged(mConfiguration);
-
-        csName = (TextView) linearLayout.findViewById(R.id.csName);
-        chargingStDt = (TextView) linearLayout.findViewById(R.id.chargingStDt);
-        chargingKW = (TextView) linearLayout.findViewById(R.id.chargingKW);
-        chargingCost = (TextView) linearLayout.findViewById(R.id.chargingCost);
 
 
         testBtn = (TextView) linearLayout.findViewById(R.id.testBtn);

@@ -1,4 +1,4 @@
-package kr.re.kitech.tractorinspectionrobot.views.recyclerView.logError.adapter;
+package kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.adapter;
 
 import android.view.View;
 

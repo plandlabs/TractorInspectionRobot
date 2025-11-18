@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -100,6 +101,7 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
 
     private View btnOpen, btnRobotChange;
     private boolean isMqttConnected = false;
+    private TextView textConnected;
 
     @SuppressLint("HandlerLeak")
     @Override
@@ -142,6 +144,7 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
         mTabLayout.setupWithViewPager(mViewPager);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
 
+        textConnected  = findViewById(R.id.textConnected);
         btnRobotChange = findViewById(R.id.btn_robot_change);
         btnOpen        = findViewById(R.id.btnOpen);
 
@@ -160,15 +163,17 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
             isMqttConnected = Boolean.TRUE.equals(connected);
             updateRobotChangeButton(isMqttConnected);
         });
-
-        // 토글 버튼
         btnRobotChange.setOnClickListener(v -> {
+            mVibrator.vibrate(80);
+            startActivity(new Intent(getApplication(), RobotListActivity.class));
+        });
+        // 연결되었을때 길게 클릭시 연결해제
+        btnRobotChange.setOnLongClickListener(v -> {
             mVibrator.vibrate(80);
             if (isMqttConnected) {
                 showDisconnectConfirm();
-            } else {
-                startActivity(new Intent(getApplication(), RobotListActivity.class));
             }
+            return false;
         });
 
         this.onConfigurationChanged(mConfiguration);
@@ -417,6 +422,8 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
             btnRobotChange.setContentDescription(
                     connected ? "MQTT 연결됨, 누르면 연결 해제" : "MQTT 연결하기"
             );
+            textConnected.setText(connected ? "현재 연결중입니다." : "현재 미연결중입니다.");
+            textConnected.setTextColor(color);
 
         } catch (Exception e) {
             btnRobotChange.setBackgroundColor(color);

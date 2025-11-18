@@ -132,7 +132,7 @@ public class MqttForegroundService extends Service {
      * MqttClientManager를 새로 생성하고 리스너/초기화까지 수행한다.
      */
     private void initMqttClient() {
-        String clientId = DEVICE_NAME + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String clientId = DEVICE_NAME + "_ING_Client_" + UUID.randomUUID().toString().substring(0, 8);
 
         mqtt = new MqttClientManager(
                 MQTT_URL,

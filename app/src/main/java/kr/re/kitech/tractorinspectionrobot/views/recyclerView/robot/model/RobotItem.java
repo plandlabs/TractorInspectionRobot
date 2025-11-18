@@ -1,4 +1,4 @@
-package kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model;
+package kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.model;
 
 import org.json.JSONException;
 import org.json.JSONObject;

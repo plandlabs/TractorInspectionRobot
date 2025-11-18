@@ -8,56 +8,147 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
-
-        <EditText
-            android:id="@+id/editDeviceName"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="로봇 이름" />
-
-        <EditText
-            android:id="@+id/editMqttHost"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="로봇 이름 :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editDeviceName"
+                android:textColor="@color/white"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="(예: controller1)" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="MQTT 호스트 (예: 192.168.0.100)"
-            android:inputType="textUri"
-            android:layout_marginTop="8dp" />
-
-        <EditText
-            android:id="@+id/editMqttPort"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="MQTT 호스트 :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttHost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint="(예: 192.168.0.100)"
+                android:inputType="textUri"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="포트 (예: 1883)"
-            android:inputType="number"
-            android:layout_marginTop="8dp" />
-
-        <EditText
-            android:id="@+id/editMqttUsername"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="포트 :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttPort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint="(예: 1883)"
+                android:inputType="number"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="MQTT Username"
-            android:layout_marginTop="8dp" />
-
-        <EditText
-            android:id="@+id/editMqttPassword"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="MQTT Username :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttUsername"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint=" (예: ingsys)"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="MQTT Password"
-            android:inputType="textPassword"
-            android:layout_marginTop="8dp" />
-
-        <EditText
-            android:id="@+id/editMqttRootTopic"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="MQTT Password :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint="(예: ing#8119)"
+                android:inputType="textPassword"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Root Topic (예: ingsys)"
-            android:layout_marginTop="8dp" />
-
-        <EditText
-            android:id="@+id/editMqttBaseTopic"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="Root Topic :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttRootTopic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint="(예: ingsys)"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Base Topic (예: ing_w00001)"
-            android:layout_marginTop="8dp" />
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:text="Base Topic :"
+                android:textSize="17dp"
+                android:layout_marginRight="6dp"
+                android:gravity="center_vertical|right"
+                />
+            <EditText
+                android:id="@+id/editMqttBaseTopic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:hint="(예: ing_w00001)"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

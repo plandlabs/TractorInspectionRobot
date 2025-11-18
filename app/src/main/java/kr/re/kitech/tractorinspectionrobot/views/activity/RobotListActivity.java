@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;              // ✅ 추가
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -34,10 +35,10 @@ import java.util.ArrayList;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.OnItemClickListener;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.OnItemLongClickListener;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.adapter.RobotRecyclerViewAdapter;
-import kr.re.kitech.tractorinspectionrobot.views.recyclerView.scanRobot.model.RobotItem;
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.adapter.OnItemClickListener;
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.adapter.OnItemLongClickListener;
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.adapter.RobotRecyclerViewAdapter;
+import kr.re.kitech.tractorinspectionrobot.views.recyclerView.robot.model.RobotItem;
 
 public class RobotListActivity extends Activity {
 
@@ -81,17 +82,31 @@ public class RobotListActivity extends Activity {
         robotRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         robotRecyclerView.setAdapter(robotRecyclerViewAdapter);
 
-        // 아이템 클릭 시: 연결 여부 확인 후 MQTT 연결
+        // 아이템 클릭 시: 연결 / 연결 해제 확인 후 MQTT 처리
         robotRecyclerViewAdapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(View v, int pos) {
                 RobotItem item = robotItemArrayList.get(pos);
+                mVibrator.vibrate(100);
+                // ✅ 이미 연결된 로봇이면 → 연결 해제 여부를 묻기
+                if (item.isConnected()) {   // <- getConnected()라면 이름만 바꿔 주세요
+                    new AlertDialog.Builder(RobotListActivity.this, R.style.DarkAlertDialog)
+                            .setTitle("MQTT 연결 해제")
+                            .setMessage("[" + item.getDeviceName() + "] 로봇과의 MQTT 연결을 끊으시겠습니까?")
+                            .setPositiveButton("연결 해제", (dialog, which) -> {
+                                disconnectFromRobot(item);
+                            })
+                            .setNegativeButton("취소", null)
+                            .show();
+                    return;
+                }
+
+                // ✅ 아직 연결 안 된 로봇이면 → 기존처럼 연결 여부를 묻기
                 new AlertDialog.Builder(RobotListActivity.this, R.style.DarkAlertDialog)
                         .setTitle("MQTT 연결")
                         .setMessage("[" + item.getDeviceName() + "] 로봇에 MQTT로 연결하시겠습니까?")
                         .setPositiveButton("연결", (dialog, which) -> {
                             connectToRobot(item);
-                            finish();
                         })
                         .setNegativeButton("취소", null)
                         .show();
@@ -100,9 +115,12 @@ public class RobotListActivity extends Activity {
             @Override
             public void onItemDeleteClick(View v, int pos) {
                 if (pos < 0 || pos >= robotItemArrayList.size()) return;
+                mVibrator.vibrate(100);
                 RobotItem item = robotItemArrayList.get(pos);
-
-                // ✅ 삭제 확인 다이얼로그
+                if (item.isConnected()) {
+                    Toast.makeText(getApplicationContext(), "[" + item.getDeviceName() + "] 로봇은 연결중이므로 삭제하실 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 new AlertDialog.Builder(RobotListActivity.this, R.style.DarkAlertDialog)
                         .setTitle("로봇 삭제")
                         .setMessage("[" + item.getDeviceName() + "] 로봇을 삭제하시겠습니까?")
@@ -148,18 +166,36 @@ public class RobotListActivity extends Activity {
             }
         };
     }
+
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(mqttStatusReceiver,
-                new IntentFilter(MqttForegroundService.ACTION_MQTT_STATUS));
+        IntentFilter filter =
+                new IntentFilter(MqttForegroundService.ACTION_MQTT_STATUS);
+
+        // ✅ Android 13(API 33) 이상에서는 exported 여부를 명시해야 함
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                    mqttStatusReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED   // 앱 내부에서만 사용
+            );
+        } else {
+            registerReceiver(mqttStatusReceiver, filter);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(mqttStatusReceiver);
+        try {
+            unregisterReceiver(mqttStatusReceiver);
+        } catch (IllegalArgumentException e) {
+            // 이미 해제된 경우 대비(크래시 방지)
+            Log.w("RobotListActivity", "mqttStatusReceiver already unregistered", e);
+        }
     }
+
     private void updateConnectedRobot(@Nullable String deviceName, boolean connected) {
         for (RobotItem item : robotItemArrayList) {
             if (deviceName != null && deviceName.equals(item.getDeviceName()) && connected) {
@@ -282,15 +318,6 @@ public class RobotListActivity extends Activity {
         EditText editPassword = dialogView.findViewById(R.id.editMqttPassword);
         EditText editRootTopic = dialogView.findViewById(R.id.editMqttRootTopic);
         EditText editBaseTopic = dialogView.findViewById(R.id.editMqttBaseTopic);
-
-        // 다크 테마용 텍스트 색
-        editDeviceName.setTextColor(Color.WHITE);
-        editHost.setTextColor(Color.WHITE);
-        editPort.setTextColor(Color.WHITE);
-        editUsername.setTextColor(Color.WHITE);
-        editPassword.setTextColor(Color.WHITE);
-        editRootTopic.setTextColor(Color.WHITE);
-        editBaseTopic.setTextColor(Color.WHITE);
 
         // 기존 값 세팅
         editDeviceName.setText(item.getDeviceName());
@@ -415,5 +442,20 @@ public class RobotListActivity extends Activity {
         ContextCompat.startForegroundService(this, intent);
 
         Toast.makeText(this, "MQTT 연결 시도 중...", Toast.LENGTH_SHORT).show();
+    }
+    private void disconnectFromRobot(RobotItem item) {
+        // 필요하다면 마지막 선택 정보도 지우고 싶으면 여기서 처리 가능
+        // SharedPreferences sp = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        // sp.edit().remove(KEY_LAST_SELECTED).apply();
+
+        Intent intent = new Intent(this, MqttForegroundService.class);
+        intent.setAction(MqttForegroundService.ACTION_DISCONNECT);  // 서비스에 정의된 상수 이름에 맞게!
+
+        // 끊기에는 호스트 정보가 필요 없으면 이 부분은 생략 가능
+        // intent.putExtra(...)
+
+        startService(intent);  // 이미 실행 중인 포그라운드 서비스에 명령만 보냄
+
+        Toast.makeText(this, "MQTT 연결 해제 시도 중...", Toast.LENGTH_SHORT).show();
     }
 }

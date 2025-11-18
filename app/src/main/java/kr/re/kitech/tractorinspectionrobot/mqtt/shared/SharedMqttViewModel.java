@@ -221,7 +221,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * 버튼 델타 적용 → 내부 상태 갱신 + 분기해서 브로커에 publish
      *
      * - axis가 x,y,z → cmd=2001 (ABS, x,y,z)
-     * - axis가 s1,s2,s3 → cmd=3002 (ABS, s1,s2,s3)
+     * - axis가 s1,s2,s3 → cmd=2003 (ABS, s1,s2,s3)
      */
     public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
         RobotState cur = getOrDefault();
@@ -285,7 +285,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             publishMoveAbs(next);   // cmd=2001, x,y,z
         }
         if (movedServo) {
-            publishServoAbs(next);  // cmd=3002, s1,s2,s3
+            publishServoAbs(next);  // cmd=2003, s1,s2,s3
         }
     }
 
@@ -311,7 +311,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      *   "fp": "pc-controller",
      *   "ct": {
      *     "tg": "ing_w00001",
-     *     "cmd": 3002,
+     *     "cmd": 2003,
      *     "opid": N,
      *     "param": { "mode": "abs", "s1": 0, "s2": 0, "s3": 0 }
      *   }
@@ -326,7 +326,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             JSONObject ct = new JSONObject();
             ct.put("tg", baseTopic);
-            ct.put("cmd", 3002);
+            ct.put("cmd", 2003);
             ct.put("opid", opidCounter++);
 
             JSONObject p = new JSONObject();
@@ -384,7 +384,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
     }
 
     /**
-     * ServoMove ABS (cmd=3002, s1,s2,s3)
+     * ServoMove ABS (cmd=2003, s1,s2,s3)
      */
     private void publishServoAbs(RobotState s) {
         try {
@@ -395,7 +395,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             JSONObject ct = new JSONObject();
             ct.put("tg", baseTopic);
-            ct.put("cmd", 3002);
+            ct.put("cmd", 2003);
             ct.put("opid", opidCounter++);
 
             JSONObject p = new JSONObject();

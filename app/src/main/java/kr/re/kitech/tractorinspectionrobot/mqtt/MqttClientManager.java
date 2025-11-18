@@ -1,4 +1,3 @@
-// com/plandlabs/nepesarkmonitwatch/mqtt/MqttClientManager.java
 package kr.re.kitech.tractorinspectionrobot.mqtt;
 
 import android.util.Log;
