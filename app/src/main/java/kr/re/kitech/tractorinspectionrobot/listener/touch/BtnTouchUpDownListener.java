@@ -56,9 +56,14 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
     private final Runnable updateTask = new Runnable() {
         @Override public void run() {
             if (!isPressed || !isRunning) return;
+
+            // 주기적으로 진동 + delta 적용
             vibrateTick(12);
             requester.applyDelta(axisKey, isIncrease ? step : -step);
-            if (isPressed && isRunning) handler.postDelayed(this, intervalMillis);
+
+            if (isPressed && isRunning) {
+                handler.postDelayed(this, intervalMillis);
+            }
         }
     };
 
@@ -69,6 +74,10 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
             case MotionEvent.ACTION_DOWN:
                 isPressed = true;
                 setTint(v, colorActive);
+
+                // ✅ 버튼 누르는 순간 바로 한 번 진동
+                vibrateTick(12);
+
                 if (!isRunning) {
                     isRunning = true;
                     handler.post(updateTask); // 즉시 1틱
@@ -81,7 +90,8 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
                     stopUpdating(v, true);
                 } else {
                     if (!isPressed || !isRunning) {
-                        isPressed = true; isRunning = true;
+                        isPressed = true;
+                        isRunning = true;
                         handler.post(updateTask);
                     }
                     setTint(v, colorActive);
@@ -106,15 +116,21 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
     }
 
     private void setTint(View v, int colorRes) {
-        v.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, colorRes)));
+        v.setBackgroundTintList(
+                ColorStateList.valueOf(ContextCompat.getColor(context, colorRes))
+        );
     }
 
     private void vibrateTick(int ms) {
         try {
             Vibrator vib = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             if (vib == null) return;
-            if (Build.VERSION.SDK_INT >= 26) vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
-            else vib.vibrate(ms);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                vib.vibrate(ms);
+            }
         } catch (Throwable ignore) {}
     }
 }

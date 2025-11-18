@@ -2,11 +2,14 @@ package kr.re.kitech.tractorinspectionrobot.views.component;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
@@ -16,13 +19,20 @@ import kr.re.kitech.tractorinspectionrobot.listener.touch.BtnTouchUpDownListener
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 
 public class ControlVimMovementTouchButtons extends LinearLayout {
+    private SharedPreferences setting;
+    private SharedPreferences.Editor editor;
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    private String deviceName;
 
     private Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
-    private SeekBar seekBar;
+    private SeekBar seekBarMills, seekBarStep;
+    private TextView textSeekMills, textSeekStep;
+    private int intervalMillis, step;
+
+    private int colorOn;
+    private int colorOff;
+    private Context mContext;
 
     public ControlVimMovementTouchButtons(Context context) {
         super(context);
@@ -36,20 +46,103 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 
     private void init(Context context) {
         inflate(context, R.layout.component_control_vim_movement_touch_buttons, this);
+        setting = context.getSharedPreferences("setting", 0);
+        editor = setting.edit();
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+
         btnUp = findViewById(R.id.btn_up);
         btnDown = findViewById(R.id.btn_down);
         btnLeftWard = findViewById(R.id.btn_leftward);
         btnRightward = findViewById(R.id.btn_rightward);
         btnForward = findViewById(R.id.btn_forward);
         btnBackward = findViewById(R.id.btn_backward);
-        deviceName = context.getString(R.string.controller_name);
+
+        colorOn = R.color.touch_on;
+        colorOff = R.color.touch_off;
+
+        // ========= millis SeekBar =========
+        seekBarMills = findViewById(R.id.seekBarMills);
+        textSeekMills = findViewById(R.id.textSeekMills);
+
+        int defaultMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_v));
+        intervalMillis = setting.getInt("v_millis", 0) > 0
+                ? setting.getInt("v_millis", 0)
+                : defaultMillis;
+
+        // 범위 10 ~ 2000 보정
+        if (intervalMillis < 10) intervalMillis = 10;
+        if (intervalMillis > 2000) intervalMillis = 2000;
+
+        // SeekBar 범위: 0 ~ (2000 - 10)
+//        seekBarMills.setMax(2000 - 10);
+//        seekBarMills.setProgress(intervalMillis - 10);
+//        textSeekMills.setText(String.valueOf(intervalMillis));
+
+//        seekBarMills.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                // 10 ~ 2000 매핑
+//                intervalMillis = 10 + progress;
+//                textSeekMills.setText(String.valueOf(intervalMillis));
+//
+//                editor.putInt("v_millis", intervalMillis);
+//                editor.apply();
+//
+//                // 최신 값으로 리스너 다시 세팅
+////                attachTouchListeners(getContext());
+//            }
+//
+//            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+//            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+//        });
+//
+//        // ========= step SeekBar =========
+//        seekBarStep = findViewById(R.id.seekBarStep);
+//        textSeekStep = findViewById(R.id.textSeekStep);
+//
+        int defaultStep = Integer.parseInt(getContext().getString(R.string.vim_move_step));
+        step = setting.getInt("v_step", 0) > 0
+                ? setting.getInt("v_step", 0)
+                : defaultStep;
+//
+//        // 범위 1 ~ 50 보정
+//        if (step < 1) step = 1;
+//        if (step > 50) step = 50;
+//
+//        // SeekBar 범위: 0 ~ (50 - 1)
+//        seekBarStep.setMax(50 - 1);
+//        seekBarStep.setProgress(step - 1);
+//        textSeekStep.setText(String.valueOf(step));
+//
+//        seekBarStep.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                // 1 ~ 50 매핑
+//                step = 1 + progress;
+//                textSeekStep.setText(String.valueOf(step));
+//
+//                editor.putInt("v_step", step);
+//                editor.apply();
+//
+//                // 최신 값으로 리스너 다시 세팅
+//                attachTouchListeners(getContext());
+//            }
+//
+//            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+//            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+//        });
     }
 
+    /**
+     * step / intervalMillis 값이 바뀔 때마다
+     * 항상 이 메서드를 호출해서 버튼 리스너를 최신 값으로 교체한다.
+     */
     @SuppressLint("ClickableViewAccessibility")
-    public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
-        this.viewModel = viewModel;
-        this.lifecycleOwner = lifecycleOwner;
+    private void attachTouchListeners(Context context) {
+        if (viewModel == null) {
+            Log.w("touch", "viewModel is null");
+            return; // 아직 ViewModel 안 들어왔으면 패스
+        }
 
         BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
             @Override
@@ -59,26 +152,77 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 
             @Override
             public void onStop() {
-                // 선택: 손 뗄 때 현재 전체 상태 한 번 더 전송
-//                viewModel.publishCurrent(deviceName);
+                // 필요하면 여기에서 publishCurrent 등 호출
+                // viewModel.publishCurrent(...);
             }
         };
 
-        final int on = R.color.touch_on;
-        final int off = R.color.touch_off;
-        final float step = Float.parseFloat(getContext().getString(R.string.vim_move_step));
-        final int intervalMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_v));
         // Y축 (상/하)
-        btnUp.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, true, step, intervalMillis, req));
-        btnDown.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "y", on, off, false, step, intervalMillis, req));
+        btnUp.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, true, step, intervalMillis, req)
+        );
+        btnDown.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, false, step, intervalMillis, req)
+        );
 
         // X축 (좌/우)
-        btnRightward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "x", on, off, true, step, intervalMillis, req));
-        btnLeftWard.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "x", on, off, false, step, intervalMillis, req));
+        btnRightward.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "x", colorOn, colorOff, true, step, intervalMillis, req)
+        );
+        btnLeftWard.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "x", colorOn, colorOff, false, step, intervalMillis, req)
+        );
 
-        // Z축 (전/후) — 네이밍에 맞춰 forward=+z, backward=-z
-        btnForward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "z", on, off, true, step, intervalMillis, req));
-        btnBackward.setOnTouchListener(new BtnTouchUpDownListener(getContext(), "z", on, off, false, step, intervalMillis, req));
+        // Z축 (전/후) — forward=+z, backward=-z
+        btnForward.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "z", colorOn, colorOff, true, step, intervalMillis, req)
+        );
+        btnBackward.setOnTouchListener(
+                new BtnTouchUpDownListener(getContext(), "z", colorOn, colorOff, false, step, intervalMillis, req)
+        );
+    }
 
+    @SuppressLint("ClickableViewAccessibility")
+    public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
+        this.viewModel = viewModel;
+        this.lifecycleOwner = lifecycleOwner;
+
+//        BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
+//            @Override
+//            public void applyDelta(String axis, double delta) {
+//                viewModel.applyDeltaAndPublish(axis, delta);
+//            }
+//
+//            @Override
+//            public void onStop() {
+//                // 필요하면 여기에서 publishCurrent 등 호출
+//                // viewModel.publishCurrent(...);
+//            }
+//        };
+
+        // ViewModel 세팅될 때 현재 step/intervalMillis 기준으로 리스너 부착
+        attachTouchListeners(getContext());
+//        btnUp.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, true, step, intervalMillis, req)
+//        );
+//        btnDown.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, false, step, intervalMillis, req)
+//        );
+//
+//        // X축 (좌/우)
+//        btnRightward.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "x", colorOn, colorOff, true, step, intervalMillis, req)
+//        );
+//        btnLeftWard.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "x", colorOn, colorOff, false, step, intervalMillis, req)
+//        );
+//
+//        // Z축 (전/후) — forward=+z, backward=-z
+//        btnForward.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "z", colorOn, colorOff, true, step, intervalMillis, req)
+//        );
+//        btnBackward.setOnTouchListener(
+//                new BtnTouchUpDownListener(getContext(), "z", colorOn, colorOff, false, step, intervalMillis, req)
+//        );
     }
 }

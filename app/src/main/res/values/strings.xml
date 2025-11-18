@@ -106,8 +106,8 @@
     <string name="mqtt_base_topic">ing_w00001</string>
     <string name="mqtt_username">ingsys</string>
     <string name="mqtt_password">ing#8119</string>
-    <string name="vim_move_step">5F</string><!-- 1mm 실제 0.1m -->
-    <string name="camera_move_step">1F</string><!-- 각도 -->
+    <string name="vim_move_step">5</string><!-- 1mm 실제 0.1m -->
+    <string name="camera_move_step">1</string><!-- 각도 -->
     <string name="interval_millis_v">10</string><!-- 빔 변경 반영 텀 0.05초 -->
     <string name="interval_millis_c">20</string><!-- 서보 변경 반영 텀 0.1초 -->
 </resources>

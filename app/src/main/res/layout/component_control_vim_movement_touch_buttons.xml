@@ -102,9 +102,53 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp">
+            <TextView
+                android:layout_width="85dp"
+                android:layout_height="40dp"
+                android:gravity="center_vertical|right"
+                android:textSize="15dp"
+                android:text="Step : "/>
+            <TextView
+                android:id="@+id/textSeekStep"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
+                android:background="@drawable/rounded"
+                android:gravity="center"
+                android:backgroundTint="@color/channel_connect"
+                android:textSize="15dp"
+                android:text="20"/>
             <SeekBar
-                android:id="@+id/seekBar"
+                android:id="@+id/seekBarStep"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp">
+            <TextView
+                android:layout_width="85dp"
+                android:layout_height="40dp"
+                android:gravity="center_vertical|right"
+                android:textSize="15dp"
+                android:text="Millisecond : "/>
+            <TextView
+                android:id="@+id/textSeekMills"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
+                android:background="@drawable/rounded"
+                android:gravity="center"
+                android:backgroundTint="@color/channel_connect"
+                android:textSize="15dp"
+                android:text="20"/>
+            <SeekBar
+                android:id="@+id/seekBarMills"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         </LinearLayout>

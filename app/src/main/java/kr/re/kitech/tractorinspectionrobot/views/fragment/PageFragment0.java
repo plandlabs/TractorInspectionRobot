@@ -161,12 +161,6 @@ public class PageFragment0 extends Fragment {
         super.onStart();
         viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
         SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
-
-        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
-        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
-        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
-        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
-        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
 
 
@@ -179,6 +173,11 @@ public class PageFragment0 extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
+        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
+        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
+        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
 
     public ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(
