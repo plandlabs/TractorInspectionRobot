@@ -54,7 +54,7 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
         BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
             @Override
             public void applyDelta(String axis, double delta) {
-                viewModel.applyDeltaAndPublish(deviceName, axis, delta);
+                viewModel.applyDeltaAndPublish(axis, delta);
             }
 
             @Override

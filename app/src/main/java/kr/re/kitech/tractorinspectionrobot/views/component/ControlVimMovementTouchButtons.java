@@ -6,6 +6,7 @@ import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
@@ -20,7 +21,8 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
     private LifecycleOwner lifecycleOwner;
     private String deviceName;
 
-    public Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
+    private Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
+    private SeekBar seekBar;
 
     public ControlVimMovementTouchButtons(Context context) {
         super(context);
@@ -52,7 +54,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
             @Override
             public void applyDelta(String axis, double delta) {
-                viewModel.applyDeltaAndPublish(deviceName, axis, delta);
+                viewModel.applyDeltaAndPublish(axis, delta);
             }
 
             @Override

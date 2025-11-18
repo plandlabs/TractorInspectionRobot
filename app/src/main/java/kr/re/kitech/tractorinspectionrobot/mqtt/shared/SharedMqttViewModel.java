@@ -223,7 +223,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * - axis가 x,y,z → cmd=2001 (ABS, x,y,z)
      * - axis가 s1,s2,s3 → cmd=2003 (ABS, s1,s2,s3)
      */
-    public void applyDeltaAndPublish(String deviceName, String axis, double delta) {
+    public void applyDeltaAndPublish(String axis, double delta) {
         RobotState cur = getOrDefault();
         double x         = cur.x;
         double y         = cur.y;
