@@ -19,20 +19,63 @@
 <body>
 <canvas id="c"></canvas>
 <div class="hud">
-    <div>입력단위: mm (내부 m)</div>
-    <div id="poseText"><b>x:0 y:0 z:0 x′:0° y′:0° z′:0°</b></div>
+    <div>입력단위: mm (내부 m + 스케일, Z는 2배 시각화)</div>
+    <div id="poseText"><b>x:0 y:0 z:0 s1:0° s2:0° s3:0°</b></div>
 </div>
 
 <script>
     /* ====================== 상수/헬퍼 ====================== */
     const MM_TO_M = 1/1000;
-    const SIZE_X = 1500*MM_TO_M, SIZE_Y = 1500*MM_TO_M, SIZE_Z = 500*MM_TO_M;
+
+    // 실제 작업 영역(mm)
+    const RAW_X_MM       = 25000; // X 작업 범위
+    const RAW_Y_MM       = 44000; // Y 작업 범위
+    const RAW_Z_WORK_MM  = 3500;  // 레일/작업 Z 범위 (실제)
+    const RAW_Z_FRAME_MM = 5000;  // 프레임 깊이 Z (실제)
+
+    // Z축을 화면에서 2배로 늘려 보이게
+    const Z_VISUAL_SCALE = 2; // 2배
+
+    // 전체 모델을 화면에서 얼마나 크게 볼지 (m)
+    const TARGET_MAX = 1.5;       // 최대 치수를 1.5m 정도로 축소
+
+    // 실제 최대 길이(m) – Z는 시각화 스케일 반영
+    const RAW_MAX_M = Math.max(
+        RAW_X_MM,
+        RAW_Y_MM,
+        RAW_Z_FRAME_MM * Z_VISUAL_SCALE
+    ) * MM_TO_M;
+
+    // 전체 스케일 비율
+    const SCENE_SCALE = TARGET_MAX / RAW_MAX_M;
+
+    // 씬 내부에서 사용할 축소된 크기(m)
+    const SIZE_X = RAW_X_MM                 * MM_TO_M * SCENE_SCALE;              // 프레임 X 길이
+    const SIZE_Y = RAW_Y_MM                 * MM_TO_M * SCENE_SCALE;              // 프레임 Y 높이
+    const SIZE_Z = RAW_Z_FRAME_MM * Z_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;       // 프레임 Z 깊이(2배 적용)
+
+    // 레일이 위치할 Z 좌표 (실제 3500mm → 시각화 7000mm)
+    const RAIL_Z_M = RAW_Z_WORK_MM * Z_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;
+
+    // 암/관절 길이 (월드 스케일과 무관하게 상대 크기 유지용)
     const LINK_L1 = 0.18;
-    const LINK_L2 = LINK_L1/2.4;
+    const LINK_L2 = LINK_L1 / 2.4;
     const L2_THICK = 0.02 * 1.7;
     const L1_THICK = 0.025 * 1.7;
+
     const deg2rad = THREE.MathUtils.degToRad;
     const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+    /* ==== 각도 보정용 절대 변수 (현장에서 조정) ==== */
+    const ANGLE_CALIB = {
+        x: { offset: 0,  dir: 1 },
+        y: { offset: 0,  dir: 1 },
+        z: { offset: 90, dir: -1 }   // 요청하신 값 유지
+    };
+
+    /* ==== Z축 연속각(unwrap)용 전역 상태 ==== */
+    let lastZRaw = null;
+    let cumZRaw  = 0;
 
     /* ====================== 기본 세팅 ====================== */
     const canvas = document.getElementById('c');
@@ -43,20 +86,17 @@
     scene.background = new THREE.Color(0x0f0f12);
 
     const camera = new THREE.PerspectiveCamera(45,1,0.01,50);
-    camera.position.set(2.2,1.8,2.6);
+    // 프레임 전체를 적당히 보는 위치
+    const maxDim = Math.max(SIZE_X, SIZE_Y, SIZE_Z);
+    camera.position.set(maxDim*1.4, maxDim*1.4, maxDim*1.4);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.target.set(SIZE_X/2, SIZE_Y/2, SIZE_Z/2);
-    {
-        const v = new THREE.Vector3().subVectors(camera.position,controls.target);
-        v.multiplyScalar(2.0);
-        camera.position.copy(controls.target).add(v);
-        controls.update();
-    }
-    controls.minDistance = 0.5;
-    controls.maxDistance = 8;
+    controls.update();
+    controls.minDistance = maxDim * 0.2;
+    controls.maxDistance = maxDim * 3;
     controls.screenSpacePanning = true;
 
     scene.add(new THREE.AmbientLight(0xffffff,0.6));
@@ -64,8 +104,9 @@
     dir.position.set(2,3,2);
     scene.add(dir);
 
-    const grid = new THREE.GridHelper(3,30,0x34495e,0x263238);
-    grid.position.set(SIZE_X/2,0,SIZE_Z/2);
+    // 바닥 그리드 (X-Z 평면, 앞쪽 z≈0 부근)
+    const grid = new THREE.GridHelper(TARGET_MAX * 2, 40, 0x34495e,0x263238);
+    grid.position.set(SIZE_X/2, 0, 0);
     scene.add(grid);
 
     /* ====================== 재질/유틸 ====================== */
@@ -75,34 +116,61 @@
     const matHead  = new THREE.MeshStandardMaterial({color:0xff9800, metalness:0.2, roughness:0.6});
     const matCone  = new THREE.MeshStandardMaterial({color:0x00bcd4, metalness:0.1, roughness:0.7, transparent:true, opacity:0.25});
 
-    function makeBeam(len, axis='x', size=0.04, mat=matFrame){
-        const g = axis==='x'?[len,size,size]:axis==='y'?[size,len,size]:[size,size,len];
+    // 빔: len은 축 방향 길이, size는 두께 (0.025m = 25mm 정도로 더 얇게)
+    function makeBeam(len, axis='x', size=0.025, mat=matFrame){
+        const g = axis==='x'
+            ? [len,size,size]
+            : axis==='y'
+            ? [size,len,size]
+            : [size,size,len];
         return new THREE.Mesh(new THREE.BoxGeometry(...g), mat);
     }
 
     /* ====================== 프레임 ====================== */
     const frame = new THREE.Group(); scene.add(frame);
+
+    // 1) 하단 사각 프레임 (4개 빔) : 원점은 왼쪽-앞쪽 (0,0,0)
     (() => {
-        const s=0.04,g=new THREE.Group();
-        const fx1=makeBeam(SIZE_X,'x'); fx1.position.set(SIZE_X/2, s/2, 0);
-        const fx2=makeBeam(SIZE_X,'x'); fx2.position.set(SIZE_X/2, s/2, SIZE_Z);
-        const fz1=makeBeam(SIZE_Z,'z'); fz1.position.set(0,s/2,SIZE_Z/2);
-        const fz2=makeBeam(SIZE_Z,'z'); fz2.position.set(SIZE_X,s/2,SIZE_Z/2);
-        g.add(fx1,fx2,fz1,fz2); frame.add(g);
-    })();
-    (() => {
-        const g=new THREE.Group();
-        const cy2=makeBeam(SIZE_Y,'y'); cy2.position.set(0, SIZE_Y/2, SIZE_Z);
-        const cy4=makeBeam(SIZE_Y,'y'); cy4.position.set(SIZE_X, SIZE_Y/2, SIZE_Z);
-        g.add(cy2,cy4); frame.add(g);
-    })();
-    (() => {
-        const g=new THREE.Group();
-        const tx2=makeBeam(SIZE_X,'x'); tx2.position.set(SIZE_X/2, SIZE_Y-0.02, SIZE_Z);
-        g.add(tx2); frame.add(g);
+        const s = 0.025;
+        const g = new THREE.Group();
+        // 앞쪽 X 빔 (z=0)
+        const fxFront = makeBeam(SIZE_X,'x', s); fxFront.position.set(SIZE_X/2, s/2, 0);
+        // 뒤쪽 X 빔 (z=SIZE_Z)
+        const fxBack  = makeBeam(SIZE_X,'x', s); fxBack.position.set(SIZE_X/2, s/2, SIZE_Z);
+        // 왼쪽 Z 빔 (x=0)
+        const fzLeft  = makeBeam(SIZE_Z,'z', s); fzLeft.position.set(0,      s/2, SIZE_Z/2);
+        // 오른쪽 Z 빔 (x=SIZE_X)
+        const fzRight = makeBeam(SIZE_Z,'z', s); fzRight.position.set(SIZE_X, s/2, SIZE_Z/2);
+        g.add(fxFront,fxBack,fzLeft,fzRight);
+        frame.add(g);
     })();
 
-    /* ====================== 이동축 ====================== */
+    // 2) 기둥(세로 빔) 4개 : 모서리 4군데
+    (() => {
+        const s = 0.025;
+        const g = new THREE.Group();
+        const cyFL = makeBeam(SIZE_Y,'y', s); cyFL.position.set(0,      SIZE_Y/2, 0);       // Front-Left
+        const cyFR = makeBeam(SIZE_Y,'y', s); cyFR.position.set(SIZE_X, SIZE_Y/2, 0);       // Front-Right
+        const cyBL = makeBeam(SIZE_Y,'y', s); cyBL.position.set(0,      SIZE_Y/2, SIZE_Z);  // Back-Left
+        const cyBR = makeBeam(SIZE_Y,'y', s); cyBR.position.set(SIZE_X, SIZE_Y/2, SIZE_Z);  // Back-Right
+        g.add(cyFL,cyFR,cyBL,cyBR);
+        frame.add(g);
+    })();
+
+    // 3) 상부 사각 프레임 (4개 빔)
+    (() => {
+        const s = 0.025;
+        const topY = SIZE_Y - s/2;
+        const g = new THREE.Group();
+        const txFront = makeBeam(SIZE_X,'x', s); txFront.position.set(SIZE_X/2, topY, 0);
+        const txBack  = makeBeam(SIZE_X,'x', s); txBack.position.set(SIZE_X/2, topY, SIZE_Z);
+        const tzLeft  = makeBeam(SIZE_Z,'z', s); tzLeft.position.set(0,      topY, SIZE_Z/2);
+        const tzRight = makeBeam(SIZE_Z,'z', s); tzRight.position.set(SIZE_X, topY, SIZE_Z/2);
+        g.add(txFront,txBack,tzLeft,tzRight);
+        frame.add(g);
+    })();
+
+    /* ====================== 이동축 그룹 ====================== */
     const groupY = new THREE.Group();
     const groupX = new THREE.Group();
     const groupZ = new THREE.Group();
@@ -110,40 +178,43 @@
     groupY.add(groupX);
     groupX.add(groupZ);
 
-    const yGuide = makeBeam(SIZE_Y,'y',0.02,matRail);
-    yGuide.position.set(SIZE_X-0.02, SIZE_Y/2, SIZE_Z);
-    scene.add(yGuide);
+    // Y 가이드 (예: 뒤쪽 z=SIZE_Z)
 
-    const xRail = makeBeam(SIZE_X,'x',0.03,new THREE.MeshStandardMaterial({color:0xD1A50B}));
-    xRail.position.set(SIZE_X/2,0,SIZE_Z);
+    // X 레일 (바닥 근처, 프레임 뒤쪽 모서리 근처)
+    const xRail = makeBeam(SIZE_X,'x',0.02,new THREE.MeshStandardMaterial({color:0xD1A50B}));
+    xRail.position.set(SIZE_X/2,0.02,SIZE_Z);
     groupY.add(xRail);
 
-    const zRailGap = 0.232;
-    const xOffsetZrail = SIZE_X/2 - 0.75; // ← z레일 전체를 왼쪽 750mm 이동
+    // X 오프셋(중앙 정렬 대신 0에서 시작 – x,y 원점은 좌하단)
+    const xOffsetZrail = 0; // (0,0)에서 시작
 
-    // Z 레일 하단
-    const zRailBottom = makeBeam(SIZE_Z,'z',0.028,matRail);
-    zRailBottom.position.set(xOffsetZrail, 0.03, SIZE_Z + zRailGap);
+    const RAIL_LEN_M = RAW_Z_WORK_MM * Z_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;
+    // Z 레일 (깊이 방향): 레일 기준 z = 3500mm → 7000mm 시각화
+    const zRailBottom = makeBeam(RAIL_LEN_M,'z',0.02,matRail);
+    zRailBottom.position.set(xOffsetZrail, 0.04, RAIL_Z_M);
     groupX.add(zRailBottom);
 
-    // Z 레일 상단
-    const zRailTop = makeBeam(SIZE_Z,'z',0.028,new THREE.MeshStandardMaterial({color:0x6bd1a3}));
-    zRailTop.position.set(xOffsetZrail, 0.058, SIZE_Z + zRailGap);
+    const zRailTop = makeBeam(RAIL_LEN_M,'z',0.02,new THREE.MeshStandardMaterial({color:0x6bd1a3}));
+    zRailTop.position.set(xOffsetZrail, 0.063, RAIL_Z_M);
     groupZ.add(zRailTop);
 
-    // 캐리지(베이스)
+    // 캐리지(베이스) - 레일 기준 약간 뒤쪽
+    const CARRIAGE_Z_OFFSET = 0.05; // 5cm 정도
     const carriage = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.06,0.02),matCart);
-    carriage.position.set(xOffsetZrail, 0.055, SIZE_Z + 0.3 + zRailGap - 0.05);
+    carriage.position.set(xOffsetZrail, 0.063, SIZE_Z);
     groupZ.add(carriage);
 
-    // 암(armBase) 기준점도 동일하게 이동
+    // 암(armBase) 기준점
     const armBase = new THREE.Group();
     armBase.position.copy(carriage.position);
     groupZ.add(armBase);
 
+    /* ====================== 암/관절 ====================== */
     const L2_LEN = LINK_L2;
-    const linkL2 = new THREE.Mesh(new THREE.BoxGeometry(L2_THICK, L2_THICK, L2_THICK),
-        new THREE.MeshStandardMaterial({color:0x9E9E9E}));
+    const linkL2 = new THREE.Mesh(
+        new THREE.BoxGeometry(L2_THICK, L2_THICK, L2_THICK),
+        new THREE.MeshStandardMaterial({color:0x9E9E9E})
+    );
     linkL2.position.set(0, 0, L2_THICK/2);
     armBase.add(linkL2);
 
@@ -152,8 +223,10 @@
     armBase.add(jointZEnd);
 
     const plateHeight = LINK_L1 * 0.45;
-    const plateZ = new THREE.Mesh(new THREE.BoxGeometry(L2_THICK, plateHeight, L2_THICK),
-        new THREE.MeshStandardMaterial({color:0xB0BEC5}));
+    const plateZ = new THREE.Mesh(
+        new THREE.BoxGeometry(L2_THICK, plateHeight, L2_THICK),
+        new THREE.MeshStandardMaterial({color:0xB0BEC5})
+    );
     plateZ.position.set(0, plateHeight/3, -L2_THICK);
     jointZEnd.add(plateZ);
 
@@ -162,8 +235,10 @@
     jointZEnd.add(jointY);
 
     const L1_LEN = LINK_L1;
-    const linkL1 = new THREE.Mesh(new THREE.BoxGeometry(L1_THICK, L1_LEN, L1_THICK),
-        new THREE.MeshStandardMaterial({color:0x8BC34A}));
+    const linkL1 = new THREE.Mesh(
+        new THREE.BoxGeometry(L1_THICK, L1_LEN, L1_THICK),
+        new THREE.MeshStandardMaterial({color:0x8BC34A})
+    );
     linkL1.position.set(0, L1_LEN/3, 0);
     jointY.add(linkL1);
 
@@ -171,87 +246,118 @@
     jointX.position.set(0, L1_LEN, 0);
     jointY.add(jointX);
 
-    /* ====================== 카메라 ====================== */
+    /* ====================== 카메라 헤드 ====================== */
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.08), matHead);
     head.position.set(0,0.007,0.05);
     jointX.add(head);
 
-    // === 카메라 상단(실제 위쪽) 얇은 패널 ===
+    // 카메라 상단(실제 위쪽) 얇은 패널
     const topStripe = new THREE.Mesh(
         new THREE.BoxGeometry(0.072, 0.004, 0.072),
         new THREE.MeshStandardMaterial({color: 0xff1744, metalness:0.2, roughness:0.6})
     );
-    // 방향 반전된 구조에서는 위쪽이 -Y이므로, 아래쪽으로 배치
     topStripe.position.set(0, -0.08/2 - 0.002, 0);
     head.add(topStripe);
 
-    // === 카메라 윗방향 표시 (빨간 화살표) ===
+    // 카메라 윗방향 표시 화살표
     const upArrow = new THREE.ArrowHelper(
-        new THREE.Vector3(0, -1, 0),   // 반전된 방향: -Y이 실제 위쪽
-        new THREE.Vector3(0, 0, 0),    // 시작점
-        0.10,                          // 길이
-        0xff1744,                      // 색상(빨강)
-        0.02, 0.01                     // 머리 크기
+        new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(0, 0, 0),
+        0.10,
+        0xff1744,
+        0.02, 0.01
     );
     head.add(upArrow);
 
-
     const lensMat = new THREE.MeshStandardMaterial({color:0x222831, metalness:0.6, roughness:0.4});
     const lensBody = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.03,0.04,32), lensMat);
-    lensBody.rotation.x = Math.PI/2; lensBody.position.set(0,0,0.06); head.add(lensBody);
+    lensBody.rotation.x = Math.PI/2;
+    lensBody.position.set(0,0,0.06);
+    head.add(lensBody);
 
     const glassMat = new THREE.MeshStandardMaterial({color:0x2196f3, transparent:true, opacity:0.6});
     const glass = new THREE.Mesh(new THREE.CircleGeometry(0.023,32), glassMat);
-    glass.rotation.x = Math.PI/2; glass.position.set(0,0,0.08); head.add(glass);
+    glass.rotation.x = Math.PI/2;
+    glass.position.set(0,0,0.08);
+    head.add(glass);
 
     const fovDeg=50, coneLen=0.25;
     const coneRadius = Math.tan(deg2rad(fovDeg/2))*coneLen;
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius,coneLen,24,1,true), matCone);
-    cone.rotation.x = Math.PI/2; cone.position.set(0,0,0.06 + coneLen*0.8);
+    cone.rotation.x = Math.PI/2;
+    cone.position.set(0,0,0.06 + coneLen*0.8);
     head.add(cone);
 
-    // === [추가] 카메라 뒤 작은 사각형 ===
     const backMat = new THREE.MeshStandardMaterial({color:0xB0BEC5, metalness:0.4, roughness:0.7});
     const backBox = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.06,0.05), backMat);
-    backBox.position.set(0, 0, -0.05); // 카메라 뒤쪽으로 약간 붙임
+    backBox.position.set(0, 0, -0.05);
     head.add(backBox);
 
     /* ====================== 포즈 업데이트 ====================== */
     const poseText = document.getElementById('poseText');
 
     window.updateRobotPose = (pose)=>{
-        // 위치(mm)
-        const xIn = clamp(pose.x ?? 0, 0, 1500);
-        const yIn = clamp(pose.y ?? 0, 0, 1500);
-        const zIn = clamp(pose.z ?? 0, 0, SIZE_Z/MM_TO_M);
+        // 위치(mm) - 실제 범위로 클램프
+        const xIn = clamp(pose.x ?? 0, 0, RAW_X_MM);
+        const yIn = clamp(pose.y ?? 0, 0, RAW_Y_MM);
+        const zIn = clamp(pose.z ?? 0, 0, RAW_Z_WORK_MM);
 
-        const xM = xIn * MM_TO_M;
-        const yM = yIn * MM_TO_M;
-        const zM = zIn * MM_TO_M;
+        // 씬 좌표(m)
+        // X/Y: mm -> m -> SCENE_SCALE
+        // Z:   mm -> m -> SCENE_SCALE * Z_VISUAL_SCALE (2배로 보이게)
+        const xM = xIn * MM_TO_M * SCENE_SCALE;
+        const yM = yIn * MM_TO_M * SCENE_SCALE;
+        const zM = zIn * MM_TO_M * SCENE_SCALE * Z_VISUAL_SCALE;
 
         groupY.position.set(0, yM, 0);
         groupX.position.set(xM, 0, 0);
         groupZ.position.set(0, 0, zM);
 
-        // 각도 입력(범위 보정)
-        const xPrimeIn = clamp(Number(pose.s1 ?? 0), 0, 180);
-        const yPrimeIn = clamp(Number(pose.s2 ?? 0), 0, 180);
-        const zPrimeIn = (Number(pose.s3 ?? 0) % 360 + 360) % 360; // 음수 방지
+        // 각도 입력 (Raw, HUD용)
+        const xRaw = clamp(Number(pose.s1 ?? 0), 0, 180);
+        const yRaw = clamp(Number(pose.s2 ?? 0), 0, 180);
+        const zRaw = ((Number(pose.s3 ?? 0) % 360) + 360) % 360;
 
-        // ★ 리버스 매핑: 입력 0° → 실제 180°
-        const xPhys = 180 - xPrimeIn;                               // 0..180
-        const yPhys = 180 - yPrimeIn;                               // 0..180
-        const zPhys = ((180 - zPrimeIn) % 360 + 360) % 360;         // 0..360
+        const xPrimeIn = xRaw;
+        const yPrimeIn = yRaw;
+        const zPrimeIn = zRaw;
 
-        // 회전 적용 (기존 부호/축 유지)
+        // Z축 연속각(unwrap)
+        if (lastZRaw === null) {
+            cumZRaw = zRaw;
+        } else {
+            let dz = zRaw - lastZRaw;
+            if (dz > 180)  dz -= 360;
+            if (dz < -180) dz += 360;
+            cumZRaw += dz;
+        }
+        lastZRaw = zRaw;
+
+        let zHud = ((cumZRaw % 360) + 360) % 360;
+        if (zHud === 0 && Math.abs(cumZRaw) > 1e-6) zHud = 360;
+
+        // 보정 적용
+        const xAdj = (xRaw    - ANGLE_CALIB.x.offset) * ANGLE_CALIB.x.dir;
+        const yAdj = (yRaw    - ANGLE_CALIB.y.offset) * ANGLE_CALIB.y.dir;
+        const zAdj = (cumZRaw - ANGLE_CALIB.z.offset) * ANGLE_CALIB.z.dir;
+
+        const xAdjClamped = clamp(xAdj, 0, 180);
+        const yAdjClamped = clamp(yAdj, 0, 180);
+        const zAdjNorm    = ((zAdj % 360) + 360) % 360;
+
+        let zPhys = ((180 - zAdjNorm) % 360 + 360) % 360;
+        if (zPhys === 0 && Math.abs(zAdj) > 1e-6) zPhys = 360;
+
+        const xPhys = 180 - xAdjClamped;
+        const yPhys = 180 - yAdjClamped;
+
         jointX.rotation.x    = THREE.MathUtils.degToRad(-xPhys);
         jointY.rotation.x    = THREE.MathUtils.degToRad( yPhys);
         jointZEnd.rotation.z = THREE.MathUtils.degToRad( zPhys);
 
-        // HUD: 입력값 그대로 표시
         poseText.textContent =
             `x:${Math.round(xIn)}  y:${Math.round(yIn)}  z:${Math.round(zIn)}  ` +
-            `x′:${xPrimeIn.toFixed(1)}°  y′:${yPrimeIn.toFixed(1)}°  z′:${zPrimeIn.toFixed(1)}°`;
+            `s1:${xPrimeIn.toFixed(1)}°  s2:${yPrimeIn.toFixed(1)}°  s3:${zHud.toFixed(1)}°`;
     };
 
     /* ====================== 렌더 루프 ====================== */
@@ -263,68 +369,23 @@
             camera.updateProjectionMatrix();
         }
     }
-    function animate(){ requestAnimationFrame(animate); resize(); controls.update(); renderer.render(scene,camera); }
+    function animate(){
+        requestAnimationFrame(animate);
+        resize();
+        controls.update();
+        renderer.render(scene,camera);
+    }
     animate();
 
     window.onStateUpdate = function(msg) {
         try {
             const pose = JSON.parse(msg);
-            if (pose) {
-                window.updateRobotPose(pose);
-            }
+            if (pose) window.updateRobotPose(pose);
         } catch (e) {
             console.error("StateUpdate 파싱 오류:", e, msg);
         }
     };
-    //window.updateRobotPose({x:1000, y:1000, z:500, s1:90, s2:90, s3:90});
-    /* ====================== 데모 ====================== */
-    // (function demo(){
-    //     let t = 0;
-    //     let zDir = 1;
-    //     let zAngle = 0;
-    //
-    //     // === 이동 및 회전 최대/최소 설정(mm, °) ===
-    //     const X_MIN = 0,    X_MAX = 1500;
-    //     const Y_MIN = 0,    Y_MAX = 1500;
-    //     const Z_MIN = 0,    Z_MAX = 500;
-    //     const ANG_MIN = 0,  ANG_MAX = 180;
-    //     const ZANG_MIN = 0, ZANG_MAX = 360;
-    //
-    //     setInterval(() => {
-    //         t += 0.02; // 시간 진행
-    //
-    //         // === 위치 (mm) ===
-    //         // 각 축별로 주기와 위상 다르게: 서로 독립적으로 움직이는 느낌
-    //         const xPhase = (Math.sin(t * 1.0 + 0) * 0.5 + 0.5);           // 0~1
-    //         const yPhase = (Math.sin(t * 0.8 + Math.PI/3) * 0.5 + 0.5);   // 0~1
-    //         const zPhase = (Math.sin(t * 1.3 + Math.PI/2) * 0.5 + 0.5);   // 0~1
-    //
-    //         const x = X_MIN + (X_MAX - X_MIN) * xPhase;
-    //         const y = Y_MIN + (Y_MAX - Y_MIN) * yPhase;
-    //         const z = Z_MIN + (Z_MAX - Z_MIN) * zPhase;
-    //
-    //         // === 각도 (°) ===
-    //         // X′: 0~180 왕복
-    //         const xAngPhase = (Math.sin(t * 0.7 + Math.PI/4) * 0.5 + 0.5);
-    //         const s1 = ANG_MIN + (ANG_MAX - ANG_MIN) * xAngPhase;
-    //
-    //         // Y′: 180~0 반대위상 왕복
-    //         const yAngPhase = (Math.sin(t * 0.9 + Math.PI) * 0.5 + 0.5);
-    //         const s2 = ANG_MIN + (ANG_MAX - ANG_MIN) * yAngPhase;
-    //
-    //         // Z′: 0~360 왕복 (방향 반전 포함)
-    //         zAngle += zDir * 2.2; // 회전 속도
-    //         if (zAngle >= ZANG_MAX) { zAngle = ZANG_MAX; zDir = -1; }
-    //         if (zAngle <= ZANG_MIN) { zAngle = ZANG_MIN; zDir = 1; }
-    //         const s3 = zAngle;
-    //
-    //         // === 적용 ===
-    //         window.updateRobotPose({ x, y, z, s1, s2, s3 });
-    //
-    //     }, 30);
-    // })();
-
-
+    //window.updateRobotPose({ x:15000, y:20000, z:3500, s1:0, s2:0, s3:90 });
 </script>
 </body>
 </html>

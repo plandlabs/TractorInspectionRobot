@@ -90,7 +90,7 @@
                     style="@style/moveControlButtonStyle"
                     android:layout_alignParentTop="true"
                     android:layout_centerInParent="true"
-                    android:drawableTop="@drawable/baseline_refresh_24"
+                    android:drawableTop="@drawable/baseline_refresh_24_mirror"
                     android:layout_height="65dp"
                     android:textSize="17sp"
                     android:text="+z'"/>
@@ -108,7 +108,7 @@
                     android:layout_marginEnd="3dp"
                     android:layout_marginRight="3dp"
                     android:layout_marginBottom="10dp"
-                    android:drawableBottom="@drawable/baseline_refresh_24_mirror"
+                    android:drawableBottom="@drawable/baseline_refresh_24"
                     android:text="-z'"
                     android:textSize="17sp" />
             </RelativeLayout>

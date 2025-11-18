@@ -237,15 +237,15 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
         switch (axis) {
             case "x":
-                x = clamp(cur.x + delta, 0, 1500);
+                x = clamp(cur.x + delta, 0, 25000);
                 movedPos = true;
                 break;
             case "y":
-                y = clamp(cur.y + delta, 0, 1500);
+                y = clamp(cur.y + delta, 0, 44000);
                 movedPos = true;
                 break;
             case "z":
-                z = clamp(cur.z + delta, 0, 500);
+                z = clamp(cur.z + delta, 0, 3500);
                 movedPos = true;
                 break;
             case "s1":
@@ -257,7 +257,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
                 movedServo = true;
                 break;
             case "s3":
-                s3 = clamp(cur.s3 + delta, 0, 360); // 필요 시 범위 조정
+                s3 = clamp(cur.s3 + delta, 0, 180); // 필요 시 범위 조정
                 movedServo = true;
                 break;
             default:
