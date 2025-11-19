@@ -1,0 +1,21 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 배경 -->
+    <item android:id="@android:id/background">
+        <shape>
+            <size android:height="12dp"/> <!-- 막대 높이 증가 -->
+            <solid android:color="@color/date_grey"/>
+            <corners android:radius="6dp"/>
+        </shape>
+    </item>
+
+    <!-- 진행 부분 -->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape>
+                <size android:height="12dp"/>
+                <solid android:color="#00BCD4"/>
+                <corners android:radius="6dp"/>
+            </shape>
+        </clip>
+    </item>
+</layer-list>

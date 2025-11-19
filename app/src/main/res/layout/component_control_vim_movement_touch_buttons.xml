@@ -32,7 +32,8 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingBottom="30dp">
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="217dp"
@@ -103,8 +104,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -123,13 +123,16 @@
                     android:layout_height="40dp"
                     android:background="@drawable/rounded"
                     android:gravity="center"
-                    android:backgroundTint="@color/channel_connect"
+                    android:backgroundTint="@color/option_name"
                     android:textSize="15dp"
                     android:text="20"/>
                 <SeekBar
                     android:id="@+id/seekBarStep"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -149,13 +152,16 @@
                     android:layout_height="40dp"
                     android:background="@drawable/rounded"
                     android:gravity="center"
-                    android:backgroundTint="@color/channel_connect"
+                    android:backgroundTint="@color/option_name"
                     android:textSize="15dp"
                     android:text="20"/>
                 <SeekBar
                     android:id="@+id/seekBarMills"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

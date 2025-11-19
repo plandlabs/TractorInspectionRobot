@@ -32,10 +32,11 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingBottom="30dp">
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="217dp"
+                android:layout_height="160dp"
                 android:layout_weight="1">
                 <Button
                     android:id="@+id/btn_x_up"
@@ -59,7 +60,7 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="217dp"
+                android:layout_height="160dp"
                 android:layout_weight="1">
                 <Button
                     android:id="@+id/btn_y_up"
@@ -83,7 +84,7 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="217dp"
+                android:layout_height="160dp"
                 android:layout_weight="1">
                 <Button
                     android:id="@+id/btn_forward"
@@ -112,6 +113,69 @@
                     android:text="-z'"
                     android:textSize="17sp" />
             </RelativeLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="10dp">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical|right"
+                    android:textSize="15dp"
+                    android:text="Step : "/>
+                <TextView
+                    android:id="@+id/textSeekStep"
+                    android:layout_width="70dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/rounded"
+                    android:gravity="center"
+                    android:backgroundTint="@color/option_name"
+                    android:textSize="15dp"
+                    android:text="20"/>
+                <SeekBar
+                    android:id="@+id/seekBarStep"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="10dp">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical|right"
+                    android:textSize="15dp"
+                    android:text="Millisecond : "/>
+                <TextView
+                    android:id="@+id/textSeekMills"
+                    android:layout_width="70dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/rounded"
+                    android:gravity="center"
+                    android:backgroundTint="@color/option_name"
+                    android:textSize="15dp"
+                    android:text="20"/>
+                <SeekBar
+                    android:id="@+id/seekBarMills"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

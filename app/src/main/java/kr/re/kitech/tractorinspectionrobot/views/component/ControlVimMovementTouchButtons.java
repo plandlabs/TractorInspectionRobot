@@ -32,7 +32,6 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 
     private int colorOn;
     private int colorOff;
-    private Context mContext;
 
     public ControlVimMovementTouchButtons(Context context) {
         super(context);
@@ -44,6 +43,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         init(context);
     }
 
+    @SuppressLint("SetTextI18n")
     private void init(Context context) {
         inflate(context, R.layout.component_control_vim_movement_touch_buttons, this);
         setting = context.getSharedPreferences("setting", 0);
@@ -60,79 +60,80 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         colorOn = R.color.touch_on;
         colorOff = R.color.touch_off;
 
+        // ========= step SeekBar =========
+        seekBarStep = findViewById(R.id.seekBarStep);
+        textSeekStep = findViewById(R.id.textSeekStep);
+
+        int defaultStep = Integer.parseInt(getContext().getString(R.string.vim_move_step));
+        step = setting.getInt("v_step", 0) > 0
+                ? setting.getInt("v_step", 0)
+                : defaultStep;
+
+        // 범위 1 ~ 50 보정
+        if (step < 1) step = 1;
+        if (step > 50) step = 50;
+
+        // SeekBar 범위: 0 ~ (50 - 1)
+        seekBarStep.setMax(50 - 1);
+        seekBarStep.setProgress(step - 1);
+        textSeekStep.setText(step + " ㎜");
+
+        seekBarStep.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mVibrator.vibrate(20);
+                // 1 ~ 50 매핑
+                step = 1 + progress;
+                textSeekStep.setText(step + " ㎜");
+
+                editor.putInt("v_step", step);
+                editor.apply();
+
+                // 최신 값으로 리스너 다시 세팅
+                attachTouchListeners();
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
+
         // ========= millis SeekBar =========
         seekBarMills = findViewById(R.id.seekBarMills);
         textSeekMills = findViewById(R.id.textSeekMills);
 
         int defaultMillis = Integer.parseInt(getContext().getString(R.string.interval_millis_v));
-//        intervalMillis = setting.getInt("v_millis", 0) > 0
-//                ? setting.getInt("v_millis", 0)
-//                : defaultMillis;
-        intervalMillis = defaultMillis;
+        intervalMillis = setting.getInt("v_millis", 0) > 0
+                ? setting.getInt("v_millis", 0)
+                : defaultMillis;
+//        intervalMillis = defaultMillis;
 
-        // 범위 10 ~ 2000 보정
-//        if (intervalMillis < 10) intervalMillis = 10;
-//        if (intervalMillis > 2000) intervalMillis = 2000;
+        // 범위 10 ~ 1000 보정
+        if (intervalMillis < 10) intervalMillis = 10;
+        if (intervalMillis > 1000) intervalMillis = 1000;
 
-        // SeekBar 범위: 0 ~ (2000 - 10)
-//        seekBarMills.setMax(2000 - 10);
-//        seekBarMills.setProgress(intervalMillis - 10);
-//        textSeekMills.setText(String.valueOf(intervalMillis));
-//
-//        seekBarMills.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//            @Override
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                // 10 ~ 2000 매핑
-//                intervalMillis = 10 + progress;
-//                textSeekMills.setText(String.valueOf(intervalMillis));
-//
-//                editor.putInt("v_millis", intervalMillis);
-//                editor.apply();
-//
-//                // 최신 값으로 리스너 다시 세팅
-//                attachTouchListeners();
-//            }
-//
-//            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
-//            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
-//        });
+        // SeekBar 범위: 0 ~ (1000 - 10)
+        seekBarMills.setMax((1000 - 10) / 10); // 199
+        seekBarMills.setProgress((intervalMillis - 10) / 10);
+        textSeekMills.setText(intervalMillis + " ㎳");
 
-        // ========= step SeekBar =========
-        seekBarStep = findViewById(R.id.seekBarStep);
-        textSeekStep = findViewById(R.id.textSeekStep);
-//
-        int defaultStep = Integer.parseInt(getContext().getString(R.string.vim_move_step));
-//        step = setting.getInt("v_step", 0) > 0
-//                ? setting.getInt("v_step", 0)
-//                : defaultStep;
-        step = defaultStep;
-//
-//        // 범위 1 ~ 50 보정
-//        if (step < 1) step = 1;
-//        if (step > 50) step = 50;
-//
-//        // SeekBar 범위: 0 ~ (50 - 1)
-//        seekBarStep.setMax(50 - 1);
-//        seekBarStep.setProgress(step - 1);
-//        textSeekStep.setText(String.valueOf(step));
-//
-//        seekBarStep.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//            @Override
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                // 1 ~ 50 매핑
-//                step = 1 + progress;
-//                textSeekStep.setText(String.valueOf(step));
-//
-//                editor.putInt("v_step", step);
-//                editor.apply();
-//
-//                // 최신 값으로 리스너 다시 세팅
-//                attachTouchListeners();
-//            }
-//
-//            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
-//            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
-//        });
+        seekBarMills.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mVibrator.vibrate(20);
+                // 10 ~ 1000 매핑
+                intervalMillis = (progress * 10) + 10;
+                textSeekMills.setText(intervalMillis + " ㎳");
+
+                editor.putInt("v_millis", intervalMillis);
+                editor.apply();
+
+                // 최신 값으로 리스너 다시 세팅
+                attachTouchListeners();
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
     }
 
     /**
@@ -189,6 +190,8 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+        attachTouchListeners();
+
 //        BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
 //            @Override
 //            public void applyDelta(String axis, double delta) {
@@ -203,7 +206,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 //        };
 
         // ViewModel 세팅될 때 현재 step/intervalMillis 기준으로 리스너 부착
-        attachTouchListeners();
+
 //        btnUp.setOnTouchListener(
 //                new BtnTouchUpDownListener(getContext(), "y", colorOn, colorOff, true, step, intervalMillis, req)
 //        );

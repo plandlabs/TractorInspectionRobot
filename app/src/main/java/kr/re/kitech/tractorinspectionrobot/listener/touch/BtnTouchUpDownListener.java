@@ -58,7 +58,7 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
             if (!isPressed || !isRunning) return;
 
             // 주기적으로 진동 + delta 적용
-            vibrateTick(12);
+            vibrateTick(intervalMillis/5);
             requester.applyDelta(axisKey, isIncrease ? step : -step);
 
             if (isPressed && isRunning) {
@@ -76,7 +76,7 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
                 setTint(v, colorActive);
 
                 // ✅ 버튼 누르는 순간 바로 한 번 진동
-                vibrateTick(12);
+                vibrateTick(intervalMillis/5);
 
                 if (!isRunning) {
                     isRunning = true;
