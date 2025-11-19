@@ -71,36 +71,52 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
-        @Override public void onReceive(Context context, Intent intent) {
-            if (intent == null ||
-                    !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
-
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null || !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction()))
+                return;
             String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
             if (status == null) return;
-
             if ("connected".equalsIgnoreCase(status)) {
-
-                Boolean prev = mqttConnected.getValue();
                 mqttConnected.postValue(true);
-
-                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
-                if (prev == null || !prev) {
-                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
-                }
-
-            } else if ("disconnected".equalsIgnoreCase(status)
-                    || "rejected".equalsIgnoreCase(status)) {
-
-                Boolean prev = mqttConnected.getValue();
+                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
+                sendInitialServoZero();
+            } else if ("disconnected".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
                 mqttConnected.postValue(false);
-
-                // 끊어질 때만 토스트
-                if (prev != null && prev) {
-                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
             }
         }
+//        @Override public void onReceive(Context context, Intent intent) {
+//            if (intent == null ||
+//                    !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
+//
+//            String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
+//            if (status == null) return;
+//
+//            if ("connected".equalsIgnoreCase(status)) {
+//
+//                Boolean prev = mqttConnected.getValue();
+//                mqttConnected.postValue(true);
+//
+//                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
+//                if (prev == null || !prev) {
+//                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+//                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
+//                }
+//
+//            } else if ("disconnected".equalsIgnoreCase(status)
+//                    || "rejected".equalsIgnoreCase(status)) {
+//
+//                Boolean prev = mqttConnected.getValue();
+//                mqttConnected.postValue(false);
+//
+//                // 끊어질 때만 토스트
+//                if (prev != null && prev) {
+//                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        }
     };
 
 

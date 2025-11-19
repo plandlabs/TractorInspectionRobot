@@ -110,4 +110,11 @@
     <string name="camera_move_step">1</string><!-- 각도 -->
     <string name="interval_millis_v">10</string><!-- 빔 변경 반영 텀 0.05초 -->
     <string name="interval_millis_c">100</string><!-- 서보 변경 반영 텀 0.1초 -->
+
+    <string name="max_x">44000</string>
+    <string name="max_y">25000</string>
+    <string name="max_z">3500</string>
+    <string name="max_s1">180</string>
+    <string name="max_s2">180</string>
+    <string name="max_s3">180</string>
 </resources>

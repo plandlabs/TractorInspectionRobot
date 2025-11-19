@@ -27,6 +27,9 @@
     /* ====================== 상수/헬퍼 ====================== */
     const MM_TO_M = 1/1000;
 
+    // ✅ X축 화면 시각화만 0.6배로 (실제 값은 44000 그대로 사용)
+    const X_VISUAL_SCALE = 0.6;
+
     // 실제 작업 영역(mm)
     const RAW_X_MM       = 44000; // X 작업 범위
     const RAW_Y_MM       = 25000; // Y 작업 범위
@@ -39,9 +42,9 @@
     // 전체 모델을 화면에서 얼마나 크게 볼지 (m)
     const TARGET_MAX = 1.5;       // 최대 치수를 1.5m 정도로 축소
 
-    // 실제 최대 길이(m) – Z는 시각화 스케일 반영
+    // ✅ 실제 최대 길이(m) – X는 0.6배, Z는 시각화 스케일 반영
     const RAW_MAX_M = Math.max(
-        RAW_X_MM,
+        RAW_X_MM * X_VISUAL_SCALE,
         RAW_Y_MM,
         RAW_Z_FRAME_MM * Z_VISUAL_SCALE
     ) * MM_TO_M;
@@ -49,10 +52,10 @@
     // 전체 스케일 비율
     const SCENE_SCALE = TARGET_MAX / RAW_MAX_M;
 
-    // 씬 내부에서 사용할 축소된 크기(m) (로봇이 실제로 움직이는 내부 작업 영역)
-    const SIZE_X = RAW_X_MM                 * MM_TO_M * SCENE_SCALE;              // X 내부 작업 길이
-    const SIZE_Y = RAW_Y_MM                 * MM_TO_M * SCENE_SCALE;              // Y 내부 작업 높이
-    const SIZE_Z = RAW_Z_FRAME_MM * Z_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;       // Z 프레임 깊이(2배 적용)
+    // ✅ 씬 내부에서 사용할 축소된 크기(m) (로봇이 실제로 움직이는 내부 작업 영역)
+    const SIZE_X = RAW_X_MM * X_VISUAL_SCALE      * MM_TO_M * SCENE_SCALE; // X만 0.6배 적용
+    const SIZE_Y = RAW_Y_MM                       * MM_TO_M * SCENE_SCALE;
+    const SIZE_Z = RAW_Z_FRAME_MM * Z_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;
 
     // 🔸 프레임 빔 두께
     const FRAME_THICK = 0.025; // 2.5cm
@@ -95,7 +98,7 @@
     const camera = new THREE.PerspectiveCamera(45,1,0.01,50);
     // 전체 프레임 기준으로 적당히 보는 위치
     const maxDim = Math.max(SIZE_X + FRAME_THICK*2, SIZE_Y + FRAME_THICK + EXTRA_TOP, SIZE_Z);
-    camera.position.set(maxDim*1.4, maxDim*1.4, maxDim*1.4);
+    camera.position.set(maxDim*2.1, maxDim*2.1, maxDim*2.1);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -331,13 +334,13 @@
     const poseText = document.getElementById('poseText');
 
     window.updateRobotPose = (pose)=>{
-        // 위치(mm) - 실제 범위로 클램프
+        // 위치(mm) - 실제 범위로 클램프 (0 ~ 44000 유지)
         const xIn = clamp(pose.x ?? 0, 0, RAW_X_MM);
         const yIn = clamp(pose.y ?? 0, 0, RAW_Y_MM);
         const zIn = clamp(pose.z ?? 0, 0, RAW_Z_WORK_MM);
 
-        // 씬 좌표(m)
-        const xM = xIn * MM_TO_M * SCENE_SCALE;
+        // ✅ 씬 좌표(m) - X만 0.6배로 줄여 표시
+        const xM = xIn * X_VISUAL_SCALE * MM_TO_M * SCENE_SCALE;
         const yM = yIn * MM_TO_M * SCENE_SCALE;
         const zM = zIn * MM_TO_M * SCENE_SCALE * Z_VISUAL_SCALE; // 2배 시각화
 
@@ -417,8 +420,8 @@
             console.error("StateUpdate 파싱 오류:", e, msg);
         }
     };
-    // 테스트
-    //window.updateRobotPose({ x:15000, y:44000, z:3500, s1:0, s2:0, s3:90 });
+    // 테스트 예시
+    // window.updateRobotPose({ x:15000, y:44000, z:3500, s1:0, s2:0, s3:90 });
 </script>
 </body>
 </html>
