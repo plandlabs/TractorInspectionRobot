@@ -78,7 +78,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="X"
+                            android:text="x"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -86,7 +86,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="Y"
+                            android:text="y"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -94,7 +94,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="Z"
+                            android:text="z"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -102,7 +102,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="S1"
+                            android:text="s1"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -110,7 +110,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="S2"
+                            android:text="s2"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
@@ -118,7 +118,7 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:text="S3"
+                            android:text="s3"
                             android:layout_width="50dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"

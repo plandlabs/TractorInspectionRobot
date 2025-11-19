@@ -46,7 +46,7 @@
                     android:drawableTop="@drawable/baseline_arrow_upward_24"
                     android:layout_height="65dp"
                     android:textSize="17sp"
-                    android:text="+x'"/>
+                    android:text="서보1(+s1)"/>
                 <Button
                     android:id="@+id/btn_x_down"
                     style="@style/moveControlButtonStyle"
@@ -55,7 +55,7 @@
                     android:drawableBottom="@drawable/baseline_arrow_downward_24"
                     android:layout_height="65dp"
                     android:textSize="17sp"
-                    android:text="-x'"/>
+                    android:text="서보1(-s1)"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -70,7 +70,7 @@
                     android:drawableTop="@drawable/baseline_arrow_upward_24"
                     android:layout_height="65dp"
                     android:textSize="17sp"
-                    android:text="+y'"/>
+                    android:text="서보2(+s2)"/>
                 <Button
                     android:id="@+id/btn_y_down"
                     style="@style/moveControlButtonStyle"
@@ -79,7 +79,7 @@
                     android:drawableBottom="@drawable/baseline_arrow_downward_24"
                     android:layout_height="65dp"
                     android:textSize="17sp"
-                    android:text="-y'"/>
+                    android:text="서보2(-s2)"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -94,7 +94,7 @@
                     android:drawableTop="@drawable/baseline_refresh_24_mirror"
                     android:layout_height="65dp"
                     android:textSize="17sp"
-                    android:text="+z'"/>
+                    android:text="서보3(+s3)"/>
 
                 <Button
                     android:id="@+id/btn_backward"
@@ -110,7 +110,7 @@
                     android:layout_marginRight="3dp"
                     android:layout_marginBottom="10dp"
                     android:drawableBottom="@drawable/baseline_refresh_24"
-                    android:text="-z'"
+                    android:text="서보3(-s3)"
                     android:textSize="17sp" />
             </RelativeLayout>
         </LinearLayout>

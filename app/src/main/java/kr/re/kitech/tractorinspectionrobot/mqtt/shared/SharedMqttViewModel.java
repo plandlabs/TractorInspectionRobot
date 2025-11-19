@@ -288,6 +288,51 @@ public class SharedMqttViewModel extends AndroidViewModel {
             publishServoAbs(next);  // cmd=2003, s1,s2,s3
         }
     }
+    /**
+     * 완성된 RobotState를 한 번에 적용 + MQTT로 전송
+     *
+     * - 내부 상태(state LiveData) 갱신
+     * - cmd=2001 (x,y,z ABS) 전송
+     * - cmd=2003 (s1,s2,s3 ABS) 전송
+     */
+    public void applyStateAndPublish(RobotState target) {
+        // null 대비 + 범위 클램프
+        long ts = System.currentTimeMillis();
+        double x  = clamp(target.x,  0, 25000);
+        double y  = clamp(target.y,  0, 44000);
+        double z  = clamp(target.z,  0, 3500);
+        double s1 = clamp(target.s1, 0, 180);
+        double s2 = clamp(target.s2, 0, 180);
+        double s3 = clamp(target.s3, 0, 180);
+
+        RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
+        next = RobotState.clamp(next);
+
+        // UI 즉시 반영
+        state.setValue(next);
+
+        // MQTT 연결 여부 체크 (applyDeltaAndPublish와 동일 로직 재사용)
+        Boolean connected = mqttConnected.getValue();
+        if (connected == null || !connected) {
+            Log.w(TAG, "applyStateAndPublish() called while MQTT not connected. Ignored.");
+            long now = System.currentTimeMillis();
+            if (now - lastNotConnectedToastMs > 2_000) {
+                Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
+                lastNotConnectedToastMs = now;
+            }
+            return;
+        }
+
+        // 위치 + 서보 모두 ABS로 전송
+        publishMoveAbs(next);   // cmd=2001, x,y,z
+        publishServoAbs(next);  // cmd=2003, s1,s2,s3
+    }
+    public void applyStateAndPublish(double x, double y, double z,
+                                     double s1, double s2, double s3) {
+        RobotState target = new RobotState(x, y, z, s1, s2, s3, System.currentTimeMillis());
+        applyStateAndPublish(target);
+    }
+
 
     /**
      * 현재 상태를 그대로 다시 보내고 싶을 때 (손 뗄 때 등)

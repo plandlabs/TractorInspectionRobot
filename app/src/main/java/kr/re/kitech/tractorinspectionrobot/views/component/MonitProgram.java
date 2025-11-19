@@ -65,7 +65,7 @@ public class MonitProgram extends LinearLayout {
 
         btnListSave = findViewById(R.id.btn_list_save);
         btnListSave.setOnClickListener(view -> {
-
+            mVibrator.vibrate(50);
             // 마지막 상태가 없는 경우
             if (lastState == null) {
                 Toast.makeText(getContext(), "현재 로봇 상태가 없습니다.", Toast.LENGTH_SHORT).show();
@@ -129,8 +129,44 @@ public class MonitProgram extends LinearLayout {
                     })
                     .show();
         });
-        programRecyclerViewAdapter.setOnItemLongClickListener((v, pos) -> {
+        programRecyclerViewAdapter.setOnItemClickListener((v, pos) -> {
 
+            if (pos < 0 || pos >= robotStateItems.size()) return;
+            mVibrator.vibrate(50);
+            RobotState item = robotStateItems.get(pos);
+
+            // RobotState 내부 값 꺼내기
+            JSONObject json = item.toJson();
+            double x  = json.optDouble("x", 0);
+            double y  = json.optDouble("y", 0);
+            double z  = json.optDouble("z", 0);
+            double s1 = json.optDouble("s1", 0);
+            double s2 = json.optDouble("s2", 0);
+            double s3 = json.optDouble("s3", 0);
+
+            String msg = String.format(
+                    "이동할 항목:\n" +
+                            "X: %.1f\nY: %.1f\nZ: %.1f\n" +
+                            "S1: %.1f\nS2: %.1f\nS3: %.1f\n\n이동하시겠습니까?",
+                    x, y, z, s1, s2, s3
+            );
+
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("이동 확인")
+                    .setMessage(msg)
+                    .setPositiveButton("예", (dialog, which) -> {
+
+                        if (mVibrator != null) mVibrator.vibrate(50);
+
+
+                        viewModel.applyStateAndPublish(item);
+                        Toast.makeText(getContext(), "이동이 입력되었습니다.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
+        programRecyclerViewAdapter.setOnItemLongClickListener((v, pos) -> {
+            mVibrator.vibrate(50);
             if (pos < 0 || pos >= robotStateItems.size()) return;
 
             RobotState item = robotStateItems.get(pos);
