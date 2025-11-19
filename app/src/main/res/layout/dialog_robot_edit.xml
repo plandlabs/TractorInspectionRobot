@@ -147,7 +147,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
-                android:hint="(예: ing_w00001)"
+                android:hint="(예: ing_xyz_001)"
                 android:layout_marginTop="8dp" />
         </LinearLayout>
     </LinearLayout>

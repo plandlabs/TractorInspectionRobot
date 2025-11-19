@@ -103,7 +103,7 @@
     <string name="mqtt_connect_url">tcp://192.168.0.201:1883</string>
 <!--    <string name="mqtt_connect_url">tcp://192.168.219.126:1883</string>-->
     <string name="mqtt_root_topic">ingsys</string>
-    <string name="mqtt_base_topic">ing_w00001</string>
+    <string name="mqtt_base_topic">ing_xyz_001</string>
     <string name="mqtt_username">ingsys</string>
     <string name="mqtt_password">ing#8119</string>
     <string name="vim_move_step">10</string><!-- 1mm 실제 0.1m -->

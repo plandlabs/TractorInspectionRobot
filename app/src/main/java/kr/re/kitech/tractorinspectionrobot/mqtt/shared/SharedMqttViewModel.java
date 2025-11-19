@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
@@ -78,17 +79,30 @@ public class SharedMqttViewModel extends AndroidViewModel {
             if (status == null) return;
 
             if ("connected".equalsIgnoreCase(status)) {
+
+                Boolean prev = mqttConnected.getValue();
                 mqttConnected.postValue(true);
-                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
-                sendInitialServoZero();
+
+                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
+                if (prev == null || !prev) {
+                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
+                }
+
             } else if ("disconnected".equalsIgnoreCase(status)
                     || "rejected".equalsIgnoreCase(status)) {
+
+                Boolean prev = mqttConnected.getValue();
                 mqttConnected.postValue(false);
-                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
+
+                // 끊어질 때만 토스트
+                if (prev != null && prev) {
+                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     };
+
 
     // ---- 수신 메시지 수신 (MQTT → ForegroundService → 브로드캐스트) ----
     private final BroadcastReceiver messageReceiver = new BroadcastReceiver() {
@@ -99,7 +113,8 @@ public class SharedMqttViewModel extends AndroidViewModel {
             String topic   = intent.getStringExtra(MqttForegroundService.EXTRA_TOPIC);
             String payload = intent.getStringExtra(MqttForegroundService.EXTRA_PAYLOAD);
             if (topic == null || payload == null) return;
-            Log.w("topic", staTopic);
+            Log.w("topic", topic);
+            Log.w("topic sta", staTopic);
             // 모든 메시지를 directMessage에도 남김(디버깅/로그용)
             postDirectMessage(topic, payload);
 
@@ -252,11 +267,11 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
         switch (axis) {
             case "x":
-                x = clamp(cur.x + delta, 0, 25000);
+                x = clamp(cur.x + delta, 0, 44000);
                 movedPos = true;
                 break;
             case "y":
-                y = clamp(cur.y + delta, 0, 44000);
+                y = clamp(cur.y + delta, 0, 25000);
                 movedPos = true;
                 break;
             case "z":
@@ -283,17 +298,19 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
-        // UI 즉시 반영
-        state.setValue(next);
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
             Log.w(TAG, "applyDeltaAndPublish() called while MQTT not connected. Ignored.");
             long now = System.currentTimeMillis();
+            // 미연결시에만 UI 즉시 반영
+            state.setValue(next);
             if (now - lastNotConnectedToastMs > 2_000) {
                 Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }
             return;
+        }else{
+            if(axis.equals("s1") || axis.equals("s2") || axis.equals("s3")) state.setValue(next);
         }
         // 🔀 분기: 좌표/서보 각각 해당하는 cmd만 전송
         if (movedPos) {
@@ -314,8 +331,8 @@ public class SharedMqttViewModel extends AndroidViewModel {
     public void applyStateAndPublish(RobotState target) {
         // null 대비 + 범위 클램프
         long ts = System.currentTimeMillis();
-        int x  = clamp(target.x,  0, 25000);
-        int y  = clamp(target.y,  0, 44000);
+        int x  = clamp(target.x,  0, 44000);
+        int y  = clamp(target.y,  0, 25000);
         int z  = clamp(target.z,  0, 3500);
         int s1 = clamp(target.s1, 0, 180);
         int s2 = clamp(target.s2, 0, 180);
@@ -324,19 +341,25 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
-        // UI 즉시 반영
-        state.setValue(next);
-
         // MQTT 연결 여부 체크
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
             Log.w(TAG, "applyStateAndPublish() called while MQTT not connected. Ignored.");
             long now = System.currentTimeMillis();
+            // 미연결시에만  UI 즉시 반영
+            state.setValue(next);
             if (now - lastNotConnectedToastMs > 2_000) {
                 Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }
             return;
+        }else{
+            RobotState servoOnly = new RobotState(
+                    Objects.requireNonNull(state.getValue()).x,
+                    Objects.requireNonNull(state.getValue()).y,
+                    Objects.requireNonNull(state.getValue()).z,
+                    s1, s2, s3, ts);
+            state.setValue(servoOnly);
         }
 
         // 위치 + 서보 모두 ABS로 전송
@@ -388,12 +411,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
             sendMqtt(reqTopic, root.toString());
 
             // 내부 상태도 같이 0으로 맞추고 싶으면 아래 주석 해제
-            /*
+
             long ts = System.currentTimeMillis();
             RobotState cur = getOrDefault();
             RobotState next = new RobotState(cur.x, cur.y, cur.z, 0, 0, 0, ts);
             state.postValue(next);
-            */
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -410,7 +433,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             root.put("fp", FP);
 
             JSONObject ct = new JSONObject();
-            ct.put("tg", baseTopic);   // ex) "ing_w00001"
+            ct.put("tg", baseTopic);   // ex) "ing_xyz_001"
             ct.put("cmd", 2001);
             ct.put("opid", opidCounter++);
 

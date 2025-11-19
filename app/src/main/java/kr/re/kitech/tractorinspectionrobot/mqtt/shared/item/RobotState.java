@@ -50,8 +50,8 @@ public class RobotState {
 
     public static RobotState clamp(RobotState s) {
         return new RobotState(
-                clamp(s.x,   0, 25000),
-                clamp(s.y,   0, 44000),
+                clamp(s.x,   0, 44000),
+                clamp(s.y,   0, 25000),
                 clamp(s.z,   0, 3500),   // 필요 시 수정
                 clamp(s.s1,  0, 180), // s1
                 clamp(s.s2, 0, 180), // s2

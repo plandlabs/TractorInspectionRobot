@@ -167,6 +167,7 @@ public class RobotListActivity extends Activity {
         };
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onStart() {
         super.onStart();

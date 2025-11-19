@@ -1,5 +1,5 @@
 #브로커로 부터 sta 받음
-토픽 ingsys/ing_w00001/sta
+토픽 ingsys/ing_xyz_001/sta
 {
   "mt": "sta",
   "tm": "2025-01-01 12:00:02",
@@ -14,13 +14,13 @@
 }
 
 #브로커에게 x,y,z를 보냄
-토픽 ingsys/ing_w00001/req
+토픽 ingsys/ing_xyz_001/req
 {
   "mt": "req",
   "tm": "2025-01-01 12:00:01",
   "fp": "pc-controller",
   "ct": {
-    "tg": "ing_w00001",
+    "tg": "ing_xyz_001",
     "cmd": 2001,
     "opid": 22,
     "param": {
@@ -34,13 +34,13 @@
 }
 
 #브로커에게 s1(s1),s2(s2),s3(s3)를 보냄
-토픽 ingsys/ing_w00001/req
+토픽 ingsys/ing_xyz_001/req
 {
   "mt": "req",
   "tm": "2025-01-01 12:00:01",
   "fp": "pc-controller",
   "ct": {
-    "tg": "ing_w00001",
+    "tg": "ing_xyz_001",
     "cmd": 2003,
     "opid": 13,
     "param": {
