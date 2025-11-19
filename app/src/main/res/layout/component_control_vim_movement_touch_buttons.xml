@@ -134,35 +134,6 @@
                     android:thumb="@drawable/custom_thumb"
                     android:progressDrawable="@drawable/custom_progress"/>
             </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="10dp">
-                <TextView
-                    android:layout_width="85dp"
-                    android:layout_height="40dp"
-                    android:gravity="center_vertical|right"
-                    android:textSize="15dp"
-                    android:text="Millisecond : "/>
-                <TextView
-                    android:id="@+id/textSeekMills"
-                    android:layout_width="70dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/rounded"
-                    android:gravity="center"
-                    android:backgroundTint="@color/option_name"
-                    android:textSize="15dp"
-                    android:text="20"/>
-                <SeekBar
-                    android:id="@+id/seekBarMills"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:padding="8dp"
-                    android:thumb="@drawable/custom_thumb"
-                    android:progressDrawable="@drawable/custom_progress"/>
-            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

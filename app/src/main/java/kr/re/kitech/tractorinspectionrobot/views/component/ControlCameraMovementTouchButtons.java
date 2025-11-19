@@ -107,39 +107,41 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
                 : defaultMillis;
 //        intervalMillis = defaultMillis;
 
-        // 범위 10 ~ 1000 보정
-        if (intervalMillis < 10) intervalMillis = 10;
+        // 범위 100 ~ 1000 보정
+        if (intervalMillis < 100) intervalMillis = 100;
         if (intervalMillis > 1000) intervalMillis = 1000;
 
-        // SeekBar 범위: 0 ~ (1000 - 10)
-        seekBarMills.setMax((1000 - 10) / 10); // 199
-        seekBarMills.setProgress((intervalMillis - 10) / 10);
+// SeekBar 범위: 0~9  (100씩 증가)
+        seekBarMills.setMax(9);
+        seekBarMills.setProgress((intervalMillis / 100) - 1);
         textSeekMills.setText(intervalMillis + " ㎳");
 
         seekBarMills.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 mVibrator.vibrate(20);
-                // 10 ~ 1000 매핑
-                intervalMillis = (progress * 10) + 10;
+
+                // ✔ 100~1000 매핑 (100 단위 증가)
+                intervalMillis = (progress + 1) * 100;
+
                 textSeekMills.setText(intervalMillis + " ㎳");
 
                 editor.putInt("c_millis", intervalMillis);
                 editor.apply();
 
-                // 최신 값으로 리스너 다시 세팅
                 attachTouchListeners();
             }
 
-            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
-            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
     }
     @SuppressLint("ClickableViewAccessibility")
     private void attachTouchListeners() {
         BtnTouchUpDownListener.DeltaRequester req = new BtnTouchUpDownListener.DeltaRequester() {
             @Override
-            public void applyDelta(String axis, double delta) {
+            public void applyDelta(String axis, int delta) {
                 viewModel.applyDeltaAndPublish(axis, delta);
             }
 

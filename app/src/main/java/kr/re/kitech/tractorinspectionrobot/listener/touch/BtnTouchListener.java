@@ -13,7 +13,7 @@ import android.view.View;
 
 import androidx.core.content.ContextCompat;
 
-public class BtnTouchUpDownListener implements View.OnTouchListener {
+public class BtnTouchListener implements View.OnTouchListener {
 
     public interface DeltaRequester {
         void applyDelta(String axis, int delta);
@@ -21,26 +21,20 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
     }
 
     private final Context context;
-    private final String axisKey;    // "x"|"y"|"z"|"pan"|"tilt"
+    private final String axisKey;
     private final int colorActive;
     private final int colorDefault;
     private final boolean isIncrease;
-    private final int step;       // 증감 단위
-    private final int intervalMillis;
+    private final int step;
     private final DeltaRequester requester;
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private volatile boolean isPressed = false;
-    private volatile boolean isRunning = false;
-
-    public BtnTouchUpDownListener(
+    public BtnTouchListener(
             Context context,
             String axisKey,
             int colorActive,
             int colorDefault,
             boolean isIncrease,
             int step,
-            int intervalMillis,
             DeltaRequester requester
     ) {
         this.context = context;
@@ -49,70 +43,33 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
         this.colorDefault = colorDefault;
         this.isIncrease = isIncrease;
         this.step = step;
-        this.intervalMillis = intervalMillis;
         this.requester = requester;
     }
-
-    private final Runnable updateTask = new Runnable() {
-        @Override public void run() {
-            if (!isPressed || !isRunning) return;
-
-            // 주기적으로 진동 + delta 적용
-            vibrateTick(intervalMillis/5);
-            requester.applyDelta(axisKey, isIncrease ? step : -step);
-
-            if (isPressed && isRunning) {
-                handler.postDelayed(this, intervalMillis);
-            }
-        }
-    };
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getActionMasked()) {
+
             case MotionEvent.ACTION_DOWN:
-                isPressed = true;
+                // 색 변경 + 진동
                 setTint(v, colorActive);
+                vibrateTick(20);
 
-                // ✅ 버튼 누르는 순간 바로 한 번 진동
-                vibrateTick(intervalMillis/5);
-
-                if (!isRunning) {
-                    isRunning = true;
-                    handler.post(updateTask); // 즉시 1틱
-                }
-                return true;
-
-            case MotionEvent.ACTION_MOVE:
-                float x = event.getX(), y = event.getY();
-                if (x < 0 || x > v.getWidth() || y < 0 || y > v.getHeight()) {
-                    stopUpdating(v, true);
-                } else {
-                    if (!isPressed || !isRunning) {
-                        isPressed = true;
-                        isRunning = true;
-                        handler.post(updateTask);
-                    }
-                    setTint(v, colorActive);
+                // 🔥 단 1회만 명령 실행
+                if (requester != null) {
+                    requester.applyDelta(axisKey, isIncrease ? step : -step);
                 }
                 return true;
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                stopUpdating(v, true);
+                // 색 되돌리기 + 정지 알림
+                setTint(v, colorDefault);
+                if (requester != null) requester.onStop();
                 return true;
         }
         return false;
-    }
-
-    private void stopUpdating(View v, boolean notifyStop) {
-        isPressed = false;
-        isRunning = false;
-        handler.removeCallbacks(updateTask);
-        handler.removeCallbacksAndMessages(null);
-        setTint(v, colorDefault);
-        if (notifyStop && requester != null) requester.onStop();
     }
 
     private void setTint(View v, int colorRes) {
@@ -134,3 +91,4 @@ public class BtnTouchUpDownListener implements View.OnTouchListener {
         } catch (Throwable ignore) {}
     }
 }
+

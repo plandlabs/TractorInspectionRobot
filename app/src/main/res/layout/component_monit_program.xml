@@ -150,6 +150,36 @@
             android:orientation="horizontal"
             android:gravity="right">
             <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_weight="1"
+                android:paddingRight="10dp">
+                <TextView
+                    android:layout_width="65dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical|right"
+                    android:textSize="15dp"
+                    android:text="대기시간 : "/>
+                <TextView
+                    android:id="@+id/textSeekMills"
+                    android:layout_width="70dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/rounded"
+                    android:gravity="center"
+                    android:backgroundTint="@color/option_name"
+                    android:textSize="15dp"
+                    android:text="20 초"/>
+                <SeekBar
+                    android:id="@+id/seekBarMills"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
+            </LinearLayout>
+            <LinearLayout
                 android:id="@+id/btn_list_save"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -175,7 +205,7 @@
                     android:layout_height="30dp"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:text="불러오기"/>
+                    android:text="실행하기"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

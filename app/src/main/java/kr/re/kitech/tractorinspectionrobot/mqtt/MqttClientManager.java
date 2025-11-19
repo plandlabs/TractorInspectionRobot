@@ -12,6 +12,7 @@ import com.hivemq.client.mqtt.mqtt3.message.connect.Mqtt3ConnectBuilder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import kr.re.kitech.tractorinspectionrobot.utils.StringConvUtil;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -67,10 +68,10 @@ public class MqttClientManager {
         this.baseTopic = baseTopic;
         this.username = (username != null && !username.isEmpty()) ? username : null;
         this.password = (password != null && !password.isEmpty()) ? password : null;
-        this.reqTopic = rootTopic + "/" + baseTopic + "/req";
-        this.resTopic = rootTopic + "/" + baseTopic + "/res";
-        this.staTopic = rootTopic + "/" + baseTopic + "/sta";
-        this.obsTopic = rootTopic + "/" + baseTopic + "/obs";
+        this.reqTopic = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/req";
+        this.resTopic = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/res";
+        this.staTopic = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/sta";
+        this.obsTopic = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/obs";
     }
 
     public void init() {

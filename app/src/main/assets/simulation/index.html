@@ -346,9 +346,9 @@
         groupZ.position.set(0, 0, zM);
 
         // 각도 입력 (Raw, HUD용)
-        const xRaw = clamp(Number(pose.s1 ?? 0), 0, 180);
+        const xRaw = clamp(Number(pose.s3 ?? 0), 0, 180);
         const yRaw = clamp(Number(pose.s2 ?? 0), 0, 180);
-        const zRaw = ((Number(pose.s3 ?? 0) % 360) + 360) % 360;
+        const zRaw = ((Number(pose.s1 ?? 0) % 360) + 360) % 360;
 
         const xPrimeIn = xRaw;
         const yPrimeIn = yRaw;
@@ -389,7 +389,7 @@
 
         poseText.textContent =
             `x:${Math.round(xIn)}  y:${Math.round(yIn)}  z:${Math.round(zIn)}  ` +
-            `s1:${xPrimeIn.toFixed(1)}°  s2:${yPrimeIn.toFixed(1)}°  s3:${zHud.toFixed(1)}°`;
+            `s1:${zHud.toFixed(0)}°  s2:${yPrimeIn.toFixed(0)}°  s3:${xPrimeIn.toFixed(0)}°`;
     };
 
     /* ====================== 렌더 루프 ====================== */

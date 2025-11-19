@@ -4,10 +4,11 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.Queue;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModelBridge;
 import kr.re.kitech.tractorinspectionrobot.net.NetworkHelper;
+import kr.re.kitech.tractorinspectionrobot.utils.StringConvUtil;
 
 /**
  * MQTT Foreground Service
@@ -71,8 +73,10 @@ public class MqttForegroundService extends Service {
     private volatile boolean isConnected = false;
 
     // 사용자 의도(끊었으면 자동재연결 금지)
-    private static final String PREF = "mqtt_pref";
-    private static final String KEY_USER_PAUSED = "user_paused";
+    public static final String PREF            = "mqtt_pref";
+    public static final String KEY_USER_PAUSED = "user_paused";
+    public static final String KEY_ROOT_TOPIC  = "root_topic";
+    public static final String KEY_BASE_TOPIC  = "base_topic";
     private boolean userPaused = false;
 
     // 연결 전/중단 시 publish를 안전하게 보관할 간단한 큐
@@ -116,12 +120,15 @@ public class MqttForegroundService extends Service {
         net.bindWifiNetwork();
 
         // 기본 설정은 strings.xml 기준 (RobotListActivity 에서 안 넘겨줄 때 사용)
-        MQTT_URL = getString(R.string.mqtt_connect_url);
-        rootTopic = getString(R.string.mqtt_root_topic);
-        baseTopic = getString(R.string.mqtt_base_topic);
+        MQTT_URL     = getString(R.string.mqtt_connect_url);
+        rootTopic    = getString(R.string.mqtt_root_topic);
+        baseTopic    = getString(R.string.mqtt_base_topic);
         mqttUsername = getString(R.string.mqtt_username);
         mqttPassword = getString(R.string.mqtt_password);
-        reqTopic = rootTopic + "/" + baseTopic + "/req";
+        reqTopic     = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/req";
+
+        // ✅ 기본 토픽도 저장
+        saveTopicConfig();
 
         // MQTT 클라이언트 초기화 (connect는 호출하지 않음)
         initMqttClient();
@@ -189,11 +196,14 @@ public class MqttForegroundService extends Service {
 
                 case ACTION_CONNECT: {
                     userPaused = false;
-                    getSharedPreferences(PREF, MODE_PRIVATE).edit().putBoolean(KEY_USER_PAUSED, false).apply();
+                    getSharedPreferences(PREF, MODE_PRIVATE)
+                            .edit()
+                            .putBoolean(KEY_USER_PAUSED, false)
+                            .apply();
 
                     // ✅ RobotListActivity 에서 넘어온 설정이 있으면 여기서 덮어쓴다.
                     String hostExtra       = i.getStringExtra(EXTRA_MQTT_HOST);
-                    int portExtra          = i.getIntExtra(EXTRA_MQTT_PORT, -1);
+                    int    portExtra       = i.getIntExtra(EXTRA_MQTT_PORT, -1);
                     String rootExtra       = i.getStringExtra(EXTRA_MQTT_ROOT_TOPIC);
                     String baseExtra       = i.getStringExtra(EXTRA_MQTT_BASE_TOPIC);
                     String usernameExtra   = i.getStringExtra(EXTRA_MQTT_USERNAME);
@@ -209,7 +219,7 @@ public class MqttForegroundService extends Service {
                     if (hasHostConfig) {
                         // RobotListActivity에서 보낸 정보로 MQTT 설정 변경
                         String host = hostExtra;
-                        int port = portExtra;
+                        int    port = portExtra;
 
                         MQTT_URL = "tcp://" + host + ":" + port;
 
@@ -217,6 +227,7 @@ public class MqttForegroundService extends Service {
                             rootTopic = rootExtra;
                         }
                         if (baseExtra != null && !baseExtra.isEmpty()) {
+                            // 🔥 baseExtra → MD5 해시로 변환하여 baseTopic 설정
                             baseTopic = baseExtra;
                         }
                         if (usernameExtra != null && !usernameExtra.isEmpty()) {
@@ -226,7 +237,10 @@ public class MqttForegroundService extends Service {
                             mqttPassword = passwordExtra;
                         }
 
-                        reqTopic = rootTopic + "/" + baseTopic + "/req";
+                        reqTopic = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/req";
+
+                        // ✅ 최종 토픽 설정 저장
+                        saveTopicConfig();
 
                         // 기존 mqtt가 있으면 정리하고 새로 만든다.
                         if (mqtt != null) {
@@ -247,7 +261,10 @@ public class MqttForegroundService extends Service {
 
                 case ACTION_DISCONNECT: {
                     userPaused = true;
-                    getSharedPreferences(PREF, MODE_PRIVATE).edit().putBoolean(KEY_USER_PAUSED, true).apply();
+                    getSharedPreferences(PREF, MODE_PRIVATE)
+                            .edit()
+                            .putBoolean(KEY_USER_PAUSED, true)
+                            .apply();
 
                     if (mqtt != null) mqtt.gracefulDisconnect();
                     isConnected = false;
@@ -261,7 +278,7 @@ public class MqttForegroundService extends Service {
                 case ACTION_PUBLISH: {
                     String topic   = i.getStringExtra(EXTRA_PUB_TOPIC);
                     String payload = i.getStringExtra(EXTRA_PUB_PAYLOAD);
-                    int qos        = i.getIntExtra(EXTRA_PUB_QOS, 1);       // 기본 QoS1
+                    int    qos     = i.getIntExtra(EXTRA_PUB_QOS, 1);       // 기본 QoS1
                     boolean retain = i.getBooleanExtra(EXTRA_PUB_RETAIN, false);
 
                     if (topic != null && payload != null) {
@@ -304,11 +321,25 @@ public class MqttForegroundService extends Service {
     @Override public void onDestroy() {
         super.onDestroy();
         if (mqtt != null) mqtt.gracefulDisconnect();
-        if (net != null) { net.releaseWifiHighPerf(); net.unbindWifiNetwork(); }
+        if (net != null) {
+            net.releaseWifiHighPerf();
+            net.unbindWifiNetwork();
+        }
         isConnected = false;
         notifier.update("Disconnected");
         sendStatus("disconnected", null);
     }
 
     @Nullable @Override public IBinder onBind(Intent intent) { return null; }
+
+    // ==========================
+    // 유틸: 토픽 설정 저장
+    // ==========================
+    private void saveTopicConfig() {
+        SharedPreferences sp = getSharedPreferences(PREF, MODE_PRIVATE);
+        sp.edit()
+                .putString(KEY_ROOT_TOPIC, rootTopic)
+                .putString(KEY_BASE_TOPIC, baseTopic)
+                .apply();
+    }
 }

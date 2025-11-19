@@ -8,19 +8,19 @@ import lombok.Setter;
 @Setter
 public class RobotState {
     private int num;
-    public final double x, y, z, s1, s2, s3; // 필드명 변경 및 s3 추가
+    public final int x, y, z, s1, s2, s3; // 필드명 변경 및 s3 추가
     public final long ts;
 
     public RobotState(JSONObject object) throws JSONException {
-        this.x = object.getDouble("x");
-        this.y = object.getDouble("y");
-        this.z = object.getDouble("z");
-        this.s1 = object.getDouble("s1"); // panDeg -> s1
-        this.s2 = object.getDouble("s2"); // tiltDeg -> s2
-        this.s3 = object.getDouble("s3"); // s3 추가
+        this.x = object.getInt("x");
+        this.y = object.getInt("y");
+        this.z = object.getInt("z");
+        this.s1 = object.getInt("s1"); // panDeg -> s1
+        this.s2 = object.getInt("s2"); // tiltDeg -> s2
+        this.s3 = object.getInt("s3"); // s3 추가
         this.ts = object.getLong("ts");
     }
-    public RobotState(double x, double y, double z, double s1, double s2, double s3, long ts) {
+    public RobotState(int x, int y, int z, int s1, int s2, int s3, long ts) {
         this.x = x; this.y = y; this.z = z; this.s1 = s1; this.s2 = s2; this.s3 = s3; this.ts = ts;
     }
 
@@ -37,12 +37,12 @@ public class RobotState {
         } catch (Exception e) { return new JSONObject(); }
     }
     public static RobotState fromJson(JSONObject o, RobotState fallback) throws JSONException {
-        double x         = o.optDouble("x",         fallback == null ? 0.0 : fallback.x);
-        double y         = o.optDouble("y",         fallback == null ? 0.0 : fallback.y);
-        double z         = o.optDouble("z",         fallback == null ? 0.0 : fallback.z);
-        double s1        = o.optDouble("s1",        fallback == null ? 0.0 : fallback.s1); // panDeg -> s1
-        double s2        = o.optDouble("s2",        fallback == null ? 0.0 : fallback.s2); // tiltDeg -> s2
-        double s3        = o.optDouble("s3",        fallback == null ? 0.0 : fallback.s3); // s3 추가
+        int x         = o.optInt("x",         fallback == null ? 0 : fallback.x);
+        int y         = o.optInt("y",         fallback == null ? 0 : fallback.y);
+        int z         = o.optInt("z",         fallback == null ? 0 : fallback.z);
+        int s1        = o.optInt("s1",        fallback == null ? 0 : fallback.s1); // panDeg -> s1
+        int s2        = o.optInt("s2",        fallback == null ? 0 : fallback.s2); // tiltDeg -> s2
+        int s3        = o.optInt("s3",        fallback == null ? 0 : fallback.s3); // s3 추가
         long   ts        = o.optLong("ts",          System.currentTimeMillis());
         // BUG FIX: 생성자에 직접 값을 전달하여 JSONException 방지
         return new RobotState(x, y, z, s1, s2, s3, ts);
@@ -60,7 +60,7 @@ public class RobotState {
         );
     }
 
-    private static double clamp(double v, double min, double max) {
+    private static int clamp(int v, int min, int max) {
         return Math.max(min, Math.min(max, v));
     }
 }

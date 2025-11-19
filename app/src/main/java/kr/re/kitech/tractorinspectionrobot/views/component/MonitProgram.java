@@ -79,17 +79,17 @@ public class MonitProgram extends LinearLayout {
             }
 
             JSONObject json = item.toJson();
-            double x  = json.optDouble("x", 0);
-            double y  = json.optDouble("y", 0);
-            double z  = json.optDouble("z", 0);
-            double s1 = json.optDouble("s1", 0);
-            double s2 = json.optDouble("s2", 0);
-            double s3 = json.optDouble("s3", 0);
+            int x  = json.optInt("x", 0);
+            int y  = json.optInt("y", 0);
+            int z  = json.optInt("z", 0);
+            int s1 = json.optInt("s1", 0);
+            int s2 = json.optInt("s2", 0);
+            int s3 = json.optInt("s3", 0);
 
             String msg = String.format(
                     "추가할 프로그램 항목:\n" +
-                            "X: %.1f\nY: %.1f\nZ: %.1f\n" +
-                            "S1: %.1f\nS2: %.1f\nS3: %.1f\n\n저장하시겠습니까?",
+                            "X: %d\nY: %d\nZ: %d\n" +
+                            "S1: %d\nS2: %d\nS3: %d\n\n저장하시겠습니까?",
                     x, y, z, s1, s2, s3
             );
 
@@ -137,17 +137,17 @@ public class MonitProgram extends LinearLayout {
 
             // RobotState 내부 값 꺼내기
             JSONObject json = item.toJson();
-            double x  = json.optDouble("x", 0);
-            double y  = json.optDouble("y", 0);
-            double z  = json.optDouble("z", 0);
-            double s1 = json.optDouble("s1", 0);
-            double s2 = json.optDouble("s2", 0);
-            double s3 = json.optDouble("s3", 0);
+            int x  = json.optInt("x", 0);
+            int y  = json.optInt("y", 0);
+            int z  = json.optInt("z", 0);
+            int s1 = json.optInt("s1", 0);
+            int s2 = json.optInt("s2", 0);
+            int s3 = json.optInt("s3", 0);
 
             String msg = String.format(
                     "이동할 항목:\n" +
-                            "X: %.1f\nY: %.1f\nZ: %.1f\n" +
-                            "S1: %.1f\nS2: %.1f\nS3: %.1f\n\n이동하시겠습니까?",
+                            "X: %d\nY: %d\nZ: %d\n" +
+                            "S1: %d\nS2: %d\nS3: %d\n\n이동하시겠습니까?",
                     x, y, z, s1, s2, s3
             );
 
@@ -173,17 +173,17 @@ public class MonitProgram extends LinearLayout {
 
             // RobotState 내부 값 꺼내기
             JSONObject json = item.toJson();
-            double x  = json.optDouble("x", 0);
-            double y  = json.optDouble("y", 0);
-            double z  = json.optDouble("z", 0);
-            double s1 = json.optDouble("s1", 0);
-            double s2 = json.optDouble("s2", 0);
-            double s3 = json.optDouble("s3", 0);
+            int x  = json.optInt("x", 0);
+            int y  = json.optInt("y", 0);
+            int z  = json.optInt("z", 0);
+            int s1 = json.optInt("s1", 0);
+            int s2 = json.optInt("s2", 0);
+            int s3 = json.optInt("s3", 0);
 
             String msg = String.format(
                     "삭제할 항목:\n" +
-                            "X: %.1f\nY: %.1f\nZ: %.1f\n" +
-                            "S1: %.1f\nS2: %.1f\nS3: %.1f\n\n삭제하시겠습니까?",
+                            "X: %d\nY: %d\nZ: %d\n" +
+                            "S1: %d\nS2: %d\nS3: %d\n\n삭제하시겠습니까?",
                     x, y, z, s1, s2, s3
             );
 

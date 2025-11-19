@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,6 +27,7 @@ import java.util.Locale;
 import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
+import kr.re.kitech.tractorinspectionrobot.utils.StringConvUtil;
 
 public class SharedMqttViewModel extends AndroidViewModel {
 
@@ -97,7 +99,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             String topic   = intent.getStringExtra(MqttForegroundService.EXTRA_TOPIC);
             String payload = intent.getStringExtra(MqttForegroundService.EXTRA_PAYLOAD);
             if (topic == null || payload == null) return;
-
+            Log.w("topic", staTopic);
             // 모든 메시지를 directMessage에도 남김(디버깅/로그용)
             postDirectMessage(topic, payload);
 
@@ -114,11 +116,13 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * {
      *   "mt": "sta",
      *   "ct": {
-     *     "motion": { "pos": { "x":..., "y":..., "z":... }, ... }
+     *     "motion": { "pos": { "x":..., "y":..., "z":... }, ... },
+     *     "servo": {
+     *         "angles": { "s1":..., "s2":..., "s3":... } 또는
+     *         "s1":..., "s2":..., "s3":...
+     *     }
      *   }
      * }
-     * 형태이고, servo 정보는 없으므로 x,y,z만 갱신되고
-     * s1,s2,s3는 기존 값을 유지한다.
      */
     private void handleStaPayload(String payload) {
         try {
@@ -127,25 +131,25 @@ public class SharedMqttViewModel extends AndroidViewModel {
             if (ct == null) return;
 
             RobotState cur = getOrDefault();
-            double x = cur.x;
-            double y = cur.y;
-            double z = cur.z;
-            double s1 = cur.s1;
-            double s2 = cur.s2;
-            double s3 = cur.s3;
+            int x  = cur.x;
+            int y  = cur.y;
+            int z  = cur.z;
+            int s1 = cur.s1;
+            int s2 = cur.s2;
+            int s3 = cur.s3;
 
             // motion.pos → x,y,z
             JSONObject motion = ct.optJSONObject("motion");
             if (motion != null) {
                 JSONObject pos = motion.optJSONObject("pos");
                 if (pos != null) {
-                    x = pos.optDouble("x", x);
-                    y = pos.optDouble("y", y);
-                    z = pos.optDouble("z", z);
+                    x = pos.optInt("x", x);
+                    y = pos.optInt("y", y);
+                    z = pos.optInt("z", z);
                 }
             }
 
-            // 현재 STA에는 servo가 없으므로, servo 파트가 없으면 기존 값 유지
+            // servo.angles → s1,s2,s3 (또는 servo.s1/s2/s3 직접)
             JSONObject servo = null;
             JSONObject servoContainer = ct.optJSONObject("servo");
             if (servoContainer != null) {
@@ -156,9 +160,9 @@ public class SharedMqttViewModel extends AndroidViewModel {
                 }
             }
             if (servo != null) {
-                s1 = servo.optDouble("s1", s1);
-                s2 = servo.optDouble("s2", s2);
-                s3 = servo.optDouble("s3", s3);
+                s1 = servo.optInt("s1", s1);
+                s2 = servo.optInt("s2", s2);
+                s3 = servo.optInt("s3", s3);
             }
 
             long ts = System.currentTimeMillis();
@@ -173,11 +177,22 @@ public class SharedMqttViewModel extends AndroidViewModel {
         super(application);
         this.app = application.getApplicationContext();
 
-        String rootTopic = application.getString(R.string.mqtt_root_topic); // ex) "ingsys"
-        baseTopic = application.getString(R.string.mqtt_base_topic);        // ex) "ing_w00001"
+        // ✅ ForegroundService에서 저장한 root/base 토픽을 우선 사용
+        SharedPreferences sp =
+                app.getSharedPreferences(MqttForegroundService.PREF, Context.MODE_PRIVATE);
 
-        staTopic = rootTopic + "/" + baseTopic + "/sta";
-        reqTopic = rootTopic + "/" + baseTopic + "/req";
+        String rootTopicPref = sp.getString(
+                MqttForegroundService.KEY_ROOT_TOPIC,
+                application.getString(R.string.mqtt_root_topic)  // 없으면 기본값
+        );
+        String baseTopicPref = sp.getString(
+                MqttForegroundService.KEY_BASE_TOPIC,
+                application.getString(R.string.mqtt_base_topic)  // 없으면 기본값
+        );
+
+        this.baseTopic = baseTopicPref;
+        this.staTopic  = rootTopicPref + "/" + StringConvUtil.md5(baseTopicPref) + "/sta";
+        this.reqTopic  = rootTopicPref + "/" + StringConvUtil.md5(baseTopicPref) + "/req";
 
         // 상태 브로드캐스트 수신
         IntentFilter f1 = new IntentFilter(MqttForegroundService.ACTION_MQTT_STATUS);
@@ -223,14 +238,14 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * - axis가 x,y,z → cmd=2001 (ABS, x,y,z)
      * - axis가 s1,s2,s3 → cmd=2003 (ABS, s1,s2,s3)
      */
-    public void applyDeltaAndPublish(String axis, double delta) {
+    public void applyDeltaAndPublish(String axis, int delta) {
         RobotState cur = getOrDefault();
-        double x         = cur.x;
-        double y         = cur.y;
-        double z         = cur.z;
-        double s1 = cur.s1;
-        double s2 = cur.s2;
-        double s3 = cur.s3;
+        int x  = cur.x;
+        int y  = cur.y;
+        int z  = cur.z;
+        int s1 = cur.s1;
+        int s2 = cur.s2;
+        int s3 = cur.s3;
 
         boolean movedPos   = false;
         boolean movedServo = false;
@@ -288,6 +303,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             publishServoAbs(next);  // cmd=2003, s1,s2,s3
         }
     }
+
     /**
      * 완성된 RobotState를 한 번에 적용 + MQTT로 전송
      *
@@ -298,12 +314,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
     public void applyStateAndPublish(RobotState target) {
         // null 대비 + 범위 클램프
         long ts = System.currentTimeMillis();
-        double x  = clamp(target.x,  0, 25000);
-        double y  = clamp(target.y,  0, 44000);
-        double z  = clamp(target.z,  0, 3500);
-        double s1 = clamp(target.s1, 0, 180);
-        double s2 = clamp(target.s2, 0, 180);
-        double s3 = clamp(target.s3, 0, 180);
+        int x  = clamp(target.x,  0, 25000);
+        int y  = clamp(target.y,  0, 44000);
+        int z  = clamp(target.z,  0, 3500);
+        int s1 = clamp(target.s1, 0, 180);
+        int s2 = clamp(target.s2, 0, 180);
+        int s3 = clamp(target.s3, 0, 180);
 
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
@@ -311,7 +327,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         // UI 즉시 반영
         state.setValue(next);
 
-        // MQTT 연결 여부 체크 (applyDeltaAndPublish와 동일 로직 재사용)
+        // MQTT 연결 여부 체크
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
             Log.w(TAG, "applyStateAndPublish() called while MQTT not connected. Ignored.");
@@ -327,12 +343,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
         publishMoveAbs(next);   // cmd=2001, x,y,z
         publishServoAbs(next);  // cmd=2003, s1,s2,s3
     }
-    public void applyStateAndPublish(double x, double y, double z,
-                                     double s1, double s2, double s3) {
+
+    public void applyStateAndPublish(int x, int y, int z,
+                                     int s1, int s2, int s3) {
         RobotState target = new RobotState(x, y, z, s1, s2, s3, System.currentTimeMillis());
         applyStateAndPublish(target);
     }
-
 
     /**
      * 현재 상태를 그대로 다시 보내고 싶을 때 (손 뗄 때 등)
@@ -346,21 +362,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
     /**
      * MQTT 연결 직후 한 번 호출되는 서보 초기화:
-     * s1(s1), s2(s2), s3(s3) = 0도로 맞추는 ABS 명령
-     *
-     * 토픽: ingsys/<baseTopic>/req
-     * JSON:
-     * {
-     *   "mt": "req",
-     *   "tm": "...",
-     *   "fp": "pc-controller",
-     *   "ct": {
-     *     "tg": "ing_w00001",
-     *     "cmd": 2003,
-     *     "opid": N,
-     *     "param": { "mode": "abs", "s1": 0, "s2": 0, "s3": 0 }
-     *   }
-     * }
+     * s1, s2, s3 = 0도로 맞추는 ABS 명령
      */
     private void sendInitialServoZero() {
         try {
@@ -385,7 +387,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             sendMqtt(reqTopic, root.toString());
 
-            // 내부 상태도 같이 0으로 맞춰주고 싶으면 주석 해제
+            // 내부 상태도 같이 0으로 맞추고 싶으면 아래 주석 해제
             /*
             long ts = System.currentTimeMillis();
             RobotState cur = getOrDefault();
@@ -445,9 +447,9 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             JSONObject p = new JSONObject();
             p.put("mode", "abs");
-            p.put("s1", s.s1); // s1
-            p.put("s2", s.s2); // s2
-            p.put("s3", s.s3); // s3
+            p.put("s1", s.s1);
+            p.put("s2", s.s2);
+            p.put("s3", s.s3);
 
             ct.put("param", p);
             root.put("ct", ct);
@@ -467,7 +469,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         app.startService(i);
     }
 
-    private static double clamp(double v, double min, double max) {
+    private static int clamp(int v, int min, int max) {
         return Math.max(min, Math.min(max, v));
     }
 
