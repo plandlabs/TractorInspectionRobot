@@ -69,12 +69,12 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
                 ? setting.getInt("v_step", 0)
                 : defaultStep;
 
-        // 범위 1 ~ 50 보정
+        // 범위 1 ~ 2000 보정
         if (step < 1) step = 1;
-        if (step > 50) step = 50;
+        if (step > 2000) step = 2000;
 
-        // SeekBar 범위: 0 ~ (50 - 1)
-        seekBarStep.setMax(50 - 1);
+        // SeekBar 범위: 0 ~ (2000 - 1)
+        seekBarStep.setMax(2000 - 1);
         seekBarStep.setProgress(step - 1);
         textSeekStep.setText(step + " ㎜");
 
@@ -82,7 +82,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 mVibrator.vibrate(20);
-                // 1 ~ 50 매핑
+                // 1 ~ 2000 매핑
                 step = 1 + progress;
                 textSeekStep.setText(step + " ㎜");
 

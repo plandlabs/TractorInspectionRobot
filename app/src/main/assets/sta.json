@@ -1,0 +1,43 @@
+{
+  "mt": "sta",
+  "tm": "2025-11-19 11:22:30",
+  "ct": {
+    "b": {
+      "stat": 0,
+      "ctrl": 1
+    },
+    "b-1": {
+      "stat": 0,
+      "alert": 0,
+      "vmap": 0,
+      "rtm": 0,
+      "opid": 42
+    },
+    "motion": {
+      "pos": {
+        "x": 2000,
+        "y": 1000,
+        "z": 500
+      },
+      "homed": {
+        "x": false,
+        "y": false,
+        "z": false
+      },
+      "busy": {
+        "x": false,
+        "y": false,
+        "z": false
+      },
+      "limits": {
+        "raw": "0xff",
+        "bits": {
+          "x": true,
+          "y": true,
+          "z": true
+        }
+      }
+    }
+  },
+  "fp": "ing_xyz_001"
+}
