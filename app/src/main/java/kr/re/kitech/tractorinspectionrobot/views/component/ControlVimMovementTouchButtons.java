@@ -26,9 +26,10 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
     private LifecycleOwner lifecycleOwner;
 
     private Button btnUp, btnDown, btnForward, btnBackward, btnLeftWard, btnRightward;
-    private SeekBar seekBarStep;
-    private TextView textSeekStep;
+    private SeekBar seekBarStep, seekBarZStep;
+    private TextView textSeekStep, textSeekZStep;
     private int step;
+    private int zStep;
 
     private int colorOn;
     private int colorOff;
@@ -96,6 +97,43 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
             @Override public void onStartTrackingTouch(SeekBar seekBar) { }
             @Override public void onStopTrackingTouch(SeekBar seekBar) { }
         });
+
+        // ========= z step SeekBar =========
+        seekBarZStep = findViewById(R.id.seekBarZStep);
+        textSeekZStep = findViewById(R.id.textSeekZStep);
+
+        int defaultZStep = Integer.parseInt(getContext().getString(R.string.vim_move_z_step));
+        zStep = setting.getInt("v_z_step", 0) > 0
+                ? setting.getInt("v_z_step", 0)
+                : defaultZStep;
+
+        // 범위 1 ~ 2000 보정
+        if (zStep < 1) zStep = 1;
+        if (zStep > 2000) zStep = 2000;
+
+        // ZSeekBar 범위: 0 ~ (2000 - 1)
+        seekBarZStep.setMax(200 - 1);
+        seekBarZStep.setProgress((zStep / 10) - 1);
+        textSeekZStep.setText(zStep + " ㎜");
+
+        seekBarZStep.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mVibrator.vibrate(20);
+                // 1 ~ 2000 매핑
+                zStep = (progress + 1) * 10;
+                textSeekZStep.setText(zStep + " ㎜");
+
+                editor.putInt("v_z_step", zStep);
+                editor.apply();
+
+                // 최신 값으로 리스너 다시 세팅
+                attachTouchListeners();
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
     }
 
     /**
@@ -116,10 +154,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
             }
 
             @Override
-            public void onStop() {
-                // 필요하면 여기에서 publishCurrent 등 호출
-                // viewModel.publishCurrent(...);
-            }
+            public void onStop() {}
         };
 
         // Y축 (상/하)
@@ -140,10 +175,10 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 
         // Z축 (전/후) — forward=+z, backward=-z
         btnForward.setOnTouchListener(
-                new BtnTouchListener(getContext(), "z", colorOn, colorOff, true, step, req)
+                new BtnTouchListener(getContext(), "z", colorOn, colorOff, true, zStep, req)
         );
         btnBackward.setOnTouchListener(
-                new BtnTouchListener(getContext(), "z", colorOn, colorOff, false, step, req)
+                new BtnTouchListener(getContext(), "z", colorOn, colorOff, false, zStep, req)
         );
     }
 

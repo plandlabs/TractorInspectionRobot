@@ -100,6 +100,11 @@
                                                             android:layout_width="match_parent"
                                                             android:layout_height="wrap_content"
                                                             tools:ignore="TooDeepLayout" />
+                                                        <kr.re.kitech.tractorinspectionrobot.views.component.MonitTarget
+                                                            android:id="@+id/monit_target"
+                                                            android:layout_width="match_parent"
+                                                            android:layout_height="wrap_content"
+                                                            tools:ignore="TooDeepLayout" />
                                                         <kr.re.kitech.tractorinspectionrobot.views.component.ControlVimMovementTouchButtons
                                                             android:id="@+id/control_vim_movement_touch_buttons"
                                                             android:layout_width="match_parent"
@@ -132,6 +137,11 @@
                                                 android:layout_height="wrap_content"
                                                 android:layout_marginBottom="5dp"
                                                 android:orientation="vertical">
+                                                <kr.re.kitech.tractorinspectionrobot.views.component.ControlEmergencyButtons
+                                                    android:id="@+id/control_emergency_buttons"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    tools:ignore="TooDeepLayout" />
                                                 <kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera
                                                     android:id="@+id/monit_camera"
                                                     android:layout_width="match_parent"

@@ -15,7 +15,6 @@
 <body>
 <canvas id="c"></canvas>
 <div class="hud">
-    <div>입력단위: mm (내부 m)</div>
     <div id="poseText"><b>x:0 <br/>y:0 <br/>z:0 <br/>pan:0 <br/>tilt:0</b></div>
 </div>
 
@@ -209,7 +208,7 @@
 
         // 표시값은 중심 기준(mm)
         poseText.textContent =
-            `x:${Math.round(cx/MM_TO_M)}  y:${Math.round(cy/MM_TO_M)}  z:${Math.round(cz/MM_TO_M)}  pan:${outPanDeg.toFixed(1)}°  tilt:${outTiltDeg.toFixed(1)}°`;
+            `x:${Math.round(cx/MM_TO_M)}<br/>  y:${Math.round(cy/MM_TO_M)}<br/>  z:${Math.round(cz/MM_TO_M)}<br/>  pan:${outPanDeg.toFixed(1)}°<br/>  tilt:${outTiltDeg.toFixed(1)}°`;
     };
 
     // ===== 리사이즈 & 렌더 루프 =====

@@ -12,9 +12,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/dataBox"
-            android:layout_margin="5dp"
-            android:padding="10dp"
             android:orientation="horizontal"
             android:gravity="center">
             <LinearLayout
@@ -52,8 +49,7 @@
             <LinearLayout
                 android:id="@+id/ctrlBox"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
+                android:layout_height="275dp"
                 android:orientation="vertical"
                 android:padding="5dp">
                 <TableLayout
@@ -62,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/rounded"
                     android:backgroundTint="#00454545"
-                    android:stretchColumns="1,2,3,4,5,6">
+                    android:stretchColumns="0,1,2,3,4,5,6,7">
 
                     <!-- 헤더 -->
                     <TableRow
@@ -70,11 +66,18 @@
                         android:background="@drawable/rounded"
                         android:backgroundTint="#555">
                         <TextView
-                            android:text="번호"
-                            android:layout_width="50dp"
+                            android:text="실행"
+                            android:layout_width="30dp"
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
-                            android:gravity="right"
+                            android:gravity="center"
+                            android:textSize="14sp" />
+                        <TextView
+                            android:text="번호"
+                            android:layout_width="30dp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:gravity="center"
                             android:textSize="14sp" />
 
                         <TextView
@@ -123,7 +126,13 @@
                             android:textColor="#FFFFFF"
                             android:textStyle="bold"
                             android:gravity="center"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"/>
+                        <TextView
+                            android:layout_width="45dp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textSize="14sp"/>
                     </TableRow>
 
                     <!-- 구분선 -->
@@ -136,9 +145,9 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:minHeight="100dp"
-                    android:maxHeight="375dp"/>
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:overScrollMode="always"/>
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
@@ -157,13 +166,13 @@
                 android:layout_weight="1"
                 android:paddingRight="10dp">
                 <TextView
-                    android:layout_width="65dp"
+                    android:layout_width="85dp"
                     android:layout_height="40dp"
                     android:gravity="center_vertical|right"
                     android:textSize="15dp"
-                    android:text="대기시간 : "/>
+                    android:text="delay time : "/>
                 <TextView
-                    android:id="@+id/textSeekMills"
+                    android:id="@+id/textSeekSecond"
                     android:layout_width="70dp"
                     android:layout_height="40dp"
                     android:background="@drawable/rounded"
@@ -172,7 +181,7 @@
                     android:textSize="15dp"
                     android:text="20 초"/>
                 <SeekBar
-                    android:id="@+id/seekBarMills"
+                    android:id="@+id/seekBarSecond"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:padding="8dp"
@@ -180,7 +189,7 @@
                     android:progressDrawable="@drawable/custom_progress"/>
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/btn_list_save"
+                android:id="@+id/btnListSave"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="right"
@@ -194,7 +203,7 @@
                     android:text="저장하기"/>
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/btn_list_load"
+                android:id="@+id/btnListLoad"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="right"
@@ -206,6 +215,20 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:text="실행하기"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnListStop"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="right"
+                android:layout_marginLeft="5dp"
+                style="@style/stateTopValueCancel">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="중지하기"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

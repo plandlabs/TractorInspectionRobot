@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class RobotState {
     private int num;
+    private int move = 0;
     public final int x, y, z, s1, s2, s3; // 필드명 변경 및 s3 추가
     public final long ts;
 
@@ -19,6 +20,7 @@ public class RobotState {
         this.s2 = object.getInt("s2"); // tiltDeg -> s2
         this.s3 = object.getInt("s3"); // s3 추가
         this.ts = object.getLong("ts");
+        this.move = 0;
     }
     public RobotState(int x, int y, int z, int s1, int s2, int s3, long ts) {
         this.x = x; this.y = y; this.z = z; this.s1 = s1; this.s2 = s2; this.s3 = s3; this.ts = ts;
@@ -33,7 +35,8 @@ public class RobotState {
                     .put("s1", s1) // panDeg -> s1
                     .put("s2", s2) // tiltDeg -> s2
                     .put("s3", s3) // s3 추가
-                    .put("ts", ts);
+                    .put("ts", ts)
+                    .put("move", move);
         } catch (Exception e) { return new JSONObject(); }
     }
     public static RobotState fromJson(JSONObject o, RobotState fallback) throws JSONException {

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -68,55 +69,59 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState s = state.getValue();
         return (s == null) ? new RobotState(0, 0, 0, 0, 0, 0, 0) : s;
     }
-
+    // 버튼으로 만든 명령 상태 (state와는 별개)
+    private final MutableLiveData<RobotState> commandState = new MutableLiveData<>();
+    public LiveData<RobotState> getCommandState() { return commandState; }
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent == null || !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction()))
-                return;
-            String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
-            if (status == null) return;
-            if ("connected".equalsIgnoreCase(status)) {
-                mqttConnected.postValue(true);
-                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
-                sendInitialServoZero();
-            } else if ("disconnected".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
-                mqttConnected.postValue(false);
-                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
-            }
-        }
-//        @Override public void onReceive(Context context, Intent intent) {
-//            if (intent == null ||
-//                    !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
-//
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            if (intent == null || !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction()))
+//                return;
 //            String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
 //            if (status == null) return;
-//
 //            if ("connected".equalsIgnoreCase(status)) {
-//
-//                Boolean prev = mqttConnected.getValue();
 //                mqttConnected.postValue(true);
-//
-//                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
-//                if (prev == null || !prev) {
-//                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-//                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
-//                }
-//
-//            } else if ("disconnected".equalsIgnoreCase(status)
-//                    || "rejected".equalsIgnoreCase(status)) {
-//
-//                Boolean prev = mqttConnected.getValue();
+//                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+//                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
+//                sendInitialServoZero();
+//            } else if ("disconnected".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
 //                mqttConnected.postValue(false);
-//
-//                // 끊어질 때만 토스트
-//                if (prev != null && prev) {
-//                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
-//                }
+//                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
 //            }
 //        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null ||
+                    !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction())) return;
+
+            String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
+            if (status == null) return;
+
+            if ("connected".equalsIgnoreCase(status)) {
+
+                Boolean prev = mqttConnected.getValue();
+                mqttConnected.postValue(true);
+
+                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
+                if (prev == null || !prev) {
+                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
+                }
+
+            } else if ("disconnected".equalsIgnoreCase(status)
+                    || "rejected".equalsIgnoreCase(status)) {
+
+                Boolean prev = mqttConnected.getValue();
+                mqttConnected.postValue(false);
+
+                // 끊어질 때만 토스트
+                if (prev != null && prev) {
+                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     };
 
 
@@ -240,6 +245,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
         } else {
             application.registerReceiver(messageReceiver, f2);
         }
+        IntentFilter f3 = new IntentFilter(MqttForegroundService.ACTION_PROGRAM_POSE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            application.registerReceiver(programPoseReceiver, f3, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            application.registerReceiver(programPoseReceiver, f3);
+        }
     }
 
     /** 서비스에게 현재 상태 브로드캐스트를 요청 */
@@ -314,6 +325,9 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
+        // ✅ 여기: state와는 별도로, 버튼으로 만들어진 next를 항상 보냄
+        commandState.setValue(next);
+
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
             Log.w(TAG, "applyDeltaAndPublish() called while MQTT not connected. Ignored.");
@@ -326,6 +340,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             }
             return;
         }else{
+            // 연결시에 s1,s2,s3는 UI 즉시 반영
             if(axis.equals("s1") || axis.equals("s2") || axis.equals("s3")) state.setValue(next);
         }
         // 🔀 분기: 좌표/서보 각각 해당하는 cmd만 전송
@@ -357,6 +372,8 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
+        // ✅ 여기: state와는 별도로, 버튼으로 만들어진 next를 항상 보냄
+        commandState.setValue(next);
         // MQTT 연결 여부 체크
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
@@ -370,6 +387,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             }
             return;
         }else{
+            // 연결시에 s1,s2,s3만 UI 즉시 반영 x,y,z는 현재값 즉시반영
             RobotState servoOnly = new RobotState(
                     Objects.requireNonNull(state.getValue()).x,
                     Objects.requireNonNull(state.getValue()).y,
@@ -383,6 +401,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         publishServoAbs(next);  // cmd=2003, s1,s2,s3
     }
 
+
     public void applyStateAndPublish(int x, int y, int z,
                                      int s1, int s2, int s3) {
         RobotState target = new RobotState(x, y, z, s1, s2, s3, System.currentTimeMillis());
@@ -393,7 +412,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * 현재 상태를 그대로 다시 보내고 싶을 때 (손 뗄 때 등)
      * - 좌표/서보 모두 ABS로 재전송
      */
-    public void publishCurrent(String deviceName) {
+    public void publishCurrent() {
         RobotState s = getOrDefault();
         publishMoveAbs(s);
         publishServoAbs(s);
@@ -523,6 +542,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
     protected void onCleared() {
         try { getApplication().unregisterReceiver(statusReceiver); } catch (Exception ignore) {}
         try { getApplication().unregisterReceiver(messageReceiver); } catch (Exception ignore) {}
+        try { getApplication().unregisterReceiver(programPoseReceiver); } catch (Exception ignore) {}
         super.onCleared();
     }
 
@@ -542,4 +562,44 @@ public class SharedMqttViewModel extends AndroidViewModel {
             this.raw = rawPayload;
         }
     }
+    private final BroadcastReceiver programPoseReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null ||
+                    !MqttForegroundService.ACTION_PROGRAM_POSE.equals(intent.getAction())) return;
+
+            String json = intent.getStringExtra(MqttForegroundService.EXTRA_POSE_JSON);
+            if (json == null) return;
+
+            try {
+                JSONObject obj = new JSONObject(json);
+                RobotState pose = new RobotState(obj);
+
+                long ts = System.currentTimeMillis();
+
+                // 1) 현재 실제 위치는 그대로 유지
+                RobotState cur = getOrDefault();
+
+                // 2) commandState 에는 "프로그램이 보내려는 전체 타겟 포즈"를 그대로 넣고
+                RobotState cmd = new RobotState(
+                        pose.x, pose.y, pose.z,
+                        pose.s1, pose.s2, pose.s3,
+                        ts
+                );
+                commandState.postValue(cmd);
+
+                // 3) UI(state)는 x,y,z는 현재값 유지하고, s1,s2,s3만 프로그램 값으로 업데이트
+                RobotState next = new RobotState(
+                        cur.x, cur.y, cur.z,
+                        pose.s1, pose.s2, pose.s3,
+                        ts
+                );
+                next = RobotState.clamp(next);
+                state.postValue(next);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
 }

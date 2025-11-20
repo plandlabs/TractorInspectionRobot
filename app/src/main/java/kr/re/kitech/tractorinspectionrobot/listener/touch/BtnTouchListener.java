@@ -54,7 +54,7 @@ public class BtnTouchListener implements View.OnTouchListener {
             case MotionEvent.ACTION_DOWN:
                 // 색 변경 + 진동
                 setTint(v, colorActive);
-                vibrateTick(20);
+                vibrateTick(100);
 
                 // 🔥 단 1회만 명령 실행
                 if (requester != null) {

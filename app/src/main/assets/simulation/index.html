@@ -19,7 +19,6 @@
 <body>
 <canvas id="c"></canvas>
 <div class="hud">
-    <div>입력단위: mm (내부 m + 스케일, Z는 2배 시각화)</div>
     <div id="poseText"><b>x:0 y:0 z:0 s1:0° s2:0° s3:0°</b></div>
 </div>
 
@@ -390,9 +389,9 @@
         jointY.rotation.x    = THREE.MathUtils.degToRad( yPhys);
         jointZEnd.rotation.z = THREE.MathUtils.degToRad( zPhys);
 
-        poseText.textContent =
-            `x:${Math.round(xIn)}  y:${Math.round(yIn)}  z:${Math.round(zIn)}  ` +
-            `s1:${zHud.toFixed(0)}°  s2:${yPrimeIn.toFixed(0)}°  s3:${xPrimeIn.toFixed(0)}°`;
+        poseText.innerHTML =
+            `x:${Math.round(xIn)}<br/>  y:${Math.round(yIn)}<br/>  z:${Math.round(zIn)}<br/>  ` +
+            `s1:${zHud.toFixed(0)}°<br/>  s2:${yPrimeIn.toFixed(0)}°<br/>  s3:${xPrimeIn.toFixed(0)}°`;
     };
 
     /* ====================== 렌더 루프 ====================== */

@@ -3,40 +3,42 @@ package kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
-
-import kr.re.kitech.tractorinspectionrobot.R;
-import kr.re.kitech.tractorinspectionrobot.helper.ItemTouchHelper;
-import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import kr.re.kitech.tractorinspectionrobot.R;
+import kr.re.kitech.tractorinspectionrobot.helper.ItemTouchHelper;
+import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
+
 public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerView.ViewHolder>
         implements ItemTouchHelper {
-    private Context context;
-    private ArrayList<RobotState> data;
-    private LayoutInflater inflater;
+
+    private final Context context;
+    private final ArrayList<RobotState> data;
+    private final LayoutInflater inflater;
     public int selectPosition = 0;
-    private Vibrator mVibrator;
+    private final Vibrator mVibrator;
+
     private static OnItemClickListener mListener = null;
-    public void setOnItemClickListener(OnItemClickListener listener)
-    {
-        this.mListener = listener;
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mListener = listener;
     }
+
     private static OnItemLongClickListener mLongListener = null;
-    public void setOnItemLongClickListener(OnItemLongClickListener listener)
-    {
-        this.mLongListener = listener;
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        mLongListener = listener;
     }
 
     public ProgramRecyclerView(ArrayList<RobotState> data, Context context) {
@@ -46,16 +48,17 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
         this.mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
+    // 드래그 이동
     @Override
     public void onItemMove(int fromPos, int targetPos) {
-        mVibrator.vibrate(10);
+        if (mVibrator != null) mVibrator.vibrate(10);
         if (fromPos < targetPos) {
             for (int i = fromPos; i < targetPos; i++) {
-                Collections.swap(data, i, i+1);
+                Collections.swap(data, i, i + 1);
             }
-        }else{
+        } else {
             for (int i = fromPos; i > targetPos; i--) {
-                Collections.swap(data, i, i-1);
+                Collections.swap(data, i, i - 1);
             }
         }
         notifyItemMoved(fromPos, targetPos);
@@ -63,30 +66,31 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
 
     @Override
     public void onItemDismiss(int pos) {
-
+        // 스와이프 삭제 안 쓰면 비워둠
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_program, parent, false);
-
-        ViewHolder viewHolder = new ViewHolder(view);
-
-        return viewHolder;
+        View view = inflater.inflate(R.layout.item_program, parent, false);
+        return new ViewHolder(view);
     }
 
+    // ⚠ 기본 onBindViewHolder가 비어 있으면 안 됨 → payload 버전으로 위임
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
+        onBindViewHolder(holder, position, new ArrayList<>()); // payloads 비어있는 걸로 전달
     }
 
     @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position, @NonNull List<Object> payloads) {
+    public void onBindViewHolder(@NonNull ViewHolder holder,
+                                 int position,
+                                 @NonNull List<Object> payloads) {
         if (payloads.isEmpty()) {
             RobotState item = data.get(position);
-            // 기본 뷰 설정
+
+            // 기본 데이터 바인딩
             holder.num.setText(String.valueOf(item.getNum()));
             holder.x.setText(String.valueOf(item.getX()));
             holder.y.setText(String.valueOf(item.getY()));
@@ -94,33 +98,67 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
             holder.s1.setText(String.valueOf(item.getS1()));
             holder.s2.setText(String.valueOf(item.getS2()));
             holder.s3.setText(String.valueOf(item.getS3()));
-            if(item.getNum() % 2 == 1) {
+
+            // 홀짝 줄 배경
+            if (item.getNum() % 2 == 1) {
                 holder.background.setBackgroundResource(R.color.rowBackground);
-            }else{
+            } else {
                 holder.background.setBackgroundResource(android.R.color.transparent);
             }
+
+            // move 상태 표시
+            int move = item.getMove();
+            if (move == 1) {
+                holder.move.setText("대기");
+                holder.move.setTextColor(
+                        ContextCompat.getColor(context, R.color.menu_color));
+            } else if (move == 2) {
+                holder.move.setText("이동중");
+                holder.move.setTextColor(
+                        ContextCompat.getColor(context, R.color.feedValueMax));
+            } else if (move == 3) {
+                holder.move.setText("실행중");
+                holder.move.setTextColor(
+                        ContextCompat.getColor(context, R.color.houseBoxBackground));
+            } else if (move == 4) {
+                holder.move.setText("완료");
+                holder.move.setTextColor(
+                        ContextCompat.getColor(context, R.color.feedValueMin));
+            } else {
+                holder.move.setText("");
+                // 필요하면 기본 색 지정
+                // holder.move.setTextColor(ContextCompat.getColor(context, android.R.color.white));
+            }
+
+            // 클릭 리스너
             holder.itemView.setOnClickListener(v -> {
-                if (position != RecyclerView.NO_POSITION && mListener != null) {
-                    mListener.onItemClick(v, position);
+                int pos = holder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && mListener != null) {
+                    mListener.onItemClick(v, pos);
                 }
             });
+
+            holder.btnDelete.setOnClickListener(v -> {
+                int pos = holder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && mListener != null) {
+                    mListener.onItemDeleteClick(v, pos);
+                }
+            });
+
             holder.itemView.setOnLongClickListener(v -> {
-                if (position != RecyclerView.NO_POSITION && mLongListener != null) {
-                    mLongListener.onItemLongClick(v, position);
+                int pos = holder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION && mLongListener != null) {
+                    mLongListener.onItemLongClick(v, pos);
                     return true;
                 }
                 return false;
             });
+
         } else {
-            // Payload가 있을 경우, 선택적 처리 가능 (예: Partial Update)
-            for (Object payload : payloads) {
-                Log.e("payloads", String.valueOf(payload));
-                // TODO: payload 타입별로 부분 갱신 처리
-            }
+            // payload로 부분 갱신하고 싶으면 여기에서 처리
+            // 지금은 전체 바인딩과 큰 차이 없으니 생략
         }
     }
-
-
 
     @Override
     public int getItemCount() {
@@ -131,22 +169,23 @@ public class ProgramRecyclerView extends RecyclerView.Adapter<ProgramRecyclerVie
         selectPosition = pos;
     }
 
-    // 뷰 바인딩 부분을 한번만 하도록, ViewHolder 패턴 의무화
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView num, x, y, z, s1, s2, s3;
+        TextView num, move, x, y, z, s1, s2, s3;
         TableRow background;
+        LinearLayout btnDelete;
 
         public ViewHolder(View view) {
             super(view);
-
-            num = (TextView) view.findViewById(R.id.num);
-            x = (TextView) view.findViewById(R.id.x);
-            y = (TextView) view.findViewById(R.id.y);
-            z = (TextView) view.findViewById(R.id.z);
-            s1 = (TextView) view.findViewById(R.id.s1);
-            s2 = (TextView) view.findViewById(R.id.s2);
-            s3 = (TextView) view.findViewById(R.id.s3);
-            background = (TableRow) view.findViewById(R.id.background);
+            num = view.findViewById(R.id.num);
+            move = view.findViewById(R.id.move);
+            x = view.findViewById(R.id.x);
+            y = view.findViewById(R.id.y);
+            z = view.findViewById(R.id.z);
+            s1 = view.findViewById(R.id.s1);
+            s2 = view.findViewById(R.id.s2);
+            s3 = view.findViewById(R.id.s3);
+            background = view.findViewById(R.id.background);
+            btnDelete = view.findViewById(R.id.btnDelete);
         }
     }
 }

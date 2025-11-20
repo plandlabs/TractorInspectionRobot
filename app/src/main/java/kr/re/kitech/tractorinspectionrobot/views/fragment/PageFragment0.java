@@ -38,6 +38,7 @@ import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModelBridge;
 import kr.re.kitech.tractorinspectionrobot.views.activity.MainActivity;
 import kr.re.kitech.tractorinspectionrobot.views.component.ControlCameraMovementTouchButtons;
+import kr.re.kitech.tractorinspectionrobot.views.component.ControlEmergencyButtons;
 import kr.re.kitech.tractorinspectionrobot.views.component.ControlVimMovementTouchButtons;
 
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
@@ -47,6 +48,7 @@ import java.text.DecimalFormat;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitProgram;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitSimulation;
+import kr.re.kitech.tractorinspectionrobot.views.component.MonitTarget;
 import okhttp3.OkHttpClient;
 
 public class PageFragment0 extends Fragment {
@@ -84,7 +86,9 @@ public class PageFragment0 extends Fragment {
 
     private MonitSimulation monitSimulation;
     private MonitProgram monitProgram;
+    private MonitTarget monitTarget;
     private ControlVimMovementTouchButtons controlVimMovementTouchButtons;
+    private ControlEmergencyButtons controlEmergencyButtons;
     private MonitCamera monitCamera;
     private ControlCameraMovementTouchButtons controlCameraMovementTouchButtons;
 
@@ -142,7 +146,9 @@ public class PageFragment0 extends Fragment {
 
         monitSimulation = linearLayout.findViewById(R.id.monit_simulation);
         monitProgram = linearLayout.findViewById(R.id.monit_program);
+        monitTarget = linearLayout.findViewById(R.id.monit_target);
         controlVimMovementTouchButtons = linearLayout.findViewById(R.id.control_vim_movement_touch_buttons);
+        controlEmergencyButtons = linearLayout.findViewById(R.id.control_emergency_buttons);
         monitCamera = linearLayout.findViewById(R.id.monit_camera);
         controlCameraMovementTouchButtons = linearLayout.findViewById(R.id.control_camera_movement_touch_buttons);
 
@@ -154,15 +160,25 @@ public class PageFragment0 extends Fragment {
         return linearLayout;
 
     }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
+        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
+        SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
 
+        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
+        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
+        monitTarget.setViewModel(viewModel, getViewLifecycleOwner());
+        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        controlEmergencyButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
+        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+    }
     @Override
     public void onStart() {
         super.onStart();
-        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
-        SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
     }
-
 
     @Override
     public void onStop() {
@@ -173,11 +189,6 @@ public class PageFragment0 extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
-        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
-        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
-        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
-        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
 
     public ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(

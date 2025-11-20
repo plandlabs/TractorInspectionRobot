@@ -106,10 +106,12 @@
     <string name="mqtt_base_topic">ing_xyz_001</string>
     <string name="mqtt_username">ingsys</string>
     <string name="mqtt_password">ing#8119</string>
-    <string name="vim_move_step">10</string><!-- 1mm 실제 0.1m -->
+    <string name="vim_move_step">10</string>
+    <string name="vim_move_z_step">10</string>
     <string name="camera_move_step">1</string><!-- 각도 -->
     <string name="interval_millis_v">10</string><!-- 빔 변경 반영 텀 0.05초 -->
     <string name="interval_millis_c">100</string><!-- 서보 변경 반영 텀 0.1초 -->
+    <string name="interval_second_p">10</string><!-- 프로그램 대기시간 기본 10초 -->
 
     <string name="max_x">44000</string>
     <string name="max_y">25000</string>

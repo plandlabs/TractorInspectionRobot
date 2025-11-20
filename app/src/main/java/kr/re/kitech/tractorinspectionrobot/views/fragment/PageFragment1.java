@@ -42,6 +42,7 @@ import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModelBridge;
 import kr.re.kitech.tractorinspectionrobot.views.activity.MainActivity;
 import kr.re.kitech.tractorinspectionrobot.views.component.ControlCameraMovementTouchButtons;
+import kr.re.kitech.tractorinspectionrobot.views.component.ControlEmergencyButtons;
 import kr.re.kitech.tractorinspectionrobot.views.component.ControlVimMovementTouchButtons;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera;
 import okhttp3.OkHttpClient;
@@ -79,6 +80,7 @@ public class PageFragment1 extends Fragment {
     private int ctrlBoolForward = 0;
     private LinearLayout wrapLinear;
     private MonitCamera monitCamera;
+    private ControlEmergencyButtons controlEmergencyButtons;
     private ControlCameraMovementTouchButtons controlCameraMovementTouchButtons;
 
     public static PageFragment1 newInstance(){
@@ -133,6 +135,7 @@ public class PageFragment1 extends Fragment {
         userName.setText(setting.getString("USER_NM",""));
 
         monitCamera = linearLayout.findViewById(R.id.monit_camera);
+        controlEmergencyButtons = linearLayout.findViewById(R.id.control_emergency_buttons);
         controlCameraMovementTouchButtons = linearLayout.findViewById(R.id.control_camera_movement_touch_buttons);
 
         this.onConfigurationChanged(mConfiguration);
@@ -146,10 +149,18 @@ public class PageFragment1 extends Fragment {
 
 
     @Override
-    public void onStart() {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onStart();
         viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
         SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
+
+        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
+        controlEmergencyButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
 
@@ -162,9 +173,6 @@ public class PageFragment1 extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
-        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
     public ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),

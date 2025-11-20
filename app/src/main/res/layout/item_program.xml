@@ -8,19 +8,29 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:stretchColumns="1,2,3,4,5,6">
+        android:stretchColumns="0,1,2,3,4,5,6,7">
         <TableRow
             android:id="@+id/background"
             android:paddingVertical="3dp">
 
             <TextView
+                android:id="@+id/move"
+                android:layout_width="30dp"
+                android:text="이동중"
+                android:textColor="#FF0000"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"/>
+            <TextView
                 android:id="@+id/num"
-                android:layout_width="50dp"
+                android:layout_width="30dp"
                 android:text="11"
                 android:textColor="#FFFFFF"
-                android:gravity="right"
+                android:gravity="center"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"/>
 
             <TextView
                 android:id="@+id/x"
@@ -29,7 +39,8 @@
                 android:text="230"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
             <TextView
                 android:id="@+id/y"
@@ -38,7 +49,8 @@
                 android:text="230"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
             <TextView
                 android:id="@+id/z"
@@ -47,7 +59,8 @@
                 android:text="102"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
             <TextView
                 android:id="@+id/s1"
                 android:layout_width="50dp"
@@ -55,7 +68,8 @@
                 android:text="230"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
             <TextView
                 android:id="@+id/s2"
                 android:layout_width="50dp"
@@ -63,7 +77,8 @@
                 android:text="230"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
             <TextView
                 android:id="@+id/s3"
                 android:layout_width="50dp"
@@ -71,7 +86,19 @@
                 android:text="230"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:padding="5dp" />
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
+            <LinearLayout
+                android:id="@+id/btnDelete"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:gravity="center">
+                <Button
+                    android:background="@drawable/baseline_delete_24"
+                    android:backgroundTint="@color/white"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"/>
+            </LinearLayout>
         </TableRow>
     </TableLayout>
 </LinearLayout>

@@ -206,6 +206,9 @@
         <item name="android:background">@drawable/rounded</item>
         <item name="android:backgroundTint">@color/count_color</item>
     </style>
+    <style name="stateTopValueCancel" parent="stateTopValue">
+        <item name="android:backgroundTint">@color/date_grey</item>
+    </style>
     <style name="stateWorkingTopValue" parent="stateTopValue">
         <item name="android:paddingLeft">10sp</item>
         <item name="android:paddingRight">10sp</item>

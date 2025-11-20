@@ -12,9 +12,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/dataBox"
-            android:layout_margin="5dp"
-            android:padding="10dp"
             android:orientation="horizontal"
             android:gravity="center">
             <LinearLayout
@@ -33,10 +30,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="30dp">
+            android:paddingBottom="20dp">
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="217dp"
+                android:layout_height="160dp"
                 android:layout_weight="1"
                 android:columnCount="3">
                 <Button
@@ -78,7 +75,7 @@
             </RelativeLayout>
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="217dp"
+                android:layout_height="160dp"
                 android:layout_weight="3"
                 android:columnCount="3">
                 <Button
@@ -116,7 +113,7 @@
                     android:layout_height="40dp"
                     android:gravity="center_vertical|right"
                     android:textSize="15dp"
-                    android:text="Step : "/>
+                    android:text="xy Step : "/>
                 <TextView
                     android:id="@+id/textSeekStep"
                     android:layout_width="70dp"
@@ -128,6 +125,35 @@
                     android:text="20"/>
                 <SeekBar
                     android:id="@+id/seekBarStep"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:padding="8dp"
+                    android:thumb="@drawable/custom_thumb"
+                    android:progressDrawable="@drawable/custom_progress"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="10dp">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical|right"
+                    android:textSize="15dp"
+                    android:text="z Step : "/>
+                <TextView
+                    android:id="@+id/textSeekZStep"
+                    android:layout_width="70dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/rounded"
+                    android:gravity="center"
+                    android:backgroundTint="@color/option_name"
+                    android:textSize="15dp"
+                    android:text="20"/>
+                <SeekBar
+                    android:id="@+id/seekBarZStep"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:padding="8dp"
