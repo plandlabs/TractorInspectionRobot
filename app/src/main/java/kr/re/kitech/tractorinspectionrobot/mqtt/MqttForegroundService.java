@@ -124,7 +124,7 @@ public class MqttForegroundService extends Service {
     // ==========================
     private String mqttStatusLabel   = "Initializing...";
     private String programStatusLabel = "";
-    private final int rollbackTargetZ = 10;
+    private final int rollbackTargetStep = 10; // 0 ~ rollbackTargetStep 안에 들어오면
 
     private void updateNotification() {
         String text = mqttStatusLabel;
@@ -139,8 +139,8 @@ public class MqttForegroundService extends Service {
     // ==========================
     // per-item 내부 이동 단계
     private static final int PHASE_IDLE      = 0;
-    private static final int PHASE_LIFTING   = 1; // Z→rollbackTargetZ
-    private static final int PHASE_MOVING_XY = 2; // XY→타겟, Z=rollbackTargetZ
+    private static final int PHASE_LIFTING   = 1; // Z→0
+    private static final int PHASE_MOVING_XY = 2; // XY→타겟, Z=0
     private static final int PHASE_MOVING_Z  = 3; // Z→타겟 Z
     private static final int PHASE_WAITING   = 4; // intervalSecond 대기
 
@@ -570,7 +570,7 @@ public class MqttForegroundService extends Service {
 
         switch (programPhase) {
             case PHASE_LIFTING:
-                // Z=rollbackTargetZ 근처(±POS_TOL)까지 들어왔을 때 도달로 간주 (XYZ 모두 ±POS_TOL)
+                // Z >= 0 || Z<= rollbackTargetStep 근처(±POS_TOL)까지 들어왔을 때 도달로 간주 (XYZ 모두 ±POS_TOL)
                 if (reachedLiftHeight(lastStaState, liftTarget, POS_TOL)) {
                     programPhase = PHASE_MOVING_XY;
                     if (xyTarget != null) {
@@ -657,22 +657,22 @@ public class MqttForegroundService extends Service {
 
         long ts = System.currentTimeMillis();
 
-        // 1단계: 현재 위치에서 Z를 rollbackTargetZ까지 올리기
+        // 1단계: 현재 위치에서 Z를 0까지 올리기
         liftTarget = new RobotState(
                 startX,
                 startY,
-                rollbackTargetZ,
+                0,
                 currentProgramTarget.s1,
                 currentProgramTarget.s2,
                 currentProgramTarget.s3,
                 ts
         );
 
-        // 2단계: Z=rollbackTargetZ 유지하면서 XY 이동
+        // 2단계: Z=0 유지하면서 XY 이동
         xyTarget = new RobotState(
                 currentProgramTarget.x,
                 currentProgramTarget.y,
-                rollbackTargetZ,
+                0,
                 currentProgramTarget.s1,
                 currentProgramTarget.s2,
                 currentProgramTarget.s3,
@@ -690,8 +690,9 @@ public class MqttForegroundService extends Service {
                 ts
         );
 
-        // 이미 Z=rollbackTargetZ이고 XY도 같은 경우 → 바로 Z 이동 단계로
-        if (startZ == rollbackTargetZ &&
+        // 이미 Z=rollbackTargetStep이고 XY도 같은 경우 → 바로 Z 이동 단계로
+        if (startZ >= 0 &&
+                startZ <= rollbackTargetStep &&
                 startX == currentProgramTarget.x &&
                 startY == currentProgramTarget.y) {
             liftTarget = null;
@@ -798,7 +799,7 @@ public class MqttForegroundService extends Service {
 
     private String phaseToLabel(int phase) {
         switch (phase) {
-            case PHASE_LIFTING:   return "Z→" + rollbackTargetZ;
+            case PHASE_LIFTING:   return "Z→ 0";
             case PHASE_MOVING_XY: return "XY 이동";
             case PHASE_MOVING_Z:  return "Z 이동";
             case PHASE_WAITING:   return "대기";
