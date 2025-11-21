@@ -46,7 +46,7 @@ import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
 import java.text.DecimalFormat;
 
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitCamera;
-import kr.re.kitech.tractorinspectionrobot.views.component.MonitProgram;
+import kr.re.kitech.tractorinspectionrobot.views.component.ControlProgram;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitSimulation;
 import kr.re.kitech.tractorinspectionrobot.views.component.MonitTarget;
 import okhttp3.OkHttpClient;
@@ -85,7 +85,7 @@ public class PageFragment0 extends Fragment {
     private LinearLayout wrapLinear;
 
     private MonitSimulation monitSimulation;
-    private MonitProgram monitProgram;
+    private ControlProgram controlProgram;
     private MonitTarget monitTarget;
     private ControlVimMovementTouchButtons controlVimMovementTouchButtons;
     private ControlEmergencyButtons controlEmergencyButtons;
@@ -145,7 +145,7 @@ public class PageFragment0 extends Fragment {
 
 
         monitSimulation = linearLayout.findViewById(R.id.monit_simulation);
-        monitProgram = linearLayout.findViewById(R.id.monit_program);
+        controlProgram = linearLayout.findViewById(R.id.control_program);
         monitTarget = linearLayout.findViewById(R.id.monit_target);
         controlVimMovementTouchButtons = linearLayout.findViewById(R.id.control_vim_movement_touch_buttons);
         controlEmergencyButtons = linearLayout.findViewById(R.id.control_emergency_buttons);
@@ -157,23 +157,23 @@ public class PageFragment0 extends Fragment {
 
         testBtn = (TextView) linearLayout.findViewById(R.id.testBtn);
 
+        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
+        SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
+
+        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
+        controlProgram.setViewModel(viewModel, getViewLifecycleOwner());
+        monitTarget.setViewModel(viewModel, getViewLifecycleOwner());
+        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        controlEmergencyButtons.setViewModel(viewModel, getViewLifecycleOwner());
+        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
+        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
+
         return linearLayout;
 
     }
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        viewModel = new ViewModelProvider(requireActivity()).get(SharedMqttViewModel.class);
-        SharedMqttViewModelBridge.getInstance().setViewModel(viewModel);
-
-        monitSimulation.setViewModel(viewModel, getViewLifecycleOwner());
-        monitProgram.setViewModel(viewModel, getViewLifecycleOwner());
-        monitTarget.setViewModel(viewModel, getViewLifecycleOwner());
-        controlVimMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
-        controlEmergencyButtons.setViewModel(viewModel, getViewLifecycleOwner());
-        monitCamera.setViewModel(viewModel, getViewLifecycleOwner());
-        controlCameraMovementTouchButtons.setViewModel(viewModel, getViewLifecycleOwner());
     }
     @Override
     public void onStart() {

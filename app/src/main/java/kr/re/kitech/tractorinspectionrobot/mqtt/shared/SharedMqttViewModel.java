@@ -74,22 +74,6 @@ public class SharedMqttViewModel extends AndroidViewModel {
     public LiveData<RobotState> getCommandState() { return commandState; }
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            if (intent == null || !MqttForegroundService.ACTION_MQTT_STATUS.equals(intent.getAction()))
-//                return;
-//            String status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS);
-//            if (status == null) return;
-//            if ("connected".equalsIgnoreCase(status)) {
-//                mqttConnected.postValue(true);
-//                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-//                // ✅ MQTT 연결 성립 시, 서보를 0도로 초기화 명령 1회 전송
-//                sendInitialServoZero();
-//            } else if ("disconnected".equalsIgnoreCase(status) || "rejected".equalsIgnoreCase(status)) {
-//                mqttConnected.postValue(false);
-//                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
-//            }
-//        }
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -335,7 +319,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             // 미연결시에만 UI 즉시 반영
             state.setValue(next);
             if (now - lastNotConnectedToastMs > 2_000) {
-                Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(app, "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }
             return;
@@ -382,7 +366,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             // 미연결시에만  UI 즉시 반영
             state.setValue(next);
             if (now - lastNotConnectedToastMs > 2_000) {
-                Toast.makeText(app, "현재 MQTT 미연결 상태입니다.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(app, "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }
             return;
@@ -451,6 +435,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             RobotState cur = getOrDefault();
             RobotState next = new RobotState(cur.x, cur.y, cur.z, 0, 0, 0, ts);
             state.postValue(next);
+            commandState.postValue(next);  // 최초 목표값과 state값을 동일하게
 
         } catch (Exception e) {
             e.printStackTrace();

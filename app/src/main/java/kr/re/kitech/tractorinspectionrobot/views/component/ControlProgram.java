@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -38,7 +37,7 @@ import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter.OnItemClickListener;
 import kr.re.kitech.tractorinspectionrobot.views.recyclerView.program.adapter.ProgramRecyclerView;
 
-public class MonitProgram extends LinearLayout {
+public class ControlProgram extends LinearLayout {
 
     private static final String KEY_PROGRAM_JSON    = "Program_json";
     private static final String KEY_INTERVAL_SECOND = "p_second";
@@ -57,7 +56,7 @@ public class MonitProgram extends LinearLayout {
     private Vibrator mVibrator;
     private SharedMqttViewModel viewModel;
     private LifecycleOwner lifecycleOwner;
-    private GridLayout gridLayout;
+    private boolean isMqttConnected = false;
     private ProgramRecyclerView programRecyclerViewAdapter;
     private final ArrayList<RobotState> robotStateItems = new ArrayList<>();
     private RobotState lastState = null;
@@ -74,18 +73,19 @@ public class MonitProgram extends LinearLayout {
     // 서비스에서 보내는 진행상황 수신용
     private BroadcastReceiver programProgressReceiver = null;
 
-    public MonitProgram(Context context) {
+    public ControlProgram(Context context) {
         super(context);
         init(context);
     }
 
-    public MonitProgram(Context context, @Nullable AttributeSet attrs) {
+    public ControlProgram(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
+    @SuppressLint({"NotifyDataSetChanged", "SetTextI18n"})
     private void init(Context context) {
-        inflate(context, R.layout.component_monit_program, this);
+        inflate(context, R.layout.component_control_program, this);
 
         setting = context.getSharedPreferences("setting", 0);
         editor = setting.edit();
@@ -129,6 +129,7 @@ public class MonitProgram extends LinearLayout {
             int s2 = json.optInt("s2", 0);
             int s3 = json.optInt("s3", 0);
 
+            @SuppressLint("DefaultLocale")
             String msg = String.format(
                     "추가할 프로그램 항목:\n" +
                             "X: %d\nY: %d\nZ: %d\n" +
@@ -179,34 +180,44 @@ public class MonitProgram extends LinearLayout {
                 Toast.makeText(getContext(), "저장된 프로그램이 없습니다.", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            // 프로그램 JSON 생성
-            JSONArray arr = new JSONArray();
-            for (RobotState rs : robotStateItems) {
-                arr.put(rs.toJson());
+            if(!isMqttConnected){
+                Toast.makeText(getContext(), "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            String programJson = arr.toString();
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("프로그램 실행")
+                    .setMessage("프로그램을 실행하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        // 프로그램 JSON 생성
+                        JSONArray arr = new JSONArray();
+                        for (RobotState rs : robotStateItems) {
+                            arr.put(rs.toJson());
+                        }
+                        String programJson = arr.toString();
 
-            // ForegroundService 에 프로그램 실행 요청
-            Intent svc = new Intent(getContext(), MqttForegroundService.class);
-            svc.setAction(MqttForegroundService.ACTION_PROGRAM_START);
-            svc.putExtra(MqttForegroundService.EXTRA_PROGRAM_JSON, programJson);
-            svc.putExtra(MqttForegroundService.EXTRA_INTERVAL_SECOND, intervalSecond);
-            ContextCompat.startForegroundService(getContext(), svc);
+                        // ForegroundService 에 프로그램 실행 요청
+                        Intent svc = new Intent(getContext(), MqttForegroundService.class);
+                        svc.setAction(MqttForegroundService.ACTION_PROGRAM_START);
+                        svc.putExtra(MqttForegroundService.EXTRA_PROGRAM_JSON, programJson);
+                        svc.putExtra(MqttForegroundService.EXTRA_INTERVAL_SECOND, intervalSecond);
+                        ContextCompat.startForegroundService(getContext(), svc);
 
-            // UI 상으로는 0번을 이동중, 나머지를 대기로 표시
-            for (int i = 0; i < robotStateItems.size(); i++) {
-                if (i == 0) robotStateItems.get(i).setMove(2); // 이동중
-                else        robotStateItems.get(i).setMove(1); // 대기
-            }
-            programRecyclerViewAdapter.notifyDataSetChanged();
+                        // UI 상으로는 0번을 이동중, 나머지를 대기로 표시
+                        for (int i = 0; i < robotStateItems.size(); i++) {
+                            if (i == 0) robotStateItems.get(i).setMove(2); // 이동중
+                            else        robotStateItems.get(i).setMove(1); // 대기
+                        }
+                        programRecyclerViewAdapter.notifyDataSetChanged();
 
-            programLoad = true;
-            updateProgramButtons();
+                        programLoad = true;
+                        updateProgramButtons();
 
-            Toast.makeText(getContext(),
-                    "프로그램 실행 시작 (1 / " + robotStateItems.size() + ")",
-                    Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(),
+                                "프로그램 실행 시작 (1 / " + robotStateItems.size() + ")",
+                                Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         btnListLoad.setOnLongClickListener(view -> {
@@ -217,26 +228,36 @@ public class MonitProgram extends LinearLayout {
         // ===== 정지 버튼 =====
         btnListStop.setOnClickListener(view -> {
             if (mVibrator != null) mVibrator.vibrate(50);
-
-            // 1) 서비스 쪽 프로그램 정지
-            Intent svc = new Intent(getContext(), MqttForegroundService.class);
-            svc.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
-            getContext().startService(svc);
-
-            // 2) UI 상태 리셋
-            programLoad = false;
-            for (RobotState rs : robotStateItems) {
-                rs.setMove(0);
+            if(!isMqttConnected){
+                Toast.makeText(getContext(), "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            programRecyclerViewAdapter.notifyDataSetChanged();
-            updateProgramButtons();
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("프로그램 실행 중지")
+                    .setMessage("프로그램을 실행을 중지하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        // 1) 서비스 쪽 프로그램 정지
+                        Intent svc = new Intent(getContext(), MqttForegroundService.class);
+                        svc.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
+                        getContext().startService(svc);
 
-            // 3) 현재 lastState 를 ABS로 한 번 더 보내서 "현재 위치를 목표로" 하도록 → 실제 정지 효과
-            if (viewModel != null && lastState != null) {
-                viewModel.applyStateAndPublish(lastState);
-            }
+                        // 2) UI 상태 리셋
+                        programLoad = false;
+                        for (RobotState rs : robotStateItems) {
+                            rs.setMove(0);
+                        }
+                        programRecyclerViewAdapter.notifyDataSetChanged();
+                        updateProgramButtons();
 
-            Toast.makeText(getContext(), "프로그램 실행을 중지했습니다.", Toast.LENGTH_SHORT).show();
+                        // 3) 현재 lastState 를 ABS로 한 번 더 보내서 "현재 위치를 목표로" 하도록 → 실제 정지 효과
+                        if (viewModel != null && lastState != null) {
+                            viewModel.applyStateAndPublish(lastState);
+                        }
+
+                        Toast.makeText(getContext(), "프로그램 실행을 중지했습니다.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         // ===== 단일 항목 클릭 → 즉시 이동 (한 번에) =====
@@ -245,7 +266,9 @@ public class MonitProgram extends LinearLayout {
             public void onItemClick(View v, int pos) {
                 if (pos < 0 || pos >= robotStateItems.size()) return;
                 if (mVibrator != null) mVibrator.vibrate(50);
-
+                if(!isMqttConnected){
+                    Toast.makeText(getContext(), "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.(시뮬레이션 이동은 가능합니다.)", Toast.LENGTH_SHORT).show();
+                }
                 RobotState item = robotStateItems.get(pos);
 
                 JSONObject json = item.toJson();
@@ -256,6 +279,7 @@ public class MonitProgram extends LinearLayout {
                 int s2 = json.optInt("s2", 0);
                 int s3 = json.optInt("s3", 0);
 
+                @SuppressLint("DefaultLocale")
                 String msg = String.format(
                         "이동할 항목:\n" +
                                 "X: %d\nY: %d\nZ: %d\n" +
@@ -296,6 +320,7 @@ public class MonitProgram extends LinearLayout {
                 int s2 = json.optInt("s2", 0);
                 int s3 = json.optInt("s3", 0);
 
+                @SuppressLint("DefaultLocale")
                 String msg = String.format(
                         "삭제할 항목:\n" +
                                 "X: %d\nY: %d\nZ: %d\n" +
@@ -304,7 +329,7 @@ public class MonitProgram extends LinearLayout {
                 );
 
                 new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
-                        .setTitle("삭제 확인")
+                        .setTitle("프로그램 삭제")
                         .setMessage(msg)
                         .setPositiveButton("예", (dialog, which) -> {
                             if (mVibrator != null) mVibrator.vibrate(50);
@@ -352,6 +377,7 @@ public class MonitProgram extends LinearLayout {
         textSeekSecond.setText(intervalSecond + " 초");
 
         seekBarSecond.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (mVibrator != null) mVibrator.vibrate(20);
@@ -390,6 +416,9 @@ public class MonitProgram extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+        viewModel.getMqttConnected().observe(lifecycleOwner, connected -> {
+            isMqttConnected = Boolean.TRUE.equals(connected);
+        });
         // STA 상태 -> lastState 저장 (버튼 저장/정지용)
         viewModel.getState().observe(lifecycleOwner, s -> {
             if (s == null) return;
@@ -399,6 +428,7 @@ public class MonitProgram extends LinearLayout {
         // 프로그램 진행 브로드캐스트 수신
         if (programProgressReceiver == null) {
             programProgressReceiver = new BroadcastReceiver() {
+                @SuppressLint("NotifyDataSetChanged")
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     if (intent == null ||

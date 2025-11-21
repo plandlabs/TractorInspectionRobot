@@ -95,8 +95,8 @@
                                                         android:layout_height="wrap_content"
                                                         android:layout_marginBottom="5dp"
                                                         android:orientation="vertical">
-                                                        <kr.re.kitech.tractorinspectionrobot.views.component.MonitProgram
-                                                            android:id="@+id/monit_program"
+                                                        <kr.re.kitech.tractorinspectionrobot.views.component.ControlProgram
+                                                            android:id="@+id/control_program"
                                                             android:layout_width="match_parent"
                                                             android:layout_height="wrap_content"
                                                             tools:ignore="TooDeepLayout" />

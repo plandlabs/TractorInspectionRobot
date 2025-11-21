@@ -124,6 +124,7 @@ public class MqttForegroundService extends Service {
     // ==========================
     private String mqttStatusLabel   = "Initializing...";
     private String programStatusLabel = "";
+    private final int rollbackTargetZ = 10;
 
     private void updateNotification() {
         String text = mqttStatusLabel;
@@ -138,8 +139,8 @@ public class MqttForegroundService extends Service {
     // ==========================
     // per-item 내부 이동 단계
     private static final int PHASE_IDLE      = 0;
-    private static final int PHASE_LIFTING   = 1; // Z→0
-    private static final int PHASE_MOVING_XY = 2; // XY→타겟, Z=0
+    private static final int PHASE_LIFTING   = 1; // Z→rollbackTargetZ
+    private static final int PHASE_MOVING_XY = 2; // XY→타겟, Z=rollbackTargetZ
     private static final int PHASE_MOVING_Z  = 3; // Z→타겟 Z
     private static final int PHASE_WAITING   = 4; // intervalSecond 대기
 
@@ -159,8 +160,9 @@ public class MqttForegroundService extends Service {
     private RobotState xyTarget = null;
     private RobotState finalTarget = null;
 
-    // STA로부터 받은 마지막 로봇 상태
-    private RobotState lastStaState = new RobotState(0,0,0,0,0,0,0);
+    // STA로부터 받은 마지막 로봇 상태 (처음엔 null, STA 수신 후 채움)
+    @Nullable
+    private RobotState lastStaState = null;
 
     // ==========================
 
@@ -524,12 +526,12 @@ public class MqttForegroundService extends Service {
             JSONObject ct = root.optJSONObject("ct");
             if (ct == null) return;
 
-            int x  = lastStaState.x;
-            int y  = lastStaState.y;
-            int z  = lastStaState.z;
-            int s1 = lastStaState.s1;
-            int s2 = lastStaState.s2;
-            int s3 = lastStaState.s3;
+            int x  = (lastStaState != null) ? lastStaState.x  : 0;
+            int y  = (lastStaState != null) ? lastStaState.y  : 0;
+            int z  = (lastStaState != null) ? lastStaState.z  : 0;
+            int s1 = (lastStaState != null) ? lastStaState.s1 : 0;
+            int s2 = (lastStaState != null) ? lastStaState.s2 : 0;
+            int s3 = (lastStaState != null) ? lastStaState.s3 : 0;
 
             JSONObject motion = ct.optJSONObject("motion");
             if (motion != null) {
@@ -568,7 +570,7 @@ public class MqttForegroundService extends Service {
 
         switch (programPhase) {
             case PHASE_LIFTING:
-                // Z=0 근처(±POS_TOL)까지 들어왔을 때 도달로 간주 (XYZ 모두 ±POS_TOL)
+                // Z=rollbackTargetZ 근처(±POS_TOL)까지 들어왔을 때 도달로 간주 (XYZ 모두 ±POS_TOL)
                 if (reachedLiftHeight(lastStaState, liftTarget, POS_TOL)) {
                     programPhase = PHASE_MOVING_XY;
                     if (xyTarget != null) {
@@ -655,26 +657,29 @@ public class MqttForegroundService extends Service {
 
         long ts = System.currentTimeMillis();
 
+        // 1단계: 현재 위치에서 Z를 rollbackTargetZ까지 올리기
         liftTarget = new RobotState(
                 startX,
                 startY,
-                0,
+                rollbackTargetZ,
                 currentProgramTarget.s1,
                 currentProgramTarget.s2,
                 currentProgramTarget.s3,
                 ts
         );
 
+        // 2단계: Z=rollbackTargetZ 유지하면서 XY 이동
         xyTarget = new RobotState(
                 currentProgramTarget.x,
                 currentProgramTarget.y,
-                0,
+                rollbackTargetZ,
                 currentProgramTarget.s1,
                 currentProgramTarget.s2,
                 currentProgramTarget.s3,
                 ts
         );
 
+        // 3단계: 최종 Z까지 이동
         finalTarget = new RobotState(
                 currentProgramTarget.x,
                 currentProgramTarget.y,
@@ -685,8 +690,8 @@ public class MqttForegroundService extends Service {
                 ts
         );
 
-        // 이미 Z=0이고 XY도 같은 경우 → 바로 Z 이동 단계로
-        if (startZ == 0 &&
+        // 이미 Z=rollbackTargetZ이고 XY도 같은 경우 → 바로 Z 이동 단계로
+        if (startZ == rollbackTargetZ &&
                 startX == currentProgramTarget.x &&
                 startY == currentProgramTarget.y) {
             liftTarget = null;
@@ -793,7 +798,7 @@ public class MqttForegroundService extends Service {
 
     private String phaseToLabel(int phase) {
         switch (phase) {
-            case PHASE_LIFTING:   return "Z→0";
+            case PHASE_LIFTING:   return "Z→" + rollbackTargetZ;
             case PHASE_MOVING_XY: return "XY 이동";
             case PHASE_MOVING_Z:  return "Z 이동";
             case PHASE_WAITING:   return "대기";

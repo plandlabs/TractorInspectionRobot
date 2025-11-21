@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
@@ -64,11 +65,14 @@ public class MonitTarget extends LinearLayout {
         tarY = findViewById(R.id.tar_y);
         tarZ = findViewById(R.id.tar_z);
     }
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint({"ClickableViewAccessibility", "SetTextI18n"})
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
         viewModel.getState().observe(lifecycleOwner, s -> {
+            Log.w("MonitTarget",
+                    "state observer:" + s
+                            + " vm=" + System.identityHashCode(viewModel));
             if (s == null) return;
             lastState = s;                    // 페이지 재로딩 시 재전송용 캐시
 
@@ -77,6 +81,9 @@ public class MonitTarget extends LinearLayout {
             curZ.setText("z : " + lastState.getZ());
         });
         viewModel.getCommandState().observe(lifecycleOwner, s -> {
+            Log.w("MonitTarget",
+                    "commandState observer:" + s
+                            + " vm=" + System.identityHashCode(viewModel));
             if (s == null) return;
             targetState = s;                    // 페이지 재로딩 시 재전송용 캐시
             targetBox.setVisibility(View.VISIBLE);
