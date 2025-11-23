@@ -11,12 +11,9 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.UUID;
@@ -76,6 +73,10 @@ public class MqttForegroundService extends Service {
     public static final String EXTRA_PROGRAM_JSON     = "program_json";
     public static final String EXTRA_INTERVAL_SECOND  = "interval_second";
 
+    // 프로그램 포즈 브로드캐스트
+    public static final String ACTION_PROGRAM_POSE = "kr.re.kitech.tractorinspectionrobot.MQTT_PROGRAM_POSE";
+    public static final String EXTRA_POSE_JSON     = "pose_json";
+
     // RobotListActivity 에서 넘겨줄 수 있는 Extra (선택)
     public static final String EXTRA_MQTT_HOST        = "extra_mqtt_host";
     public static final String EXTRA_MQTT_PORT        = "extra_mqtt_port";
@@ -97,10 +98,6 @@ public class MqttForegroundService extends Service {
     public static final String KEY_BASE_TOPIC  = "base_topic";
     private boolean userPaused = false;
 
-    // 프로그램 포즈 브로드캐스트
-    public static final String ACTION_PROGRAM_POSE = "kr.re.kitech.tractorinspectionrobot.MQTT_PROGRAM_POSE";
-    public static final String EXTRA_POSE_JSON     = "pose_json";
-
     // 연결 전/중단 시 publish를 안전하게 보관할 간단한 큐
     private static class PendingPub {
         final String topic; final String payload; final int qos; final boolean retain;
@@ -114,10 +111,6 @@ public class MqttForegroundService extends Service {
     private String staTopic;
     private String mqttUsername;
     private String mqttPassword;
-
-    // opid 증가용
-    private int opidCounter = 1;
-    private static final String FP = "pc-controller";
 
     // ==========================
     // Notifier 텍스트 관리
@@ -135,34 +128,9 @@ public class MqttForegroundService extends Service {
     }
 
     // ==========================
-    // 프로그램 실행 상태머신
+    // 프로그램 상태머신 (분리된 클래스)
     // ==========================
-    // per-item 내부 이동 단계
-    private static final int PHASE_IDLE      = 0;
-    private static final int PHASE_LIFTING   = 1; // Z→0
-    private static final int PHASE_MOVING_XY = 2; // XY→타겟, Z=0
-    private static final int PHASE_MOVING_Z  = 3; // Z→타겟 Z
-    private static final int PHASE_WAITING   = 4; // intervalSecond 대기
-
-    // 위치 허용 오차 (XYZ 공통)
-    private static final int POS_TOL = 10;
-
-    private final Handler programHandler = new Handler(Looper.getMainLooper());
-    private boolean programRunning = false;
-    private int programPhase = PHASE_IDLE;
-    private int programIndex = -1;
-    private boolean programStepScheduled = false;
-    private int programIntervalSecond = 10;
-
-    private final List<RobotState> programList = new ArrayList<>();
-    private RobotState currentProgramTarget = null;
-    private RobotState liftTarget = null;
-    private RobotState xyTarget = null;
-    private RobotState finalTarget = null;
-
-    // STA로부터 받은 마지막 로봇 상태 (처음엔 null, STA 수신 후 채움)
-    @Nullable
-    private RobotState lastStaState = null;
+    private ProgramStateMachine programStateMachine;
 
     // ==========================
 
@@ -218,6 +186,44 @@ public class MqttForegroundService extends Service {
         staTopic     = rootTopic + "/" + StringConvUtil.md5(baseTopic) + "/sta";
 
         saveTopicConfig();
+
+        // 프로그램 상태머신 생성
+        programStateMachine = new ProgramStateMachine(
+                new Handler(Looper.getMainLooper()),
+                baseTopic,
+                reqTopic,
+                rollbackTargetStep,
+                new ProgramStateMachine.Callback() {
+                    @Override
+                    public void publish(String topic, String payload, int qos, boolean retain) {
+                        // 상태머신에서 보내는 명령도 기존 publish 경로 사용
+                        handlePublish(topic, payload, qos, retain);
+                    }
+
+                    @Override
+                    public void onProgramStatusLabelChanged(String label) {
+                        programStatusLabel = label;
+                        updateNotification();
+                    }
+
+                    @Override
+                    public void onProgramProgressChanged(boolean running, int index, int total, int phase) {
+                        Intent intent = new Intent(ACTION_PROGRAM_PROGRESS);
+                        intent.setPackage(getPackageName());
+                        intent.putExtra(EXTRA_PROGRAM_RUNNING, running);
+                        intent.putExtra(EXTRA_PROGRAM_INDEX, index);
+                        intent.putExtra(EXTRA_PROGRAM_TOTAL, total);
+                        intent.putExtra(EXTRA_PROGRAM_PHASE, phase);
+                        sendBroadcast(intent);
+                    }
+
+                    @Override
+                    public void onProgramPose(RobotState pose) {
+                        broadcastProgramPose(pose);
+                    }
+                }
+        );
+
         initMqttClient();
     }
 
@@ -232,35 +238,52 @@ public class MqttForegroundService extends Service {
                 mqttUsername,
                 mqttPassword
         );
+
         mqtt.setListener(new MqttClientManager.Listener() {
-            @Override public void onConnected() {
+            @Override
+            public void onConnected() {
                 isConnected = true;
+                lastStatus = "connected";
+                lastCause  = null;
+
                 mqttStatusLabel = "Connected";
                 updateNotification();
 
                 sendStatus("connected", null);
+
                 mqtt.afterConnected();
                 flushPendingPublishes();
             }
 
-            @Override public void onDisconnected(Throwable cause) {
+            @Override
+            public void onDisconnected(Throwable cause) {
                 isConnected = false;
+                lastCause  = (cause != null ? cause.getMessage() : null);
 
+                // 사용자가 명시적으로 끊은 경우 → 자동 재연결 UI/상태 안 띄움
                 if (userPaused) {
+                    lastStatus = "disconnected";
                     mqttStatusLabel = "Disconnected";
                     updateNotification();
                     sendStatus("disconnected", null);
                     return;
                 }
 
+                // 서버 다운 / 네트워크 문제 등
+                // HiveMQ automaticReconnect()가 내부에서 재연결 시도하므로
+                // 여기서는 상태/알림만 "Reconnecting..." 으로 두면 됨.
+                lastStatus = "reconnecting";
                 mqttStatusLabel = "Reconnecting...";
                 updateNotification();
-                sendStatus("reconnecting", (cause != null ? cause.getMessage() : null));
+                sendStatus("reconnecting", lastCause);
             }
 
-            @Override public void onMessage(String topic, String payload) {
+            @Override
+            public void onMessage(String topic, String payload) {
                 // 기존 ViewModel 브리지 + 브로드캐스트
-                SharedMqttViewModelBridge.getInstance().postDirectMessage(topic, payload);
+                SharedMqttViewModelBridge
+                        .getInstance()
+                        .postDirectMessage(topic, payload);
 
                 Intent intent = new Intent(ACTION_MQTT_MESSAGE);
                 intent.setPackage(getPackageName());
@@ -334,10 +357,48 @@ public class MqttForegroundService extends Service {
                             mqtt.gracefulDisconnect();
                             isConnected = false;
                         }
+
+                        // 토픽/베이스 변경 시 프로그램 상태머신도 다시 만들어 주는 게 안전
+                        programStateMachine = new ProgramStateMachine(
+                                new Handler(Looper.getMainLooper()),
+                                baseTopic,
+                                reqTopic,
+                                rollbackTargetStep,
+                                new ProgramStateMachine.Callback() {
+                                    @Override
+                                    public void publish(String topic, String payload, int qos, boolean retain) {
+                                        handlePublish(topic, payload, qos, retain);
+                                    }
+
+                                    @Override
+                                    public void onProgramStatusLabelChanged(String label) {
+                                        programStatusLabel = label;
+                                        updateNotification();
+                                    }
+
+                                    @Override
+                                    public void onProgramProgressChanged(boolean running, int index, int total, int phase) {
+                                        Intent intent = new Intent(ACTION_PROGRAM_PROGRESS);
+                                        intent.setPackage(getPackageName());
+                                        intent.putExtra(EXTRA_PROGRAM_RUNNING, running);
+                                        intent.putExtra(EXTRA_PROGRAM_INDEX, index);
+                                        intent.putExtra(EXTRA_PROGRAM_TOTAL, total);
+                                        intent.putExtra(EXTRA_PROGRAM_PHASE, phase);
+                                        sendBroadcast(intent);
+                                    }
+
+                                    @Override
+                                    public void onProgramPose(RobotState pose) {
+                                        broadcastProgramPose(pose);
+                                    }
+                                }
+                        );
+
                         initMqttClient();
                     }
 
                     if (mqtt != null && !mqtt.isConnected()) {
+                        lastStatus = "reconnecting";
                         mqttStatusLabel = "Reconnecting...";
                         updateNotification();
                         sendStatus("reconnecting", null);
@@ -357,10 +418,13 @@ public class MqttForegroundService extends Service {
                             .putBoolean(KEY_USER_PAUSED, true)
                             .apply();
 
-                    stopProgramInternal(); // 프로그램도 같이 정지
+                    if (programStateMachine != null) {
+                        programStateMachine.stopProgram();
+                    }
 
                     if (mqtt != null) mqtt.gracefulDisconnect();
                     isConnected = false;
+                    lastStatus = "disconnected";
                     mqttStatusLabel = "Disconnected";
                     updateNotification();
                     sendStatus("disconnected", null);
@@ -384,13 +448,17 @@ public class MqttForegroundService extends Service {
                 case ACTION_PROGRAM_START: {
                     String programJson = i.getStringExtra(EXTRA_PROGRAM_JSON);
                     int intervalSec = i.getIntExtra(EXTRA_INTERVAL_SECOND, 10);
-                    startProgram(programJson, intervalSec);
+                    if (programStateMachine != null) {
+                        programStateMachine.startProgram(programJson, intervalSec);
+                    }
                     break;
                 }
 
                 // ✅ 프로그램 정지
                 case ACTION_PROGRAM_STOP: {
-                    stopProgramInternal();
+                    if (programStateMachine != null) {
+                        programStateMachine.stopProgram();
+                    }
                     break;
                 }
 
@@ -421,9 +489,19 @@ public class MqttForegroundService extends Service {
         }
     }
 
+    // STA 토픽만 골라서 상태머신에 전달
+    private void handleProgramStaIfNeeded(String topic, String payload) {
+        if (programStateMachine == null) return;
+        if (staTopic == null || !staTopic.equals(topic)) return;
+        programStateMachine.onStaPayload(payload);
+    }
+
     @Override public void onDestroy() {
         super.onDestroy();
-        stopProgramInternal();
+
+        if (programStateMachine != null) {
+            programStateMachine.stopProgram();
+        }
 
         if (mqtt != null) mqtt.gracefulDisconnect();
         if (net != null) {
@@ -431,407 +509,13 @@ public class MqttForegroundService extends Service {
             net.unbindWifiNetwork();
         }
         isConnected = false;
+        lastStatus = "disconnected";
         mqttStatusLabel = "Disconnected";
         updateNotification();
         sendStatus("disconnected", null);
     }
 
     @Nullable @Override public IBinder onBind(Intent intent) { return null; }
-
-    // ==========================
-    // 프로그램 상태머신 구현부
-    // ==========================
-
-    private void startProgram(String programJson, int intervalSec) {
-        stopProgramInternal(); // 기존 것 정리
-
-        if (programJson == null || programJson.isEmpty()) {
-            Log.w(TAG, "startProgram: programJson is empty");
-            return;
-        }
-
-        try {
-            JSONArray arr = new JSONArray(programJson);
-            programList.clear();
-            for (int j = 0; j < arr.length(); j++) {
-                JSONObject obj = arr.getJSONObject(j);
-                RobotState rs = new RobotState(obj);
-                programList.add(rs);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "startProgram: invalid program json", e);
-            programList.clear();
-            return;
-        }
-
-        if (programList.isEmpty()) {
-            Log.w(TAG, "startProgram: programList is empty");
-            return;
-        }
-
-        programIntervalSecond = Math.max(1, intervalSec);
-
-        programRunning = true;
-        programIndex = 0;
-        programPhase = PHASE_LIFTING;
-        programStepScheduled = false;
-        currentProgramTarget = programList.get(0);
-        liftTarget = xyTarget = finalTarget = null;
-
-        prepareProgramPhaseTargets();
-
-        if (liftTarget != null) {
-            sendMoveAndServo(liftTarget);
-        } else if (finalTarget != null) {
-            // 시작 위치가 이미 목적지인 경우 등
-            sendMoveAndServo(finalTarget);
-        }
-
-        Log.i(TAG, "Program started, total items=" + programList.size());
-
-        updateProgramStatusLabel();
-        broadcastProgramProgress();
-    }
-
-    private void stopProgramInternal() {
-        if (!programRunning && programPhase == PHASE_IDLE) {
-            // 이미 멈춰있으면 중복 브로드캐스트 방지
-            programList.clear();
-            programStatusLabel = "";
-            updateNotification();
-            broadcastProgramProgress();
-            return;
-        }
-
-        programRunning = false;
-        programHandler.removeCallbacksAndMessages(null);
-        programPhase = PHASE_IDLE;
-        programIndex = -1;
-        programStepScheduled = false;
-        currentProgramTarget = null;
-        liftTarget = xyTarget = finalTarget = null;
-
-        Log.i(TAG, "Program stopped");
-
-        updateProgramStatusLabel();
-        broadcastProgramProgress();
-    }
-
-    private void handleProgramStaIfNeeded(String topic, String payload) {
-        if (!programRunning) return;
-        if (staTopic == null || !staTopic.equals(topic)) return;
-
-        try {
-            JSONObject root = new JSONObject(payload);
-            JSONObject ct = root.optJSONObject("ct");
-            if (ct == null) return;
-
-            int x  = (lastStaState != null) ? lastStaState.x  : 0;
-            int y  = (lastStaState != null) ? lastStaState.y  : 0;
-            int z  = (lastStaState != null) ? lastStaState.z  : 0;
-            int s1 = (lastStaState != null) ? lastStaState.s1 : 0;
-            int s2 = (lastStaState != null) ? lastStaState.s2 : 0;
-            int s3 = (lastStaState != null) ? lastStaState.s3 : 0;
-
-            JSONObject motion = ct.optJSONObject("motion");
-            if (motion != null) {
-                JSONObject pos = motion.optJSONObject("pos");
-                if (pos != null) {
-                    x = pos.optInt("x", x);
-                    y = pos.optInt("y", y);
-                    z = pos.optInt("z", z);
-                }
-            }
-
-            JSONObject servoContainer = ct.optJSONObject("servo");
-            if (servoContainer != null) {
-                JSONObject servo = servoContainer.optJSONObject("angles");
-                if (servo == null && servoContainer.has("s1")) {
-                    servo = servoContainer;
-                }
-                if (servo != null) {
-                    s1 = servo.optInt("s1", s1);
-                    s2 = servo.optInt("s2", s2);
-                    s3 = servo.optInt("s3", s3);
-                }
-            }
-
-            long ts = System.currentTimeMillis();
-            lastStaState = new RobotState(x, y, z, s1, s2, s3, ts);
-
-            onProgramStateUpdatedBySta();
-        } catch (Exception e) {
-            Log.e(TAG, "handleProgramStaIfNeeded parse error", e);
-        }
-    }
-
-    private void onProgramStateUpdatedBySta() {
-        if (!programRunning || currentProgramTarget == null) return;
-
-        switch (programPhase) {
-            case PHASE_LIFTING:
-                // Z >= 0 || Z<= rollbackTargetStep 근처(±POS_TOL)까지 들어왔을 때 도달로 간주 (XYZ 모두 ±POS_TOL)
-                if (reachedLiftHeight(lastStaState, liftTarget, POS_TOL)) {
-                    programPhase = PHASE_MOVING_XY;
-                    if (xyTarget != null) {
-                        sendMoveAndServo(xyTarget);
-                    }
-                    updateProgramStatusLabel();
-                    broadcastProgramProgress();
-                }
-                break;
-
-            case PHASE_MOVING_XY:
-                if (sameXYZ(lastStaState, xyTarget)) {
-                    programPhase = PHASE_MOVING_Z;
-                    if (finalTarget != null) {
-                        sendMoveAndServo(finalTarget);
-                    }
-                    updateProgramStatusLabel();
-                    broadcastProgramProgress();
-                }
-                break;
-
-            case PHASE_MOVING_Z:
-                // 위치(x,y,z)만 맞으면 도착으로 간주
-                if (sameXYZ(lastStaState, finalTarget) && !programStepScheduled) {
-                    programPhase = PHASE_WAITING;
-                    updateProgramStatusLabel();
-                    broadcastProgramProgress();
-                    scheduleNextProgramStep();
-                }
-                break;
-
-            case PHASE_WAITING:
-            case PHASE_IDLE:
-            default:
-                break;
-        }
-    }
-
-    private void scheduleNextProgramStep() {
-        if (!programRunning) return;
-
-        programStepScheduled = true;
-
-        programHandler.postDelayed(() -> {
-            if (!programRunning) return;
-
-            programIndex++;
-
-            if (programIndex >= programList.size()) {
-                // 전체 완료
-                Log.i(TAG, "Program finished");
-                stopProgramInternal();
-                return;
-            }
-
-            currentProgramTarget = programList.get(programIndex);
-            programPhase = PHASE_LIFTING;
-            programStepScheduled = false;
-            liftTarget = xyTarget = finalTarget = null;
-
-            prepareProgramPhaseTargets();
-
-            if (liftTarget != null) {
-                sendMoveAndServo(liftTarget);
-            } else if (finalTarget != null) {
-                sendMoveAndServo(finalTarget);
-            }
-
-            Log.i(TAG, "Program step: " + (programIndex + 1) + " / " + programList.size());
-
-            updateProgramStatusLabel();
-            broadcastProgramProgress();
-        }, programIntervalSecond * 1000L);
-    }
-
-    private void prepareProgramPhaseTargets() {
-        if (currentProgramTarget == null) return;
-
-        RobotState pose = (lastStaState != null) ? lastStaState : currentProgramTarget;
-
-        int startX = pose.x;
-        int startY = pose.y;
-        int startZ = pose.z;
-
-        long ts = System.currentTimeMillis();
-
-        // 1단계: 현재 위치에서 Z를 0까지 올리기
-        liftTarget = new RobotState(
-                startX,
-                startY,
-                0,
-                currentProgramTarget.s1,
-                currentProgramTarget.s2,
-                currentProgramTarget.s3,
-                ts
-        );
-
-        // 2단계: Z=0 유지하면서 XY 이동
-        xyTarget = new RobotState(
-                currentProgramTarget.x,
-                currentProgramTarget.y,
-                0,
-                currentProgramTarget.s1,
-                currentProgramTarget.s2,
-                currentProgramTarget.s3,
-                ts
-        );
-
-        // 3단계: 최종 Z까지 이동
-        finalTarget = new RobotState(
-                currentProgramTarget.x,
-                currentProgramTarget.y,
-                currentProgramTarget.z,
-                currentProgramTarget.s1,
-                currentProgramTarget.s2,
-                currentProgramTarget.s3,
-                ts
-        );
-
-        // 이미 Z=rollbackTargetStep이고 XY도 같은 경우 → 바로 Z 이동 단계로
-        if (startZ >= 0 &&
-                startZ <= rollbackTargetStep &&
-                startX == currentProgramTarget.x &&
-                startY == currentProgramTarget.y) {
-            liftTarget = null;
-            xyTarget = null;
-            programPhase = PHASE_MOVING_Z;
-        }
-    }
-
-    private void sendMoveAndServo(RobotState s) {
-        sendMoveAbs(s);
-        sendServoAbs(s);
-        broadcastProgramPose(s);
-    }
-
-    private void sendMoveAbs(RobotState s) {
-        try {
-            JSONObject root = new JSONObject();
-            root.put("mt", "req");
-            root.put("tm", nowIso());
-            root.put("fp", FP);
-
-            JSONObject ct = new JSONObject();
-            ct.put("tg", baseTopic);
-            ct.put("cmd", 2001);
-            ct.put("opid", opidCounter++);
-
-            JSONObject p = new JSONObject();
-            p.put("mode", "abs");
-            p.put("x", s.x);
-            p.put("y", s.y);
-            p.put("z", s.z);
-            p.put("scurve", true);
-
-            ct.put("param", p);
-            root.put("ct", ct);
-
-            handlePublish(reqTopic, root.toString(), 1, false);
-        } catch (Exception e) {
-            Log.e(TAG, "sendMoveAbs error", e);
-        }
-    }
-
-    private void sendServoAbs(RobotState s) {
-        try {
-            JSONObject root = new JSONObject();
-            root.put("mt", "req");
-            root.put("tm", nowIso());
-            root.put("fp", FP);
-
-            JSONObject ct = new JSONObject();
-            ct.put("tg", baseTopic);
-            ct.put("cmd", 2003);
-            ct.put("opid", opidCounter++);
-
-            JSONObject p = new JSONObject();
-            p.put("mode", "abs");
-            p.put("s1", s.s1);
-            p.put("s2", s.s2);
-            p.put("s3", s.s3);
-
-            ct.put("param", p);
-            root.put("ct", ct);
-
-            handlePublish(reqTopic, root.toString(), 1, false);
-        } catch (Exception e) {
-            Log.e(TAG, "sendServoAbs error", e);
-        }
-    }
-
-    private boolean samePose(RobotState a, RobotState b) {
-        if (a == null || b == null) return false;
-        return a.x == b.x &&
-                a.y == b.y &&
-                a.z == b.z &&
-                a.s1 == b.s1 &&
-                a.s2 == b.s2 &&
-                a.s3 == b.s3;
-    }
-
-    private boolean sameXYZ(RobotState a, RobotState b) {
-        if (a == null || b == null) return false;
-        return a.x == b.x &&
-                a.y == b.y &&
-                a.z == b.z;
-    }
-
-    // ✅ Z 리프트 단계에서 사용할 "XYZ ±tol 안이면 OK" 판정
-    private boolean reachedLiftHeight(RobotState cur, RobotState target, int tol) {
-        if (cur == null || target == null) return false;
-        return Math.abs(cur.x - target.x) <= tol &&
-                Math.abs(cur.y - target.y) <= tol &&
-                Math.abs(cur.z - target.z) <= tol;
-    }
-
-    private static String nowIso() {
-        java.text.SimpleDateFormat sdf =
-                new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
-        return sdf.format(new java.util.Date());
-    }
-
-    // ==========================
-    // 프로그램 진행 상황 브로드캐스트 + Notifier 텍스트 갱신
-    // ==========================
-
-    private String phaseToLabel(int phase) {
-        switch (phase) {
-            case PHASE_LIFTING:   return "Z→ 0";
-            case PHASE_MOVING_XY: return "XY 이동";
-            case PHASE_MOVING_Z:  return "Z 이동";
-            case PHASE_WAITING:   return "대기";
-            case PHASE_IDLE:
-            default:              return "";
-        }
-    }
-
-    private void updateProgramStatusLabel() {
-        if (!programRunning || programList.isEmpty() || programIndex < 0 || programIndex >= programList.size()) {
-            programStatusLabel = "";
-        } else {
-            String phaseStr = phaseToLabel(programPhase);
-            String stepStr  = (programIndex + 1) + "/" + programList.size();
-            if (phaseStr.isEmpty()) {
-                programStatusLabel = "Program " + stepStr;
-            } else {
-                programStatusLabel = "Program " + stepStr + " (" + phaseStr + ")";
-            }
-        }
-        updateNotification();
-    }
-
-    private void broadcastProgramProgress() {
-        Intent intent = new Intent(ACTION_PROGRAM_PROGRESS);
-        intent.setPackage(getPackageName());
-        intent.putExtra(EXTRA_PROGRAM_RUNNING, programRunning);
-        intent.putExtra(EXTRA_PROGRAM_INDEX, programIndex);
-        intent.putExtra(EXTRA_PROGRAM_TOTAL, programList.size());
-        intent.putExtra(EXTRA_PROGRAM_PHASE, programPhase);
-        sendBroadcast(intent);
-    }
 
     // ==========================
     // 토픽 설정 저장
