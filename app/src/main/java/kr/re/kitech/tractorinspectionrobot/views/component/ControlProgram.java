@@ -72,6 +72,7 @@ public class ControlProgram extends LinearLayout {
 
     // 서비스에서 보내는 진행상황 수신용
     private BroadcastReceiver programProgressReceiver = null;
+    private View progress;
 
     public ControlProgram(Context context) {
         super(context);
@@ -409,6 +410,8 @@ public class ControlProgram extends LinearLayout {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -423,6 +426,21 @@ public class ControlProgram extends LinearLayout {
         viewModel.getState().observe(lifecycleOwner, s -> {
             if (s == null) return;
             lastState = s;
+        });
+
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
         });
 
         // 프로그램 진행 브로드캐스트 수신

@@ -5,231 +5,244 @@
     android:layout_height="match_parent"
     style="@style/dataBox"
     android:layout_margin="5dp">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="left">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAlignment="gravity"
-                    style="@style/tabTopTitle"
-                    android:text="프로그램"/>
-            </LinearLayout>
-            <LinearLayout
-                android:visibility="gone"
-                android:id="@+id/btn_list_refresh"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center|right"
-                style="@style/stateTopValue">
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:background="@drawable/baseline_refresh_24"
-                    android:backgroundTint="#fff"/>
-            </LinearLayout>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/wrapLinear"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal">
-            <LinearLayout
-                android:id="@+id/ctrlBox"
-                android:layout_width="match_parent"
-                android:layout_height="275dp"
-                android:orientation="vertical"
-                android:padding="5dp">
-                <TableLayout
-                    android:id="@+id/sensor_table"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/rounded"
-                    android:backgroundTint="#00454545"
-                    android:stretchColumns="0,1,2,3,4,5,6,7">
-
-                    <!-- 헤더 -->
-                    <TableRow
-                        android:paddingVertical="12dp"
-                        android:background="@drawable/rounded"
-                        android:backgroundTint="#555">
-                        <TextView
-                            android:text="실행"
-                            android:layout_width="30dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-                        <TextView
-                            android:text="번호"
-                            android:layout_width="30dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="x"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="y"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="z"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="s1"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="s2"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:text="s3"
-                            android:layout_width="50dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp"/>
-                        <TextView
-                            android:layout_width="45dp"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:textSize="14sp"/>
-                    </TableRow>
-
-                    <!-- 구분선 -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:background="#888"
-                        android:layout_marginBottom="4dp" />
-                </TableLayout>
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:overScrollMode="always"/>
-            </LinearLayout>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/dataBox"
-            android:layout_margin="5dp"
-            android:padding="10dp"
-            android:orientation="horizontal"
-            android:gravity="right">
+            android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:gravity="center">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="left">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="gravity"
+                        style="@style/tabTopTitle"
+                        android:text="프로그램"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:visibility="gone"
+                    android:id="@+id/btn_list_refresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center|right"
+                    style="@style/stateTopValue">
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/baseline_refresh_24"
+                        android:backgroundTint="#fff"/>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/wrapLinear"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:paddingRight="10dp">
-                <TextView
-                    android:layout_width="85dp"
-                    android:layout_height="40dp"
-                    android:gravity="center_vertical|right"
-                    android:textSize="15dp"
-                    android:text="delay time : "/>
-                <TextView
-                    android:id="@+id/textSeekSecond"
-                    android:layout_width="70dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/rounded"
-                    android:gravity="center"
-                    android:backgroundTint="@color/option_name"
-                    android:textSize="15dp"
-                    android:text="20 초"/>
-                <SeekBar
-                    android:id="@+id/seekBarSecond"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/ctrlBox"
                     android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:padding="8dp"
-                    android:thumb="@drawable/custom_thumb"
-                    android:progressDrawable="@drawable/custom_progress"/>
+                    android:layout_height="275dp"
+                    android:orientation="vertical"
+                    android:padding="5dp">
+                    <TableLayout
+                        android:id="@+id/sensor_table"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded"
+                        android:backgroundTint="#00454545"
+                        android:stretchColumns="0,1,2,3,4,5,6,7">
+
+                        <!-- 헤더 -->
+                        <TableRow
+                            android:paddingVertical="12dp"
+                            android:background="@drawable/rounded"
+                            android:backgroundTint="#555">
+                            <TextView
+                                android:text="실행"
+                                android:layout_width="30dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+                            <TextView
+                                android:text="번호"
+                                android:layout_width="30dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="x"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="y"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="z"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="s1"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="s2"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:text="s3"
+                                android:layout_width="50dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp"/>
+                            <TextView
+                                android:layout_width="45dp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textSize="14sp"/>
+                        </TableRow>
+
+                        <!-- 구분선 -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:background="#888"
+                            android:layout_marginBottom="4dp" />
+                    </TableLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:overScrollMode="always"/>
+                </LinearLayout>
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/btnListSave"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="right"
-                android:layout_marginLeft="5dp"
-                style="@style/stateTopValue">
-                <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/dataBox"
+                android:layout_margin="5dp"
+                android:padding="10dp"
+                android:orientation="horizontal"
+                android:gravity="right">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:paddingRight="10dp">
+                    <TextView
+                        android:layout_width="85dp"
+                        android:layout_height="40dp"
+                        android:gravity="center_vertical|right"
+                        android:textSize="15dp"
+                        android:text="delay time : "/>
+                    <TextView
+                        android:id="@+id/textSeekSecond"
+                        android:layout_width="70dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/rounded"
+                        android:gravity="center"
+                        android:backgroundTint="@color/option_name"
+                        android:textSize="15dp"
+                        android:text="20 초"/>
+                    <SeekBar
+                        android:id="@+id/seekBarSecond"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:padding="8dp"
+                        android:thumb="@drawable/custom_thumb"
+                        android:progressDrawable="@drawable/custom_progress"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/btnListSave"
                     android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="저장하기"/>
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/btnListLoad"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="right"
-                android:layout_marginLeft="5dp"
-                style="@style/stateTopValue">
-                <TextView
+                    android:layout_height="match_parent"
+                    android:gravity="right"
+                    android:layout_marginLeft="5dp"
+                    style="@style/stateTopValue">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="저장하기"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/btnListLoad"
                     android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="실행하기"/>
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/btnListStop"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="right"
-                android:layout_marginLeft="5dp"
-                style="@style/stateTopValueCancel">
-                <TextView
+                    android:layout_height="match_parent"
+                    android:gravity="right"
+                    android:layout_marginLeft="5dp"
+                    style="@style/stateTopValue">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="실행하기"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/btnListStop"
                     android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="중지하기"/>
+                    android:layout_height="match_parent"
+                    android:gravity="right"
+                    android:layout_marginLeft="5dp"
+                    style="@style/stateTopValueCancel">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="중지하기"/>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+        <RelativeLayout
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ProgressBar
+                android:layout_centerInParent="true"
+                android:layout_width="60dp"
+                android:layout_height="60dp"/>
+        </RelativeLayout>
+    </RelativeLayout>
 </LinearLayout>

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.GridLayout;
@@ -21,6 +22,7 @@ public class MonitCamera extends LinearLayout {
     private LifecycleOwner lifecycleOwner;
     private GridLayout gridLayout;
     private WebView robotCam;
+    private View progress;
 
 
     public MonitCamera(Context context) {
@@ -43,6 +45,8 @@ public class MonitCamera extends LinearLayout {
         s.setAllowFileAccess(true);
         s.setAllowFileAccessFromFileURLs(true);
         s.setAllowUniversalAccessFromFileURLs(true);
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
         robotCam.loadUrl("file:///android_asset/simulation/cam.html");
     }
     @SuppressLint("ClickableViewAccessibility")
@@ -50,6 +54,20 @@ public class MonitCamera extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
         // 관찰 가능!
     }
 

@@ -396,7 +396,7 @@
         <item name="android:textStyle">normal</item>
     </style>
     <style name="moveControlButtonStyle" parent="controlButtonStyle">
-        <item name="android:layout_width">120dp</item>
+        <item name="android:layout_width">110dp</item>
         <item name="android:layout_height">50dp</item>
     </style>
     <style name="moveControlJoyButtonStyle" parent="controlButtonStyle">

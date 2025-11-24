@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -33,6 +34,7 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
 
     private int colorOn;
     private int colorOff;
+    private View progress, programRun;
 
     public ControlVimMovementTouchButtons(Context context) {
         super(context);
@@ -134,6 +136,10 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
             @Override public void onStartTrackingTouch(SeekBar seekBar) { }
             @Override public void onStopTrackingTouch(SeekBar seekBar) { }
         });
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
+        programRun = findViewById(R.id.program_run);
+        programRun.setVisibility(View.GONE);
     }
 
     /**
@@ -187,6 +193,29 @@ public class ControlVimMovementTouchButtons extends LinearLayout {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
 
+
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getProgramState().observe(lifecycleOwner, running -> {
+            if (running == null) return;
+            if (running) {
+                programRun.setVisibility(View.VISIBLE);
+            } else {
+                programRun.setVisibility(View.GONE);
+            }
+        });
         attachTouchListeners();
     }
 }

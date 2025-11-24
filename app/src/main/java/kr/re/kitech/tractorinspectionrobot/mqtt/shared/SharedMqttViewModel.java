@@ -30,6 +30,7 @@ import kr.re.kitech.tractorinspectionrobot.R;
 import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.item.RobotState;
 import kr.re.kitech.tractorinspectionrobot.utils.StringConvUtil;
+import lombok.Getter;
 
 public class SharedMqttViewModel extends AndroidViewModel {
 
@@ -60,6 +61,14 @@ public class SharedMqttViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> mqttConnected = new MutableLiveData<>(false);
     public LiveData<Boolean> getMqttConnected() { return mqttConnected; }
 
+    // 최초 STA 1회 구분용
+    private final MutableLiveData<Boolean> firstConnectReceive = new MutableLiveData<>(false);
+    public LiveData<Boolean> getFirstConnectReceive() { return firstConnectReceive; }
+
+    // 프로그램 실행 여부
+    private final MutableLiveData<Boolean> programState = new MutableLiveData<>(false);
+    public LiveData<Boolean> getProgramState() { return programState; }
+
     // 3) 로봇 전체 상태 (x,y,z,s1,s2,s3,ts)
     private final MutableLiveData<RobotState> state =
             new MutableLiveData<>(new RobotState(0, 0, 0, 0, 0, 0, 0));
@@ -69,9 +78,11 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState s = state.getValue();
         return (s == null) ? new RobotState(0, 0, 0, 0, 0, 0, 0) : s;
     }
+
     // 버튼으로 만든 명령 상태 (state와는 별개)
     private final MutableLiveData<RobotState> commandState = new MutableLiveData<>();
     public LiveData<RobotState> getCommandState() { return commandState; }
+
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
 
@@ -87,27 +98,30 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
                 Boolean prev = mqttConnected.getValue();
                 mqttConnected.postValue(true);
+                firstConnectReceive.postValue(true);
+                Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+                sendInitialServoZero();  // 서보 0도 초기화도 이때만
 
-                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주
-                if (prev == null || !prev) {
-                    Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
-                    sendInitialServoZero();  // 서보 0도 초기화도 이때만
-                }
+                // ✅ 이전 상태가 null/false일 때만 "새로 연결"로 간주하고 싶으면 아래로
+                // if (prev == null || !prev) {
+                //     Toast.makeText(app, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+                //     sendInitialServoZero();
+                // }
 
             } else if ("disconnected".equalsIgnoreCase(status)
                     || "rejected".equalsIgnoreCase(status)) {
 
                 Boolean prev = mqttConnected.getValue();
                 mqttConnected.postValue(false);
+                firstConnectReceive.postValue(false);
+                Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
 
-                // 끊어질 때만 토스트
-                if (prev != null && prev) {
-                    Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
-                }
+                // if (prev != null && prev) {
+                //     Toast.makeText(app, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show();
+                // }
             }
         }
     };
-
 
     // ---- 수신 메시지 수신 (MQTT → ForegroundService → 브로드캐스트) ----
     private final BroadcastReceiver messageReceiver = new BroadcastReceiver() {
@@ -120,6 +134,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             if (topic == null || payload == null) return;
             Log.w("topic", topic);
             Log.w("topic sta", staTopic);
+
             // 모든 메시지를 directMessage에도 남김(디버깅/로그용)
             postDirectMessage(topic, payload);
 
@@ -127,6 +142,32 @@ public class SharedMqttViewModel extends AndroidViewModel {
             if (topic.equals(staTopic)) {
                 handleStaPayload(payload);
             }
+        }
+    };
+
+    // ✅ 프로그램 진행상태 수신 (running true/false 등)
+    private final BroadcastReceiver programProgressReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null ||
+                    !MqttForegroundService.ACTION_PROGRAM_PROGRESS.equals(intent.getAction()))
+                return;
+
+            boolean running = intent.getBooleanExtra(
+                    MqttForegroundService.EXTRA_PROGRAM_RUNNING,
+                    false
+            );
+            int index = intent.getIntExtra(MqttForegroundService.EXTRA_PROGRAM_INDEX, -1);
+            int total = intent.getIntExtra(MqttForegroundService.EXTRA_PROGRAM_TOTAL, 0);
+            int phase = intent.getIntExtra(MqttForegroundService.EXTRA_PROGRAM_PHASE, 0);
+
+            // 프로그램 실행 여부만 LiveData로 반영
+            programState.postValue(running);
+
+            Log.d("SharedMqttViewModel",
+                    "PROGRAM_PROGRESS running=" + running +
+                            " index=" + index + "/" + total +
+                            " phase=" + phase);
         }
     };
 
@@ -189,6 +230,12 @@ public class SharedMqttViewModel extends AndroidViewModel {
             RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
             next = RobotState.clamp(next);
             state.postValue(next);
+
+            // 최초 STA 1회일 때만 commandState에도 복사
+            if (Boolean.TRUE.equals(firstConnectReceive.getValue())) {
+                commandState.postValue(next);
+            }
+            firstConnectReceive.postValue(false);
         } catch (Exception ignore) {}
     }
 
@@ -229,11 +276,21 @@ public class SharedMqttViewModel extends AndroidViewModel {
         } else {
             application.registerReceiver(messageReceiver, f2);
         }
+
+        // 프로그램 포즈 수신
         IntentFilter f3 = new IntentFilter(MqttForegroundService.ACTION_PROGRAM_POSE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             application.registerReceiver(programPoseReceiver, f3, Context.RECEIVER_NOT_EXPORTED);
         } else {
             application.registerReceiver(programPoseReceiver, f3);
+        }
+
+        // ✅ 프로그램 진행상태 수신
+        IntentFilter f4 = new IntentFilter(MqttForegroundService.ACTION_PROGRAM_PROGRESS);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            application.registerReceiver(programProgressReceiver, f4, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            application.registerReceiver(programProgressReceiver, f4);
         }
     }
 
@@ -309,7 +366,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
-        // ✅ 여기: state와는 별도로, 버튼으로 만들어진 next를 항상 보냄
+        // ✅ 버튼으로 만들어진 목표 포즈는 항상 commandState에 반영
         commandState.setValue(next);
 
         Boolean connected = mqttConnected.getValue();
@@ -323,10 +380,11 @@ public class SharedMqttViewModel extends AndroidViewModel {
                 lastNotConnectedToastMs = now;
             }
             return;
-        }else{
+        } else {
             // 연결시에 s1,s2,s3는 UI 즉시 반영
-            if(axis.equals("s1") || axis.equals("s2") || axis.equals("s3")) state.setValue(next);
+            if (axis.equals("s1") || axis.equals("s2") || axis.equals("s3")) state.setValue(next);
         }
+
         // 🔀 분기: 좌표/서보 각각 해당하는 cmd만 전송
         if (movedPos) {
             publishMoveAbs(next);   // cmd=2001, x,y,z
@@ -356,22 +414,23 @@ public class SharedMqttViewModel extends AndroidViewModel {
         RobotState next = new RobotState(x, y, z, s1, s2, s3, ts);
         next = RobotState.clamp(next);
 
-        // ✅ 여기: state와는 별도로, 버튼으로 만들어진 next를 항상 보냄
+        // ✅ 버튼으로 만들어진 목표 포즈는 항상 commandState에 반영
         commandState.setValue(next);
+
         // MQTT 연결 여부 체크
         Boolean connected = mqttConnected.getValue();
         if (connected == null || !connected) {
             Log.w(TAG, "applyStateAndPublish() called while MQTT not connected. Ignored.");
             long now = System.currentTimeMillis();
-            // 미연결시에만  UI 즉시 반영
+            // 미연결시에만 UI 즉시 반영
             state.setValue(next);
             if (now - lastNotConnectedToastMs > 2_000) {
                 Toast.makeText(app, "현재 MQTT 미연결 상태입니다. 연결상태를 확인하세요.", Toast.LENGTH_SHORT).show();
                 lastNotConnectedToastMs = now;
             }
             return;
-        }else{
-            // 연결시에 s1,s2,s3만 UI 즉시 반영 x,y,z는 현재값 즉시반영
+        } else {
+            // 연결시에 s1,s2,s3만 UI 즉시 반영, x,y,z는 현재값 유지
             RobotState servoOnly = new RobotState(
                     Objects.requireNonNull(state.getValue()).x,
                     Objects.requireNonNull(state.getValue()).y,
@@ -384,7 +443,6 @@ public class SharedMqttViewModel extends AndroidViewModel {
         publishMoveAbs(next);   // cmd=2001, x,y,z
         publishServoAbs(next);  // cmd=2003, s1,s2,s3
     }
-
 
     public void applyStateAndPublish(int x, int y, int z,
                                      int s1, int s2, int s3) {
@@ -429,13 +487,10 @@ public class SharedMqttViewModel extends AndroidViewModel {
 
             sendMqtt(reqTopic, root.toString());
 
-            // 내부 상태도 같이 0으로 맞추고 싶으면 아래 주석 해제
-
             long ts = System.currentTimeMillis();
             RobotState cur = getOrDefault();
             RobotState next = new RobotState(cur.x, cur.y, cur.z, 0, 0, 0, ts);
             state.postValue(next);
-            commandState.postValue(next);  // 최초 목표값과 state값을 동일하게
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -528,6 +583,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
         try { getApplication().unregisterReceiver(statusReceiver); } catch (Exception ignore) {}
         try { getApplication().unregisterReceiver(messageReceiver); } catch (Exception ignore) {}
         try { getApplication().unregisterReceiver(programPoseReceiver); } catch (Exception ignore) {}
+        try { getApplication().unregisterReceiver(programProgressReceiver); } catch (Exception ignore) {}
         super.onCleared();
     }
 
@@ -547,6 +603,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
             this.raw = rawPayload;
         }
     }
+
     private final BroadcastReceiver programPoseReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

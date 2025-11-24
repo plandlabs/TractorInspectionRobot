@@ -40,6 +40,7 @@ public class MonitTarget extends LinearLayout {
     private RobotState targetState = null;
     private LinearLayout targetBox;
     private TextView curX, curY, curZ, tarX, tarY, tarZ;
+    private View progress;
 
 
     public MonitTarget(Context context) {
@@ -64,6 +65,9 @@ public class MonitTarget extends LinearLayout {
         tarX = findViewById(R.id.tar_x);
         tarY = findViewById(R.id.tar_y);
         tarZ = findViewById(R.id.tar_z);
+
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
     }
     @SuppressLint({"ClickableViewAccessibility", "SetTextI18n"})
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
@@ -90,6 +94,20 @@ public class MonitTarget extends LinearLayout {
             tarX.setText("x : " + targetState.getX());
             tarY.setText("y : " + targetState.getY());
             tarZ.setText("z : " + targetState.getZ());
+        });
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
         });
     }
 

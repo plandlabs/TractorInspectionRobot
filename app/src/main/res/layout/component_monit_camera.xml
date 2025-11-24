@@ -5,31 +5,44 @@
     android:layout_height="match_parent"
     style="@style/dataBox"
     android:layout_margin="5dp">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="left">
-                <TextView
-                    android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAlignment="gravity"
-                    style="@style/tabTopTitle"
-                    android:text="카메라"/>
+                    android:layout_weight="1"
+                    android:gravity="left">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="gravity"
+                        style="@style/tabTopTitle"
+                        android:text="카메라"/>
+                </LinearLayout>
             </LinearLayout>
+            <WebView
+                android:id="@+id/robotCam"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
         </LinearLayout>
-        <WebView
-            android:id="@+id/robotCam"
+        <RelativeLayout
+            android:id="@+id/progress"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </LinearLayout>
+            android:layout_height="match_parent">
+            <ProgressBar
+                android:layout_centerInParent="true"
+                android:layout_width="60dp"
+                android:layout_height="60dp"/>
+        </RelativeLayout>
+    </RelativeLayout>
 </LinearLayout>

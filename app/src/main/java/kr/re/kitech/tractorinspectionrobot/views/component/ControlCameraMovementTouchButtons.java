@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -29,6 +30,7 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     private int intervalMillis, step;
     private int colorOn;
     private int colorOff;
+    private View progress, programRun;
 
 
     public ControlCameraMovementTouchButtons(Context context) {
@@ -136,6 +138,10 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
+        programRun = findViewById(R.id.program_run);
+        programRun.setVisibility(View.GONE);
     }
     @SuppressLint("ClickableViewAccessibility")
     private void attachTouchListeners() {
@@ -165,7 +171,28 @@ public class ControlCameraMovementTouchButtons extends LinearLayout {
     public void setViewModel(SharedMqttViewModel viewModel, LifecycleOwner lifecycleOwner) {
         this.viewModel = viewModel;
         this.lifecycleOwner = lifecycleOwner;
-
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getProgramState().observe(lifecycleOwner, running -> {
+            if (running == null) return;
+            if (running) {
+                programRun.setVisibility(View.VISIBLE);
+            } else {
+                programRun.setVisibility(View.GONE);
+            }
+        });
         attachTouchListeners();
     }
 

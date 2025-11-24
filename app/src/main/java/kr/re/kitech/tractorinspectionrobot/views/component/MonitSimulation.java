@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.GridLayout;
@@ -30,6 +31,7 @@ public class MonitSimulation extends LinearLayout {
     private boolean pageReady = false;
     private final ArrayList<String> pendingJs = new ArrayList<>();
     private RobotState lastState = null;
+    private View progress;
 
 
     public MonitSimulation(Context context) {
@@ -53,6 +55,8 @@ public class MonitSimulation extends LinearLayout {
         s.setAllowFileAccessFromFileURLs(true);
         s.setAllowUniversalAccessFromFileURLs(true);
         WebView.setWebContentsDebuggingEnabled(true); // 콘솔 로그를 Logcat에서 보려면
+        progress = findViewById(R.id.progress);
+        progress.setVisibility(View.GONE);
         robotSimulation.setWebViewClient(new android.webkit.WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -72,6 +76,20 @@ public class MonitSimulation extends LinearLayout {
             if (s == null) return;
             lastState = s;                    // 페이지 재로딩 시 재전송용 캐시
             sendStateToWeb(s);
+        });
+        viewModel.getMqttConnected().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
+        });
+        viewModel.getFirstConnectReceive().observe(lifecycleOwner, s -> {
+            if (s){
+                progress.setVisibility(View.VISIBLE);
+            }else{
+                progress.setVisibility(View.GONE);
+            }
         });
         // 관찰 가능!
     }
