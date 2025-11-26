@@ -1,5 +1,6 @@
 package kr.re.kitech.tractorinspectionrobot.views.component;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.VibrationEffect;
@@ -59,59 +60,88 @@ public class ControlEmergencyButtons extends LinearLayout {
 
         btnZeroAll.setOnClickListener(v -> {
             vibrateShort();
-
-            // 1) x,y,z,s1,s2,s3 모두 0으로
-            viewModel.applyStateAndPublish(0, 0, 0, 0, 0, 0);
-            // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
-            Intent i = new Intent(getContext(), MqttForegroundService.class);
-            i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
-            getContext().startService(i);
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("전체 영점 이동")
+                    .setMessage("전체 영점으로 이동하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        if (mVibrator != null) mVibrator.vibrate(50);
+                        // 1) x,y,z,s1,s2,s3 모두 0으로
+                        viewModel.applyStateAndPublish(0, 0, 0, 0, 0, 0);
+                        // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
+                        Intent i = new Intent(getContext(), MqttForegroundService.class);
+                        i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
+                        getContext().startService(i);
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         btnZeroVim.setOnClickListener(v -> {
             vibrateShort();
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("빔 영점 이동")
+                    .setMessage("빔을 영점으로 이동하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        if (mVibrator != null) mVibrator.vibrate(50);
+                        // 1) 현재 서보값 유지, x,y,z만 0으로
+                        RobotState cur = viewModel.getState().getValue();
+                        if (cur == null) cur = new RobotState(0,0,0,0,0,0, System.currentTimeMillis());
 
-            // 1) 현재 서보값 유지, x,y,z만 0으로
-            RobotState cur = viewModel.getState().getValue();
-            if (cur == null) cur = new RobotState(0,0,0,0,0,0, System.currentTimeMillis());
-
-            viewModel.applyStateAndPublish(
-                    0, 0, 0,
-                    cur.s1, cur.s2, cur.s3
-            );
-            // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
-            Intent i = new Intent(getContext(), MqttForegroundService.class);
-            i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
-            getContext().startService(i);
+                        viewModel.applyStateAndPublish(
+                                0, 0, 0,
+                                cur.s1, cur.s2, cur.s3
+                        );
+                        // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
+                        Intent i = new Intent(getContext(), MqttForegroundService.class);
+                        i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
+                        getContext().startService(i);
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         btnZeroServo.setOnClickListener(v -> {
             vibrateShort();
 
-            // 1) 현재 위치 유지, s1,s2,s3만 0으로
-            RobotState cur = viewModel.getState().getValue();
-            if (cur == null) cur = new RobotState(0,0,0,0,0,0, System.currentTimeMillis());
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("카메라 앵글 영점 이동")
+                    .setMessage("카메라 앵글을 영점으로 이동하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        if (mVibrator != null) mVibrator.vibrate(50);
+                        // 1) 현재 위치 유지, s1,s2,s3만 0으로
+                        RobotState cur = viewModel.getState().getValue();
+                        if (cur == null) cur = new RobotState(0,0,0,0,0,0, System.currentTimeMillis());
 
-            viewModel.applyStateAndPublish(
-                    cur.x, cur.y, cur.z,
-                    0, 0, 0
-            );
-            // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
-            Intent i = new Intent(getContext(), MqttForegroundService.class);
-            i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
-            getContext().startService(i);
+                        viewModel.applyStateAndPublish(
+                                cur.x, cur.y, cur.z,
+                                0, 0, 0
+                        );
+                        // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
+                        Intent i = new Intent(getContext(), MqttForegroundService.class);
+                        i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
+                        getContext().startService(i);
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         btnStop.setOnClickListener(v -> {
             vibrateShort();
+            new AlertDialog.Builder(getContext(), R.style.DarkAlertDialog)
+                    .setTitle("이동 중지")
+                    .setMessage("이동 중지하시겠습니까?")
+                    .setPositiveButton("예", (dialog, which) -> {
+                        if (mVibrator != null) mVibrator.vibrate(50);
+                        // 1) 현재 상태를 그대로 ABS로 다시 보내서 "정지" 효과
+                        viewModel.publishCurrent();
 
-            // 1) 현재 상태를 그대로 ABS로 다시 보내서 "정지" 효과
-            viewModel.publishCurrent();
-
-            // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
-            Intent i = new Intent(getContext(), MqttForegroundService.class);
-            i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
-            getContext().startService(i);
+                        // 2) 만약 ForegroundService에서 프로그램이 돌고 있다면 중지
+                        Intent i = new Intent(getContext(), MqttForegroundService.class);
+                        i.setAction(MqttForegroundService.ACTION_PROGRAM_STOP);
+                        getContext().startService(i);
+                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
     }
 
