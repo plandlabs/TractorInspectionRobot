@@ -49,6 +49,7 @@ import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.android.material.tabs.TabLayout;
 
 import kr.re.kitech.tractorinspectionrobot.R;
+import kr.re.kitech.tractorinspectionrobot.mqtt.MqttForegroundService;
 import kr.re.kitech.tractorinspectionrobot.mqtt.shared.SharedMqttViewModel;
 import kr.re.kitech.tractorinspectionrobot.ui.BackPressHandler;
 import kr.re.kitech.tractorinspectionrobot.ui.TouchHideKeyboardHelper;
@@ -173,6 +174,10 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
             if (isMqttConnected) {
                 showDisconnectConfirm();
             }
+//            else
+//            {
+//                showConnectConfirm();
+//            }
             return false;
         });
 
@@ -219,6 +224,9 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
                 );
             }
         });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkBatteryOptimization();
+        }
     }
 
     @Override
@@ -279,9 +287,6 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            checkBatteryOptimization();
-        }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -379,7 +384,6 @@ public class MainActivity extends FragmentActivity implements NavigationView.OnN
                 .show();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestBatteryOptimizationException() {
         try {
             Intent i = new Intent();

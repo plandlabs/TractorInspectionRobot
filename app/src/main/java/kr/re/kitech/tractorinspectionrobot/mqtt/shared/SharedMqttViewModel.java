@@ -83,6 +83,11 @@ public class SharedMqttViewModel extends AndroidViewModel {
     private final MutableLiveData<RobotState> commandState = new MutableLiveData<>();
     public LiveData<RobotState> getCommandState() { return commandState; }
 
+    private RobotState getCommandDefault() {
+        RobotState s = commandState.getValue();
+        return (s == null) ? new RobotState(0, 0, 0, 0, 0, 0, 0) : s;
+    }
+
     // ---- 연결 상태 수신 ----
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
 
@@ -322,7 +327,7 @@ public class SharedMqttViewModel extends AndroidViewModel {
      * - axis가 s1,s2,s3 → cmd=2003 (ABS, s1,s2,s3)
      */
     public void applyDeltaAndPublish(String axis, int delta) {
-        RobotState cur = getOrDefault();
+        RobotState cur = getCommandDefault();
         int x  = cur.x;
         int y  = cur.y;
         int z  = cur.z;
